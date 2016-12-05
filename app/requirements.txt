@@ -1,0 +1,6 @@
+Flask
+beautifulsoup4
+lxml
+requests
+pyvirtualdisplay
+selenium

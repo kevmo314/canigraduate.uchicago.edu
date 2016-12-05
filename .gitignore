@@ -1,0 +1,7 @@
+# Ignore all canigraduate.* scoped files.
+canigraduate.*
+
+# Ignore compiled
+__pycache__/
+*.py[cod]
+*$py.class
