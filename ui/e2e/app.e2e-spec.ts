@@ -1,10 +1,10 @@
-import { MyprojectPage } from './app.po';
+import { UiPage } from './app.po';
 
-describe('myproject App', function() {
-  let page: MyprojectPage;
+describe('ui App', function() {
+  let page: UiPage;
 
   beforeEach(() => {
-    page = new MyprojectPage();
+    page = new UiPage();
   });
 
   it('should display message saying app works', () => {
