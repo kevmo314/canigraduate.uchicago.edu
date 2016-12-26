@@ -1,5 +1,7 @@
 import { Component, Input } from '@angular/core';
 
+import { CourseInfoService } from 'app/course-info/course-info.service';
+
 import { Transcript } from './transcript';
 import { TranscriptRecord } from './transcript-record';
 
@@ -9,10 +11,13 @@ import { TranscriptRecord } from './transcript-record';
   styleUrls: ['./transcript.component.css']
 })
 export class TranscriptComponent {
+  constructor(private courseInfoService: CourseInfoService) {}
+
   @Input() transcript: Transcript;
 
   @Input() showGrades: boolean;
 
+  // TODO: See if this can be moved to transcript.ts via a groupByTerm().
   getRecords(term: string): TranscriptRecord[] {
     return this.transcript.records.filter(r => r.term == term);
   }

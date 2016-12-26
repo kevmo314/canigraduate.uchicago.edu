@@ -18,7 +18,9 @@ export class TranscriptService {
   constructor (
     private http: Http,
     private authenticationService: AuthenticationService) {
-    this.authenticationService.subscribe(data => this.bind(data));
+    this.authenticationService
+      .filter(x => x.password != null)
+      .subscribe(data => this.bind(data));
   }
 
   get transcript() {

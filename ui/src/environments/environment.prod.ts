@@ -8,5 +8,7 @@ export const environment = {
     storageBucket: "canigraduate-43286.appspot.com",
     messagingSenderId: "916201625926"
   },
-  hmr: false
+  hmr: false,
+  // The cookie name used to store the username.
+  cookieName: 'uchicago',
 };

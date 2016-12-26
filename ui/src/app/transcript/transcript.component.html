@@ -1,10 +1,26 @@
-<md-list>
-  <cig-transcript-term
+<md-list cig-transcript-term
     *ngFor="let term of transcript.terms; let last = last"
-    [term]="term"
+    #cigTranscriptTerm="cigTranscriptTerm"
+    class="term"
     [records]="getRecords(term)"
-    [cumulativeGpa]="getCumulativeGpa(term)"
-    [expanded]="last"
-    [showGrades]="showGrades">
-  </cig-transcript-term>
+    [expanded]="last">
+  <md-divider></md-divider>
+  <div class="subheader" (click)="cigTranscriptTerm.expanded = !cigTranscriptTerm.expanded">
+    <md-icon [ngClass]="{'flip': !cigTranscriptTerm.expanded}">expand_more</md-icon>
+    <h3 md-subheader class="term">{{ term }}</h3>
+    <h3 md-subheader class="gpa" *ngIf="showGrades">
+      Quarter {{ cigTranscriptTerm.gpa | number : '1.2-2' }} &middot; Cumulative {{ getCumulativeGpa(term) | number : '1.2-2' }}
+    </h3>
+  </div>
+  <div class="records" [ngClass]="{'hidden': !cigTranscriptTerm.expanded}">
+    <md-list-item cig-transcript-record
+        #cigTranscriptRecord="cigTranscriptRecord"
+        *ngFor="let record of cigTranscriptTerm.records"
+        [record]="record"
+        class="record">
+      <div class="id">{{ record.id }}</div>
+      <div class="name">{{ (courseInfoService.lookup(record.id) | async)?.name }}</div>
+      <div class="gpa" *ngIf="showGrades">{{ record.gpa | number : '1.2-2' }}</div>
+    </md-list-item>
+  </div>
 </md-list>

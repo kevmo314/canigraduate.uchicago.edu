@@ -1,8 +1,0 @@
-.record .id {
-  width: 100px;
-  flex-shrink: 0;
-}
-
-.record .name {
-  flex-grow: 1;
-}

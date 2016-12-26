@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Http, Response } from '@angular/http';
-
+import { CookieService } from 'angular2-cookie/core';
 import { Subject } from 'rxjs/Subject';
+
+import { environment } from 'environments/environment';
 
 /**
  * An authentication service. 
@@ -11,8 +13,14 @@ export class AuthenticationService extends Subject<{username: string, password: 
   private _data: {username: string, password: string} = null;
   private _valid: boolean = true;
   private _authenticated: boolean = false;
-  constructor(private http: Http) {
+  constructor(
+    private http: Http,
+    private cookieService: CookieService) {
     super();
+    const cookie = <{username: string, password: string}> this.cookieService.getObject(environment.cookieName);
+    if (cookie) {
+      setTimeout(() => this.next(cookie), 0);
+    }
   }
 
   get locked(): boolean {
@@ -48,11 +56,17 @@ export class AuthenticationService extends Subject<{username: string, password: 
 
   complete(): void {
     this._authenticated = true;
+    // Save the credentials to a cookie, clear the password if prod.
+    if (environment.production) {
+      this._data.password = null;
+    }
+    this.cookieService.putObject(environment.cookieName, this._data);
   }
 
   reset(): void {
     this._data = null;
     this._valid = true;
     this._authenticated = false;
+    this.cookieService.remove(environment.cookieName);
   }
 }
