@@ -1,3 +1,4 @@
 export const environment = {
-  production: true
+  production: true,
+  backend: 'http://canigraduate.uchicago.edu'
 };

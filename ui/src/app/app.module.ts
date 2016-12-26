@@ -5,6 +5,7 @@ import { HttpModule } from '@angular/http';
 import { MaterialModule } from '@angular/material';
 
 import { SidebarModule } from './sidebar/sidebar.module';
+import { TranscriptService } from './transcript/transcript.service';
 
 import { AppComponent } from './app.component';
 
@@ -19,7 +20,7 @@ import { AppComponent } from './app.component';
     SidebarModule,
     MaterialModule.forRoot()
   ],
-  providers: [],
+  providers: [TranscriptService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

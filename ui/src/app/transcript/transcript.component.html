@@ -1,0 +1,11 @@
+<md-list>
+  <ng-container *ngFor="let term of transcript.terms">
+    <md-divider></md-divider>
+    <h3 md-subheader>{{term}}</h3>
+    
+    <cig-transcript-record
+      *ngFor="let record of recordsForTerm(term)"
+      [record]="record">
+    </cig-transcript-record>
+  </ng-container>
+</md-list>

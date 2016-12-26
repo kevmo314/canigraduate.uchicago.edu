@@ -1,13 +1,23 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule }  from '@angular/platform-browser';
+import { ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from '@angular/material';
+
+import { AuthenticationService } from 'app/authentication/authentication.service';
+import { TranscriptModule } from 'app/transcript/transcript.module';
+import { TranscriptService } from 'app/transcript/transcript.service';
 
 import { SidebarComponent } from './sidebar.component';
 
 @NgModule({
   declarations: [SidebarComponent],
-  imports: [BrowserModule, MaterialModule.forRoot()],
+  imports: [
+    BrowserModule,
+    ReactiveFormsModule,
+    TranscriptModule,
+    MaterialModule.forRoot()
+  ],
   exports: [SidebarComponent],
-  providers: []
+  providers: [AuthenticationService, TranscriptService]
 })
 export class SidebarModule { }
