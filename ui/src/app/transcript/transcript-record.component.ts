@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 
+import { CourseInfoService } from 'app/course-info/course-info.service';
 import { TranscriptRecord } from './transcript-record';
 
 @Component({
@@ -8,7 +9,8 @@ import { TranscriptRecord } from './transcript-record';
   styleUrls: ['./transcript-record.component.css']
 })
 export class TranscriptRecordComponent {
-  constructor() {}
+  constructor(private courseInfoService: CourseInfoService) {}
 
   @Input() record: TranscriptRecord;
+  @Input() showGrades: boolean;
 }

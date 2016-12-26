@@ -2,4 +2,21 @@
 	margin: 0 12px;
 	margin-top: -24px;
 	height: 100%;
+	width: 540px;
+}
+
+.transcript { 
+	margin: 0 -24px;
+}
+
+.sidebar .header {
+	display: flex;
+}
+
+.sidebar .header .title {
+	flex-grow: 1;
+}
+
+.sidebar .header .grades-toggle {
+	margin: 0;
 }

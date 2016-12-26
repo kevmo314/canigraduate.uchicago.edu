@@ -1,10 +1,9 @@
 import { TranscriptRecord } from './transcript-record';
 
 export class Transcript {
-  /** A list of records, assumed to be chronologically ordered. */
   constructor(private _records: TranscriptRecord[]) {}
 
-  get records() { return this._records; }
+  get records(): TranscriptRecord[] { return this._records; }
 
   get terms(): string[] {
     const seen = new Set<string>();

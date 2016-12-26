@@ -1,0 +1,15 @@
+<md-divider></md-divider>
+<div class="subheader" (click)="expanded = !expanded">
+  <md-icon [ngClass]="{'flip': !expanded}">expand_more</md-icon>
+  <h3 md-subheader class="term">{{ term }}</h3>
+  <h3 md-subheader class="gpa" *ngIf="showGrades">
+    Quarter {{ gpa | number : '1.2-2' }} &middot; Cumulative {{ cumulativeGpa | number : '1.2-2' }}
+  </h3>
+</div>
+
+<div class="records"  [ngClass]="{'hidden': !expanded}">
+  <cig-transcript-record
+    *ngFor="let record of records"
+    [record]="record"
+    [showGrades]="showGrades"></cig-transcript-record>
+</div>

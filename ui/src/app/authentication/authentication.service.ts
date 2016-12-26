@@ -8,46 +8,50 @@ import { Subject } from 'rxjs/Subject';
  */
 @Injectable()
 export class AuthenticationService extends Subject<{username: string, password: string}> {
-  private _locked: boolean = false;
+  private _data: {username: string, password: string} = null;
   private _valid: boolean = true;
   private _authenticated: boolean = false;
-  constructor (private http: Http) {
+  constructor(private http: Http) {
     super();
   }
 
-  get locked() {
-    return this._locked;
+  get locked(): boolean {
+    return this._data != null;
   }
 
-  get valid() {
+  get valid(): boolean {
     return this._valid;
   }
 
-  get authenticated() {
+  get authenticated(): boolean {
     return this._authenticated;
   }
 
-  next(data: {username: string, password: string}) {
-    if (!this._locked) {
-      this._locked = true;
+  reauthenticate(password: string): boolean {
+    return this.locked && password === this._data['password'];
+  }
+
+  next(data: {username: string, password: string}): void {
+    if (!this.locked) {
+      this._data = data;
       this._valid = true;
       super.next(data);
     }
   }
   
-  error(err: any) {
-    this._locked = false;
+  error(err: any): void {
+    this._data = null;
     // Intercept error as we don't want to terminate the stream.
     // Instead, flag the state as invalid.
     this._valid = false;
   }
 
-  complete() {
+  complete(): void {
     this._authenticated = true;
   }
 
-  reset() {
-    this._locked = false;
+  reset(): void {
+    this._data = null;
     this._valid = true;
     this._authenticated = false;
   }

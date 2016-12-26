@@ -31,8 +31,14 @@
   </form>
 </md-card>
 <md-card class="sidebar" *ngIf="authenticationService.authenticated">
-  <md-card-title>Transcript</md-card-title>
-  <md-card-content>
-    <cig-transcript [transcript]="transcriptService.transcript"></cig-transcript>
+  <md-card-title class="header">
+    <div class="title">Transcript</div>
+    <md-slide-toggle (change)="toggleGrades($event)" class="grades-toggle">
+      Show Grades
+    </md-slide-toggle>
+  </md-card-title>
+  <md-card-content class="transcript">
+    <cig-transcript [transcript]="transcriptService.transcript"
+                    [showGrades]="showGrades"></cig-transcript>
   </md-card-content>
 </md-card>

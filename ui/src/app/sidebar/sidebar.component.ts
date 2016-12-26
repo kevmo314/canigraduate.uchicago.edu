@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
+import { MdDialog, MdSlideToggleChange } from '@angular/material';
+
 import { AuthenticationService } from 'app/authentication/authentication.service';
+import { ReauthenticationDialog } from 'app/authentication/reauthentication-dialog.component';
 import { TranscriptService } from 'app/transcript/transcript.service';
 
 @Component({
@@ -10,9 +13,11 @@ import { TranscriptService } from 'app/transcript/transcript.service';
 })
 export class SidebarComponent implements OnInit {
   private credentials: FormGroup;
+  showGrades: boolean = false;
   constructor(
     private transcriptService: TranscriptService,
-    private authenticationService: AuthenticationService) {}
+    private authenticationService: AuthenticationService,
+    private mdDialog: MdDialog) {}
   ngOnInit() {
     this.credentials = new FormGroup({
       username: new FormControl(),
@@ -21,5 +26,18 @@ export class SidebarComponent implements OnInit {
   }
   signIn({value, valid}: {value: {username: string, password: string}, valid: boolean}) {
     this.authenticationService.next(value);
+  }
+  toggleGrades(event: MdSlideToggleChange) {
+    if (!event.checked) {
+      this.showGrades = event.checked;
+    } else {
+      this.mdDialog.open(ReauthenticationDialog).afterClosed().subscribe(result => {
+        if(result) {
+          this.showGrades = event.checked;
+        } else {
+          event.source.checked = false;
+        }
+      });
+    }
   }
 }

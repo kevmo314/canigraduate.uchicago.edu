@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule }  from '@angular/platform-browser';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from '@angular/material';
 
 import { AuthenticationService } from 'app/authentication/authentication.service';
@@ -14,6 +14,7 @@ import { SidebarComponent } from './sidebar.component';
   imports: [
     BrowserModule,
     ReactiveFormsModule,
+    FormsModule,
     TranscriptModule,
     MaterialModule.forRoot()
   ],

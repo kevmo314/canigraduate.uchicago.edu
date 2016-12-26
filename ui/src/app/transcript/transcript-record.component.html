@@ -1,5 +1,5 @@
 <md-list-item class="record">
-  <div class="id">{{record.id}}</div>
-  <div class="name">{{record.name}}</div>
-  <div class="gpa">{{record.gpa}}</div>
+  <div class="id">{{ record.id }}</div>
+  <div class="name">{{ (courseInfoService.lookup(record.id) | async)?.name }}</div>
+  <div class="gpa" *ngIf="showGrades">{{ record.gpa | number : '1.2-2' }}</div>
 </md-list-item>
