@@ -12,5 +12,6 @@ export const environment = {
     databaseURL: "https://canigraduate-43286.firebaseio.com",
     storageBucket: "canigraduate-43286.appspot.com",
     messagingSenderId: "916201625926"
-  }
+  },
+  hmr: true
 };

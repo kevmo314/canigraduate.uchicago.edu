@@ -13,7 +13,7 @@ import { TranscriptService } from 'app/transcript/transcript.service';
 })
 export class SidebarComponent implements OnInit {
   private credentials: FormGroup;
-  showGrades: boolean = false;
+  showGrades: boolean = true;
   constructor(
     private transcriptService: TranscriptService,
     private authenticationService: AuthenticationService,

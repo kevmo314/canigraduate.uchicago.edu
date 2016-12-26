@@ -4,7 +4,7 @@
   "license": "MIT",
   "angular-cli": {},
   "scripts": {
-    "start": "ng serve",
+    "start": "ng serve --hmr",
     "lint": "tslint \"src/**/*.ts\"",
     "test": "ng test",
     "pree2e": "webdriver-manager update",
@@ -21,19 +21,20 @@
     "@angular/platform-browser": "^2.2.3",
     "@angular/platform-browser-dynamic": "^2.2.3",
     "@angular/router": "^3.2.3",
-    "angularfire2": "^2.0.0-beta.6",
+    "angularfire2": "2.0.0-beta.6",
     "core-js": "^2.4.1",
     "firebase": "^3.6.4",
     "hammerjs": "^2.0.8",
-    "rxjs": "^5.0.0-beta.12",
+    "rxjs": "^5.0.2",
     "ts-helpers": "^1.1.1",
-    "zone.js": "^0.6.23"
+    "zone.js": "^0.7.4"
   },
   "devDependencies": {
     "@angular/compiler-cli": "^2.2.3",
+    "@angularclass/hmr": "^1.2.2",
     "@types/jasmine": "^2.5.38",
     "@types/node": "^6.0.42",
-    "angular-cli": "1.0.0-beta.21",
+    "angular-cli": "1.0.0-beta.24",
     "angular-ide": "^0.9.10",
     "codelyzer": "^2.0.0-beta.1",
     "jasmine-core": "^2.5.2",

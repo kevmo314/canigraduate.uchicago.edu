@@ -33,7 +33,7 @@
 <md-card class="sidebar" *ngIf="authenticationService.authenticated">
   <md-card-title class="header">
     <div class="title">Transcript</div>
-    <md-slide-toggle (change)="toggleGrades($event)" class="grades-toggle">
+    <md-slide-toggle (change)="toggleGrades($event)" [checked]="showGrades" class="grades-toggle">
       Show Grades
     </md-slide-toggle>
   </md-card-title>
