@@ -17,13 +17,16 @@ export class RequirementLeafDirective extends RequirementNodeComponent {
   @Input() requirement: string;
 
   satisfier: string = null;
-
   force: boolean = false;
 
   constructor(
     private courseInfoService: CourseInfoService,
     private angularFire: AngularFire) {
     super();
+  }
+
+  get complete(): boolean {
+    return this.satisfier !== null;
   }
 
   get paddedId(): string {

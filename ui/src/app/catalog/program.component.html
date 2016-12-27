@@ -1,12 +1,12 @@
 <md-card class="program">
   <md-card-header>
     <div md-card-avatar class="example-header-image"></div>
-    <md-card-title class="header">{{name}}</md-card-title>
+    <md-card-title class="header">{{program[0]}}</md-card-title>
     <md-card-subtitle>
-      <a [href]="programs.get(name).metadata.catalog" target="_blank">College Catalog</a>
+      <a [href]="program[1].metadata.catalog" target="_blank">College Catalog</a>
     </md-card-subtitle>
   </md-card-header>
   <md-card-content>
-    <cig-requirement-node *ngFor="let requirement of programs.get(name).requirements" [requirement]="requirement"></cig-requirement-node>
+    <cig-requirement-node *ngFor="let requirement of program[1].requirements" [requirement]="requirement"></cig-requirement-node>
   </md-card-content>
 </md-card>

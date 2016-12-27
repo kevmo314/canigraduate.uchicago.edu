@@ -11,6 +11,10 @@ import { CrosslistInvariantPrefixMultiSet } from 'app/course-info/crosslist-inva
 export class RequirementNodeComponent {
   @Input() requirement: any;
 
+  force: boolean = false;
+  complete: boolean = false;
+  hide: boolean = false;
+
   @ViewChildren(RequirementNodeComponent) children: QueryList<RequirementNodeComponent>;
 
   get isLeaf(): boolean {
@@ -27,8 +31,11 @@ export class RequirementNodeComponent {
    * @param {Transcript} transcript the original transcript.
    * @param {CrosslistInvariantPrefixMultiSet} state a set representing the current progression state.
    */
-  async evaluateTranscriptRecords(transcript: Transcript, state: CrosslistInvariantPrefixMultiSet): Promise<{progress: number, remaining: number}> {
-    if (!this.requirement) {
+  async evaluateTranscriptRecords(
+      transcript: Transcript,
+      state: CrosslistInvariantPrefixMultiSet): Promise<{progress: number, remaining: number}> {
+    const children = this.requirement.requirements;
+    if (!children) {
       // This is a metadata leaf node that doesn't require progression.
       return {progress: 0, remaining: 0};
     }
@@ -38,9 +45,25 @@ export class RequirementNodeComponent {
     let completedChildren = 0;
     // The number of courses required to complete this subtree.
     let total = 0;
-    for (let childRequirement of this.requirement) {
-      let {progress: childProgress, remaining: childRemaining} = await childRequirement.evaluateTranscriptRecords(transcript, state);
+    for (let i = 0; i < children.length; i++) {
+      let child = await children[i].evaluateTranscriptRecords(transcript, state);
+      // If the index is less than the min count, add that node's requirement count to the cap
+      // to accumulate how many classes we need to finish this node.
+      if (i < (this.requirement.min || children.length)) {
+        total += child.progress + child.remaining;
+      }
+      progressions.push(child);
+      if (child.remaining === 0 && (++completedChildren === (this.requirement.max || children.length))) {
+        // We've exceeded the max limit for completed children, so stop here.
+        break;
+      }
     }
+    progressions.sort((a, b) => b.progress - a.progress);
+    let progress = this.force ? total : progressions.reduce((sum, x) => sum + x.progress, 0);
+    this.complete = (completedChildren >= (this.requirement.min || children.length));
+    // Only set hide to true explicitly, otherwise it's whatever metadata.hide is set to.
+    this.hide = this.complete || this.requirement.metadata.hide;
+    return {progress: progress, remaining: total - progress};
   }
 
 }
