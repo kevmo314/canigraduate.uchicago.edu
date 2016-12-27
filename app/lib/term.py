@@ -2,8 +2,8 @@ import bs4
 import functools
 import requests
 
-from timeschedules_parser import TimeSchedules
-from coursesearch_parser import CourseSearch
+from .timeschedules_parser import TimeSchedules
+from .coursesearch_parser import CourseSearch
 
 @functools.total_ordering
 class Term(object):
@@ -16,7 +16,9 @@ class Term(object):
         timeschedules = bs4.BeautifulSoup(requests.get('http://timeschedules.uchicago.edu/browse.php').text, 'lxml')
         for option in timeschedules.find('select', {'id': 'term_name'}).find_all('option'):
             if option.has_attr('value'):
-                yield TimeSchedulesTerm(id=option.getText(), timeschedules_id=option['value'])
+                term = TimeSchedulesTerm(id=option.getText(), timeschedules_id=option['value'])
+                if term.parsable:
+                    yield term
         coursesearch = bs4.BeautifulSoup(requests.get('https://coursesearch.uchicago.edu/psc/prdguest/EMPLOYEE/HRMS/c/UC_STUDENT_RECORDS_FL.UC_CLASS_SEARCH_FL.GBL').text, 'lxml')
         for option in coursesearch.find('select', {'id': 'UC_CLSRCH_WRK2_STRM'}).find_all('option'):
             if option.has_attr('value') and option['value']:
@@ -60,7 +62,11 @@ class TimeSchedulesTerm(Term):
 
     @property
     def courses(self):
-        return TimeSchedulesParser(self.timeschedules_id).courses
+        return TimeSchedules(self.timeschedules_id).courses
+
+    @property
+    def parsable(self):
+        return self.ordinal > Term('Summer 2002').ordinal
 
     def __str__(self):
         return '%s (%s)' % (self.id, self.timeschedules_id)

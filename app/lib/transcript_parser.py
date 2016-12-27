@@ -1,11 +1,11 @@
 import bs4
 import requests
 
-from course import Course
-from grade import Grade
-from section import Section
-from term import Term
-from transcript_record import TranscriptRecord
+from .course import Course
+from .grade import Grade
+from .section import Section
+from .term import Term
+from .transcript_record import TranscriptRecord
 
 class TranscriptParser(object):
     def __init__(self, username, password):

@@ -4,9 +4,9 @@ import multiprocessing
 import re
 import requests
 
-from course import Course
-from section import Section
-from activity import PrimaryActivity, SecondaryActivity
+from .course import Course
+from .section import Section
+from .activity import PrimaryActivity, SecondaryActivity
 
 class FSM(object):
     def __init__(self, cells):
@@ -40,6 +40,8 @@ class FSM(object):
         enrollment_limit = self.next_string()
         location = self.next_string()
         self.index += 3
+        if name == 'CANCELLED':
+            raise ValueError()
         return Course(id='%s %s' % (data[0], data[1])), Section(
                 id=data[2],
                 name=name,
@@ -116,6 +118,7 @@ class TimeSchedules(object):
         p = multiprocessing.Pool(10)
         for page in p.map(parse_page, re.findall(r'view\.php\?dept=.+?&term=' + self.id, department_page)):
             results.update(page)
+        p.close()
         return results
 
 if __name__ == '__main__':
