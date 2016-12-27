@@ -8,11 +8,11 @@ import { AuthenticationService } from './authentication.service';
   templateUrl: './reauthentication-dialog.component.html',
   styleUrls: ['./reauthentication-dialog.component.css']
 })
-export class ReauthenticationDialog {
+export class ReauthenticationDialogComponent {
   password: string;
   private _valid: boolean = true;
   constructor(
-    private mdDialogRef: MdDialogRef<ReauthenticationDialog>,
+    private mdDialogRef: MdDialogRef<ReauthenticationDialogComponent>,
     private authenticationService: AuthenticationService) {}
   get valid() { return this._valid; }
   submit(): void {

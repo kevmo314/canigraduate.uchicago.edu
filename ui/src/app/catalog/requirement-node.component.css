@@ -1,0 +1,7 @@
+.leaf {
+  display: flex;
+}
+
+.node {
+  padding-left: 8px;
+}

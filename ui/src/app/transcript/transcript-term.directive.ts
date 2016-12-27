@@ -3,7 +3,7 @@ import { Directive, Input } from '@angular/core';
 import { CourseInfoService } from 'app/course-info/course-info.service';
 import { TranscriptRecord } from './transcript-record';
 
-@Directive({selector: '[cig-transcript-term]', exportAs: 'cigTranscriptTerm'})
+@Directive({ selector: '[cigTranscriptTerm]', exportAs: 'cigTranscriptTerm' })
 export class TranscriptTermDirective {
   @Input() records: TranscriptRecord[];
   @Input() expanded: boolean = false;

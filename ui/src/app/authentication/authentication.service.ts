@@ -46,7 +46,7 @@ export class AuthenticationService extends Subject<{username: string, password: 
       super.next(data);
     }
   }
-  
+
   error(err: any): void {
     this._data = null;
     // Intercept error as we don't want to terminate the stream.

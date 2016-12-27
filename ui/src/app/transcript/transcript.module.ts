@@ -7,7 +7,7 @@ import { AuthenticationModule } from 'app/authentication/authentication.module';
 import { AuthenticationService } from 'app/authentication/authentication.service';
 import { CourseInfoModule } from 'app/course-info/course-info.module';
 import { CourseInfoService } from 'app/course-info/course-info.service';
-import { ReauthenticationDialog } from 'app/authentication/reauthentication-dialog.component';
+import { ReauthenticationDialogComponent } from 'app/authentication/reauthentication-dialog.component';
 
 import { TranscriptComponent } from './transcript.component';
 import { TranscriptRecordDirective } from './transcript-record.directive';
@@ -29,6 +29,6 @@ import { TranscriptService } from './transcript.service';
   ],
   exports: [TranscriptComponent],
   providers: [AuthenticationService, CourseInfoService],
-  entryComponents: [ReauthenticationDialog],
+  entryComponents: [ReauthenticationDialogComponent],
 })
 export class TranscriptModule { }

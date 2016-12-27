@@ -1,9 +1,7 @@
-import { Component, Input } from '@angular/core';
-
-import { CourseInfoService } from 'app/course-info/course-info.service';
-
 import { Transcript } from './transcript';
 import { TranscriptRecord } from './transcript-record';
+import { Component, Input } from '@angular/core';
+import { CourseInfoService } from 'app/course-info/course-info.service';
 
 @Component({
   selector: 'cig-transcript',
@@ -11,15 +9,13 @@ import { TranscriptRecord } from './transcript-record';
   styleUrls: ['./transcript.component.css']
 })
 export class TranscriptComponent {
-  constructor(private courseInfoService: CourseInfoService) {}
-
   @Input() transcript: Transcript;
-
   @Input() showGrades: boolean;
+  constructor(private courseInfoService: CourseInfoService) { }
 
   // TODO: See if this can be moved to transcript.ts via a groupByTerm().
   getRecords(term: string): TranscriptRecord[] {
-    return this.transcript.records.filter(r => r.term == term);
+    return this.transcript.records.filter(r => r.term === term);
   }
 
   /**
@@ -28,16 +24,16 @@ export class TranscriptComponent {
    * @returns number
    */
   getCumulativeGpa(term: string): number {
-    let visited: boolean = false; // true if we've visited the target term.
-    let total: number = 0.0;
-    let count: number = 0;
-    for(let record of this.transcript.records) {
-      if(record.term == term) {
+    let visited = false; // true if we've visited the target term.
+    let total = 0.0;
+    let count = 0;
+    for (let record of this.transcript.records) {
+      if (record.term === term) {
         visited = true;
-      } else if(visited) { // Now on the quarter after the desired term.
+      } else if (visited) { // Now on the quarter after the desired term.
         break;
       }
-      if(record.gpa !== null) {
+      if (record.gpa !== null) {
         total += record.gpa;
         count++;
       }

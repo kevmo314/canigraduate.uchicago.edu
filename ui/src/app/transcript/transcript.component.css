@@ -5,6 +5,7 @@
 .record .id {
   width: 100px;
   flex-shrink: 0;
+  text-align: right;
 }
 
 .record .name {
@@ -23,6 +24,10 @@
 
 .subheader md-icon.flip {
   transform: rotate(-180deg);
+}
+
+.subheader md-icon.right {
+  transform: rotate(-90deg);
 }
 
 .subheader h3[md-subheader] {

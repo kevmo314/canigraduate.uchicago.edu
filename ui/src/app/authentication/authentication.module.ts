@@ -7,10 +7,10 @@ import { MaterialModule } from '@angular/material';
 import { CookieService } from 'angular2-cookie/services/cookies.service';
 
 import { AuthenticationService } from './authentication.service';
-import { ReauthenticationDialog } from './reauthentication-dialog.component';
+import { ReauthenticationDialogComponent } from './reauthentication-dialog.component';
 
 @NgModule({
-  declarations: [ReauthenticationDialog],
+  declarations: [ReauthenticationDialogComponent],
   imports: [
     BrowserModule,
     HttpModule,

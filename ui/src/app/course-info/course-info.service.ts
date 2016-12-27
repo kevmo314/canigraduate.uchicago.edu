@@ -1,24 +1,20 @@
 import { Injectable } from '@angular/core';
-import { Http, Response } from '@angular/http';
-
 import { AngularFire, FirebaseObjectObservable } from 'angularfire2';
+import { Memoize } from 'typescript-memoize';
 import { Subject } from 'rxjs/Subject';
+import { ReplaySubject } from 'rxjs/ReplaySubject';
 
 /**
  * An authentication service. 
  */
 @Injectable()
 export class CourseInfoService {
-  private _cache: Map<string, FirebaseObjectObservable<{name: string}>>;
-  constructor(
-    private angularFire: AngularFire) {
-      this._cache = new Map<string, FirebaseObjectObservable<{name: string}>>();
-    }
+  constructor(private angularFire: AngularFire) {}
 
-  lookup(id: string): FirebaseObjectObservable<{name: string}> {
-    if (!this._cache.has(id)) {
-      this._cache.set(id, this.angularFire.database.object('/course-info/' + id));
-    }
-    return this._cache.get(id);
+  @Memoize()
+  lookup(id: string): Subject<{name: string}> {
+    const behaviorSubject = new ReplaySubject(1);
+    this.angularFire.database.object('/course-info/' + id).subscribe(behaviorSubject);
+    return behaviorSubject;
   }
 }
