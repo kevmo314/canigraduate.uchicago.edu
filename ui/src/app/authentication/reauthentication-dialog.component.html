@@ -1,0 +1,20 @@
+<h2 md-dialog-title>Reauthenticate</h2>
+<form (submit)="submit()">
+  <md-dialog-content>
+    <div>Please re-enter your CNetID password</div>
+    <md-input-container [dividerColor]="valid ? null : 'warn'" class="password-input">
+      <input
+        md-input
+        type="password"
+        [(ngModel)]="password"
+        name="password"
+        required
+        placeholder="Password">
+      <md-hint [ngStyle]="{'color': 'red'}" *ngIf="!valid">Password does not match</md-hint>
+    </md-input-container>
+  </md-dialog-content>
+  <md-dialog-actions>
+    <button md-raised-button color="primary">Submit</button>
+    <button md-button md-dialog-close>Cancel</button>
+  </md-dialog-actions>
+</form>

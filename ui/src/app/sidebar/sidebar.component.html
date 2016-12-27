@@ -1,0 +1,31 @@
+<md-card class="sidebar" *ngIf="!authenticationService.authenticated">
+  <form (ngSubmit)="signIn(credentials)" [formGroup]="credentials">
+    <md-card-title>Sign In</md-card-title>
+    <md-card-content>
+      <p><strong>Can I Graduate?</strong> works better if you're signed in. Enter your UChicago CNetID and password to import your data from AIS.</p>
+      <md-input-container [dividerColor]="authenticationService.valid ? null : 'warn'">
+        <input md-input placeholder="CNetID" formControlName="username" required>
+        <md-hint *ngIf="!authenticationService.valid" [ngStyle]="{'color': 'red'}">Invalid CNetID or password.</md-hint>
+      </md-input-container>
+      <md-input-container [dividerColor]="authenticationService.valid ? null : 'warn'">
+        <input md-input placeholder="Password" required type="password" formControlName="password">
+      </md-input-container>
+    </md-card-content>
+    <md-card-actions>
+      <button type="submit" md-raised-button color="primary" [attr.disabled]="authenticationService.locked ? true : null">
+        Sign In
+      </button> or don't.
+    </md-card-actions>
+  </form>
+</md-card>
+<md-card class="sidebar transcript" *ngIf="authenticationService.authenticated">
+  <md-card-title class="header">
+    <div class="title">Transcript</div>
+    <md-slide-toggle (change)="toggleGrades($event)" [checked]="showGrades" class="grades-toggle">
+      Show Grades
+    </md-slide-toggle>
+  </md-card-title>
+  <md-card-content>
+    <cig-transcript [transcript]="transcriptService.transcript | async" [showGrades]="showGrades"></cig-transcript>
+  </md-card-content>
+</md-card>

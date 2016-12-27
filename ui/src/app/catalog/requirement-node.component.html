@@ -1,0 +1,13 @@
+<div cigRequirementLeaf #leaf="cigRequirementLeaf" *ngIf="isLeaf" class="leaf" [requirement]="requirement">
+  <!-- Render a leaf node. -->
+  <div class="id">{{leaf.paddedId}}</div>
+  <cig-course-name *ngIf="!leaf.isWildcardElective" class="name" [course]="leaf.id"></cig-course-name>
+  <div *ngIf="leaf.isWildcardElective">Elective</div>
+</div>
+<div *ngIf="!isLeaf">
+  <!-- Render a recursive node. -->
+  <div>Min {{requirement?.min || requirement.requirements.length}} - Max {{requirement?.max || requirement.requirements.length}}</div>
+  <div class="node">
+    <cig-requirement-node *ngFor="let child of requirement.requirements" [requirement]="child"></cig-requirement-node>
+  </div>
+</div>

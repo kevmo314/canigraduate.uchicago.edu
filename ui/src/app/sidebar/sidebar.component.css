@@ -1,0 +1,22 @@
+.sidebar {
+  margin: 0 12px;
+  margin-top: -24px;
+  width: 540px;
+  padding-bottom: 0;
+}
+
+.sidebar.transcript md-card-content {
+  margin: 0 -24px;
+}
+
+.sidebar .header {
+  display: flex;
+}
+
+.sidebar .header .title {
+  flex-grow: 1;
+}
+
+.sidebar .header .grades-toggle {
+  margin: 0;
+}
