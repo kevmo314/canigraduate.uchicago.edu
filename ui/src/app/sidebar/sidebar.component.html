@@ -26,6 +26,6 @@
     </md-slide-toggle>
   </md-card-title>
   <md-card-content>
-    <cig-transcript [transcript]="transcriptService.transcript" [showGrades]="showGrades"></cig-transcript>
+    <cig-transcript [transcript]="transcriptService.transcript | async" [showGrades]="showGrades"></cig-transcript>
   </md-card-content>
 </md-card>

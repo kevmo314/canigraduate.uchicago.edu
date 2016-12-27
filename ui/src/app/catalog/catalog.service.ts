@@ -1,15 +1,14 @@
 import { Injectable } from '@angular/core';
 import { AngularFire, FirebaseObjectObservable } from 'angularfire2';
+import { Memoize } from 'typescript-memoize';
 
 /** Course catalog information service. */
 @Injectable()
 export class CatalogService {
-  private _programs: FirebaseObjectObservable<any>;
-  constructor(
-    private angularFire: AngularFire) {
-      this._programs = this.angularFire.database.object('/programs');
-    }
+  constructor(private angularFire: AngularFire) {}
+
+  @Memoize()
   get programs(): FirebaseObjectObservable<any> {
-    return this._programs;
+    return this.angularFire.database.object('/programs');
   }
 }

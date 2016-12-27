@@ -3,6 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AngularFireModule } from 'angularfire2';
 import { CourseNameComponent } from './course-name.component';
 import { environment } from 'environments/environment';
+import { CrosslistInvariantPrefixMultiSet } from './crosslist-invariant-prefix-multi-set';
 
 @NgModule({
   declarations: [CourseNameComponent],
@@ -10,7 +11,7 @@ import { environment } from 'environments/environment';
     BrowserModule,
     AngularFireModule.initializeApp(environment.firebaseConfig)
   ],
-  exports: [CourseNameComponent],
+  exports: [CourseNameComponent, CrosslistInvariantPrefixMultiSet],
   providers: [],
 })
 export class CourseInfoModule { }

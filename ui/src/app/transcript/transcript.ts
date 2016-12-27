@@ -1,6 +1,10 @@
 import { TranscriptRecord } from './transcript-record';
 
 export class Transcript {
+  static deserialize(data: any): Transcript {
+    return new Transcript(data.map(TranscriptRecord.deserialize));
+  }
+
   constructor(private _records: TranscriptRecord[]) {}
 
   get records(): TranscriptRecord[] { return this._records; }
@@ -14,9 +18,5 @@ export class Transcript {
       }
       return accumulator;
     }, []);
-  }
-
-  static deserialize(data: any): Transcript {
-    return new Transcript(data.map(TranscriptRecord.deserialize));
   }
 }
