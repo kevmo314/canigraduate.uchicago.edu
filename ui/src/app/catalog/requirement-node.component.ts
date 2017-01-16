@@ -1,24 +1,61 @@
 import { Transcript } from '../transcript/transcript';
 import { TranscriptRecord } from '../transcript/transcript-record';
-import { Component, Input, QueryList, ViewChildren } from '@angular/core';
+import { Component, Input, QueryList, ViewChildren, OnInit, AfterViewInit } from '@angular/core';
 import { CrosslistInvariantPrefixMultiSet } from 'app/course-info/crosslist-invariant-prefix-multi-set';
+import { Observable } from 'rxjs/Observable';
 
 @Component({
   selector: 'cig-requirement-node',
   templateUrl: './requirement-node.component.html',
   styleUrls: ['./requirement-node.component.css']
 })
-export class RequirementNodeComponent {
+export class RequirementNodeComponent implements OnInit, AfterViewInit {
   @Input() requirement: any;
 
   force: boolean = false;
-  complete: boolean = false;
+  completedChildren: number = 0;
   hide: boolean = false;
+  private _initPromise: Promise<void>;
+  private _initResolver: () => void;
 
   @ViewChildren(RequirementNodeComponent) children: QueryList<RequirementNodeComponent>;
 
+  constructor() {
+    this._initPromise = new Promise<void>((resolve, reject) => {
+      this._initResolver = resolve;
+    });
+  }
+
+  ngOnInit() {
+    if (!this.requirement) {
+      throw new Error('Attribute "requirement" is required');
+    }
+  }
+
+  ngAfterViewInit() {
+    this._initResolver();
+  }
+
   get isLeaf(): boolean {
     return typeof this.requirement === 'string';
+  }
+
+  get complete(): boolean {
+    return this.completedChildren >= this.minRequire;
+  }
+
+  /** The lowest number of courses that can satisfy this node. */
+  get minRequire(): number {
+    if (this.isLeaf) {
+      return 1;
+    }
+    if (this.requirement.min) {
+      return this.requirement.min;
+    }
+    if (this.requirement.requirements) {
+      return this.requirement.requirements.length;
+    }
+    return 0;
   }
 
   /**
@@ -29,41 +66,49 @@ export class RequirementNodeComponent {
    * TODO: This can possibly be extended to return an iterator that returns progression proposals.
    * 
    * @param {Transcript} transcript the original transcript.
-   * @param {CrosslistInvariantPrefixMultiSet} state a set representing the current progression state.
+   * @param {Set<string>} state a set representing the current progression state.
    */
-  async evaluateTranscriptRecords(
+  evaluateTranscriptRecords(
       transcript: Transcript,
-      state: CrosslistInvariantPrefixMultiSet): Promise<{progress: number, remaining: number}> {
-    const children = this.requirement.requirements;
-    if (!children) {
-      // This is a metadata leaf node that doesn't require progression.
-      return {progress: 0, remaining: 0};
-    }
-    // The list of child progress objects.
-    let progressions = [];
-    // The raw number of child nodes completed.
-    let completedChildren = 0;
-    // The number of courses required to complete this subtree.
-    let total = 0;
-    for (let i = 0; i < children.length; i++) {
-      let child = await children[i].evaluateTranscriptRecords(transcript, state);
-      // If the index is less than the min count, add that node's requirement count to the cap
-      // to accumulate how many classes we need to finish this node.
-      if (i < (this.requirement.min || children.length)) {
-        total += child.progress + child.remaining;
+      state: Set<string>): Promise<{ progress: number, total: number }> {
+    return this._initPromise.then(() => {
+      if (!this.children) {
+        // This is a metadata leaf node that doesn't require progression.
+        return { progress: 0, total: 0 };
       }
-      progressions.push(child);
-      if (child.remaining === 0 && (++completedChildren === (this.requirement.max || children.length))) {
-        // We've exceeded the max limit for completed children, so stop here.
-        break;
-      }
-    }
-    progressions.sort((a, b) => b.progress - a.progress);
-    let progress = this.force ? total : progressions.reduce((sum, x) => sum + x.progress, 0);
-    this.complete = (completedChildren >= (this.requirement.min || children.length));
-    // Only set hide to true explicitly, otherwise it's whatever metadata.hide is set to.
-    this.hide = this.complete || this.requirement.metadata.hide;
-    return {progress: progress, remaining: total - progress};
+      // The list of child progress objects.
+      let progressions = [];
+      // The raw number of child nodes completed.
+      this.completedChildren = 0;
+      // The number of courses required to complete this subtree.
+      let total = 0;
+      const children = this.children.toArray();
+      // QueryList is supposed to extend Iterable but for some reason it doesn't.
+      const evaluateChildAtIndex = (index: number) => {
+        if (index === this.children.length) {
+          return Promise.resolve();
+        }
+        return children[index].evaluateTranscriptRecords(transcript, state).then(result => {
+          if (index < (this.requirement.min || this.children.length)) {
+            total += result.total;
+          }
+          progressions.push(result);
+          if (result.progress === result.total && (++this.completedChildren === (this.requirement.max || this.children.length))) {
+            // We've exceeded the max limit for completed children, so stop evaluating here.
+            return;
+          } else {
+            // Evaluate the next child.
+            return evaluateChildAtIndex(index + 1);
+          }
+        });
+      };
+      return evaluateChildAtIndex(0).then(() => {
+        progressions.sort((a, b) => b.progress - a.progress);
+        let progress = this.force ? total : progressions.reduce((sum, x) => sum + x.progress, 0);
+        // Only set hide to true explicitly, otherwise it's whatever metadata.hide is set to.
+        this.hide = this.complete || (this.requirement.metadata && this.requirement.metadata.hide);
+        return { progress, total };
+      });
+    });
   }
-
 }

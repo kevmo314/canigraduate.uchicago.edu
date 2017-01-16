@@ -7,30 +7,24 @@ import { Observable } from 'rxjs/Observable';
 
 @Component({
   selector: 'cig-catalog',
-  template: `<cig-program *ngFor="let program of majors" [program]="program"></cig-program>`,
+  template: `<cig-program *ngFor="let program of majors" [title]="program[0]" [program]="program[1]"></cig-program>`,
   styleUrls: ['./catalog.component.css']
 })
 export class CatalogComponent {
-  programs: Map<string, any> = new Map<string, any>();
-
+  majors: [string, any][] = [];
+  minors: [string, any][] = [];
   progress: Map<string, {completed: number, remaining: number}>;
 
   constructor(
     private catalogService: CatalogService,
     private transcriptService: TranscriptService) {
     this.catalogService.programs.subscribe(data => {
-      this.programs.clear();
+      const programs = new Map<string, any>();
       for (let key of Object.keys(data).filter(x => !x.startsWith('$')).sort()) {
-        this.programs.set(key, data[key]);
+        programs.set(key, data[key]);
       }
+      this.majors = Array.from(programs.entries()).filter(x => !x[0].endsWith('Minor'));
+      this.minors = Array.from(programs.entries()).filter(x => x[0].endsWith('Minor'));
     });
-  }
-
-  get majors(): [string, any][] {
-    return Array.from(this.programs.entries()).filter(x => !x[0].endsWith('Minor'));
-  }
-
-  get minors(): [string, any][] {
-    return Array.from(this.programs.entries()).filter(x => x[0].endsWith('Minor'));
   }
 }

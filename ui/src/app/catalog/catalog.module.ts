@@ -2,6 +2,7 @@ import { CourseInfoModule } from 'app/course-info/course-info.module';
 import { RequirementLeafDirective } from './requirement-leaf.directive';
 import { RequirementNodeComponent } from './requirement-node.component';
 import { CatalogComponent } from './catalog.component';
+import { ProgramComponent } from './program.component';
 import { NgModule } from '@angular/core';
 import { HttpModule } from '@angular/http';
 import { MaterialModule } from '@angular/material';
@@ -12,6 +13,7 @@ import { environment } from 'environments/environment';
 @NgModule({
   declarations: [
     CatalogComponent,
+    ProgramComponent,
     RequirementNodeComponent,
     RequirementLeafDirective
   ],
@@ -23,7 +25,7 @@ import { environment } from 'environments/environment';
     AngularFireModule.initializeApp(environment.firebaseConfig)
   ],
   exports: [
-    CatalogComponent, RequirementNodeComponent
+    CatalogComponent, ProgramComponent, RequirementNodeComponent
   ],
   providers: [],
 })

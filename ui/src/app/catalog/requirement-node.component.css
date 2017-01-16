@@ -2,6 +2,10 @@
   display: flex;
 }
 
+.leaf .id {
+  width: 120px;
+}
+
 .node {
-  padding-left: 8px;
+  padding: 8px;
 }

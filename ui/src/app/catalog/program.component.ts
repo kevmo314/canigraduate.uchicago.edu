@@ -4,9 +4,8 @@ import { Transcript } from '../transcript/transcript';
 import { TranscriptService } from '../transcript/transcript.service';
 import { RequirementNodeComponent } from './requirement-node.component';
 import { CatalogService } from './catalog.service';
-import { Component, ViewChildren, QueryList, AfterViewInit, Input } from '@angular/core';
+import { Component, ViewChild, QueryList, AfterViewInit, Input } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
-import { CrosslistInvariantPrefixMultiSet } from '../course-info/crosslist-invariant-prefix-multi-set';
 
 @Component({
   selector: 'cig-program',
@@ -14,8 +13,9 @@ import { CrosslistInvariantPrefixMultiSet } from '../course-info/crosslist-invar
   styleUrls: ['./program.component.css']
 })
 export class ProgramComponent implements AfterViewInit {
-  @Input() program: [string, any];
-  @ViewChildren(RequirementNodeComponent) children: QueryList<RequirementNodeComponent>;
+  @Input() title: string;
+  @Input() program: any;
+  @ViewChild(RequirementNodeComponent) requirementNodeComponent: RequirementNodeComponent;
 
   private _progress = 0;
   private _remaining = 0;
@@ -31,19 +31,15 @@ export class ProgramComponent implements AfterViewInit {
   get progress() { return this._progress; }
   get remaining() { return this._remaining; }
 
-  private async evaluateTranscript(transcript: Transcript) {
+  private evaluateTranscript(transcript: Transcript) {
     this._progress = 0;
     this._remaining = 0;
     this._coursesUsed.length = 0;
-    const coursesTaken =
-        new CrosslistInvariantPrefixMultiSet(this.courseInfoService, transcript.records.map(r => r.id));
-    for (let child of this.children.toArray()) {
-      let {progress: childProgress, remaining: childRemaining} =
-          await child.evaluateTranscriptRecords(transcript, coursesTaken);
-      this._progress += childProgress;
-      this._remaining += childRemaining;
-    }
-    // The courses used are those that no longer appear in coursesTaken.
-    this._coursesUsed = transcript.records.filter(r => !coursesTaken.has(r.id));
+    // TODO: Remove records that are in the same crosslist equivalence class.
+    const coursesTaken = new Set(transcript.records.map(r => r.id));
+    this.requirementNodeComponent.evaluateTranscriptRecords(transcript, coursesTaken).then(state => {
+      // The courses used are those that no longer appear in coursesTaken.
+      this._coursesUsed = transcript.records.filter(r => !coursesTaken.has(r.id));
+    });
   }
 }
