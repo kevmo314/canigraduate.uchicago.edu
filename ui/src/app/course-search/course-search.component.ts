@@ -1,7 +1,6 @@
 import { CourseInfoService } from '../course-info/course-info.service';
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
-
-const UNKNOWN_COURSE_NAME = 'Unknown';
+import { Filters } from './filters';
 
 @Component({
   selector: 'cig-course-search',
@@ -9,5 +8,5 @@ const UNKNOWN_COURSE_NAME = 'Unknown';
   styleUrls: ['./course-search.component.css']
 })
 export class CourseSearchComponent {
-    
+  filters: Filters = new Filters();
 }
