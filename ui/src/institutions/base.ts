@@ -2,6 +2,10 @@
  * Generic course specification interface.
  */
 export type Base = {
+    /** The name to display for this institution. */
+    name: string,
+    /** The CSS class to use for theming. */
+    theme: string,
     /**
      * Get the department of a given course id string.
      * @param id The course id to identify.

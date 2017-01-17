@@ -17,16 +17,12 @@
       "tsconfig": "tsconfig.json",
       "prefix": "app",
       "mobile": false,
-      "styles": [
-        "styles.css"
-      ],
-      "scripts": [
-        "../node_modules/hammerjs/hammer.min.js"
-      ],
+      "styles": ["styles.scss"],
+      "scripts": ["../node_modules/hammerjs/hammer.min.js"],
       "environments": {
         "source": "environments/environment.ts",
         "dev": "environments/environment.ts",
-        "prod": "environments/environment.prod.ts"
+        "uchicago": "environments/environment.uchicago.ts"
       }
     }
   ],
@@ -43,7 +39,7 @@
     }
   },
   "defaults": {
-    "styleExt": "css",
+    "styleExt": "scss",
     "prefixInterfaces": false,
     "inline": {
       "style": false,

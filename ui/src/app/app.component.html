@@ -1,19 +1,20 @@
-<md-toolbar color="primary">
-  Can I Graduate?
-</md-toolbar>
-<div class="body">
-  <md-tab-group class="content">
-    <md-tab label="Catalog">
-      <cig-catalog></cig-catalog>
-    </md-tab>
-    <md-tab label="Course Search">
-      <h1>Some more tab content</h1>
-      <p>...</p>
-    </md-tab>
-    <md-tab label="Watches">
-      <h1>Some more tab content</h1>
-      <p>...</p>
-    </md-tab>
-  </md-tab-group>
-  <cig-sidebar></cig-sidebar>
+<div class="theme {{institutionTheme}}">
+  <md-toolbar color="primary">
+    Can I Graduate? - {{institutionName}}
+  </md-toolbar>
+  <div class="body">
+    <md-tab-group [selectedIndex]="selectedIndex" class="content" (selectChange)="changeTab($event)">
+      <md-tab label="Catalog">
+        <router-outlet name="catalog"></router-outlet>
+      </md-tab>
+      <md-tab label="Course Search">
+        <router-outlet name="search"></router-outlet>
+      </md-tab>
+      <md-tab label="Watches">
+        <h1>Some more tab content</h1>
+        <p>...</p>
+      </md-tab>
+    </md-tab-group>
+    <cig-sidebar></cig-sidebar>
+  </div>
 </div>

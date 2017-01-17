@@ -18,7 +18,7 @@ export class ProgramComponent implements AfterViewInit {
   @ViewChild(RequirementNodeComponent) requirementNodeComponent: RequirementNodeComponent;
 
   private _progress = 0;
-  private _remaining = 0;
+  private _total = 0;
   private _coursesUsed: TranscriptRecord[] = [];
 
   constructor(private transcriptService: TranscriptService, private courseInfoService: CourseInfoService) {}
@@ -27,18 +27,18 @@ export class ProgramComponent implements AfterViewInit {
     this.transcriptService.transcript.subscribe(t => this.evaluateTranscript(t));
   }
 
-  get completed() { return this.remaining === 0; }
+  get complete() { return this.progress === this.total; }
   get progress() { return this._progress; }
-  get remaining() { return this._remaining; }
+  get total() { return this._total; }
 
   private evaluateTranscript(transcript: Transcript) {
-    this._progress = 0;
-    this._remaining = 0;
     this._coursesUsed.length = 0;
     // TODO: Remove records that are in the same crosslist equivalence class.
     const coursesTaken = new Set(transcript.records.map(r => r.id));
     this.requirementNodeComponent.evaluateTranscriptRecords(transcript, coursesTaken).then(state => {
       // The courses used are those that no longer appear in coursesTaken.
+      this._progress = state.progress;
+      this._total = state.total;
       this._coursesUsed = transcript.records.filter(r => !coursesTaken.has(r.id));
     });
   }

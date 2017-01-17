@@ -1,5 +1,5 @@
 import { CourseInfoModule } from 'app/course-info/course-info.module';
-import { RequirementLeafDirective } from './requirement-leaf.directive';
+import { RequirementLeafComponent } from './requirement-leaf.component';
 import { RequirementNodeComponent } from './requirement-node.component';
 import { CatalogComponent } from './catalog.component';
 import { ProgramComponent } from './program.component';
@@ -15,7 +15,7 @@ import { environment } from 'environments/environment';
     CatalogComponent,
     ProgramComponent,
     RequirementNodeComponent,
-    RequirementLeafDirective
+    RequirementLeafComponent
   ],
   imports: [
     BrowserModule,
@@ -25,7 +25,7 @@ import { environment } from 'environments/environment';
     AngularFireModule.initializeApp(environment.firebaseConfig)
   ],
   exports: [
-    CatalogComponent, ProgramComponent, RequirementNodeComponent
+    CatalogComponent, ProgramComponent, RequirementNodeComponent, RequirementLeafComponent
   ],
   providers: [],
 })

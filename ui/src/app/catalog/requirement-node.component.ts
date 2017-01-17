@@ -1,5 +1,6 @@
 import { Transcript } from '../transcript/transcript';
 import { TranscriptRecord } from '../transcript/transcript-record';
+import { CatalogService } from './catalog.service';
 import { Component, Input, QueryList, ViewChildren, OnInit, AfterViewInit } from '@angular/core';
 import { CrosslistInvariantPrefixMultiSet } from 'app/course-info/crosslist-invariant-prefix-multi-set';
 import { Observable } from 'rxjs/Observable';
@@ -11,16 +12,17 @@ import { Observable } from 'rxjs/Observable';
 })
 export class RequirementNodeComponent implements OnInit, AfterViewInit {
   @Input() requirement: any;
+  @Input() root: boolean = false;
 
   force: boolean = false;
   completedChildren: number = 0;
   hide: boolean = false;
   private _initPromise: Promise<void>;
-  private _initResolver: () => void;
+  protected _initResolver: () => void;
 
-  @ViewChildren(RequirementNodeComponent) children: QueryList<RequirementNodeComponent>;
+  @ViewChildren('child') children: QueryList<RequirementNodeComponent>;
 
-  constructor() {
+  constructor(private catalogService: CatalogService) {
     this._initPromise = new Promise<void>((resolve, reject) => {
       this._initResolver = resolve;
     });
@@ -33,11 +35,28 @@ export class RequirementNodeComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this._initResolver();
+    // If it's a string, then it's a reference node, so graft it in.
+    (typeof this.requirement === 'string' ? this.catalogService.sequences(this.requirement) : Observable.of(this.requirement))
+      .subscribe(node => {
+      this.requirement = node;
+      this._initResolver();
+      this.hide = (this.requirement.metadata && this.requirement.metadata.hide);
+    });
   }
 
-  get isLeaf(): boolean {
-    return typeof this.requirement === 'string';
+  /** Toggles the visibility of this node. */  
+  toggle() {
+    if (this.children) {
+      // QueryList's don't have .every() implemented yet.
+      if (this.children.reduce((prev, child) => prev && child.hide === this.hide, true)) {
+        this.children.forEach(x => x.toggle());
+      }
+    }
+    this.hide = !this.hide;
+  }
+
+  isLeaf(child: any): boolean {
+    return typeof child === 'string' && !child.startsWith('/');
   }
 
   get complete(): boolean {
@@ -46,9 +65,6 @@ export class RequirementNodeComponent implements OnInit, AfterViewInit {
 
   /** The lowest number of courses that can satisfy this node. */
   get minRequire(): number {
-    if (this.isLeaf) {
-      return 1;
-    }
     if (this.requirement.min) {
       return this.requirement.min;
     }
@@ -105,8 +121,10 @@ export class RequirementNodeComponent implements OnInit, AfterViewInit {
       return evaluateChildAtIndex(0).then(() => {
         progressions.sort((a, b) => b.progress - a.progress);
         let progress = this.force ? total : progressions.reduce((sum, x) => sum + x.progress, 0);
-        // Only set hide to true explicitly, otherwise it's whatever metadata.hide is set to.
-        this.hide = this.complete || (this.requirement.metadata && this.requirement.metadata.hide);
+        // Only set hide to true explicitly.
+        if (this.complete) {
+          this.hide = true;
+        }
         return { progress, total };
       });
     });

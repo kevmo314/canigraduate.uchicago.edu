@@ -1,26 +1,23 @@
-<div cigRequirementLeaf #leaf="cigRequirementLeaf" *ngIf="isLeaf" class="leaf" [requirement]="requirement">
-  <!-- Render a leaf node. -->
-  <div class="id">{{leaf.displayName}}</div>
-  {{leaf.isExplicitRequirement}}
-  <cig-course-name *ngIf="leaf.isExplicitRequirement" class="name" [course]="leaf.requirement"></cig-course-name>
-  <div *ngIf="!leaf.isExplicitRequirement">Elective</div>
-</div>
-<div *ngIf="!isLeaf">
-  <!-- Render a recursive node. -->
-  <div class="header">
-    <ng-container *ngIf="!complete">
+<!-- Render a recursive node. -->
+<div class="node">
+  <div class="subheader" (click)="toggle()" *ngIf="!root">
+    <md-icon [ngClass]="{'flip': hide}">expand_more</md-icon>
+    <div class="text" *ngIf="!complete">
       <ng-container *ngIf="minRequire == requirement.requirements.length">All</ng-container>
       <ng-container *ngIf="minRequire != requirement.requirements.length">{{minRequire}}</ng-container>
       of the following
-    </ng-container>
-    <ng-container *ngIf="complete">
+    </div>
+    <div class="text muted" *ngIf="complete">
       <ng-container *ngIf="minRequire == 1">1 requirement</ng-container>
       <ng-container *ngIf="minRequire != 1">{{minRequire}} requirements</ng-container>
       <ng-container *ngIf="force">ignored</ng-container>
       <ng-container *ngIf="!force">finished</ng-container>
-    </ng-container>
+    </div>
   </div>
-  <div class="node">
-    <cig-requirement-node *ngFor="let child of requirement.requirements" [requirement]="child"></cig-requirement-node>
+  <div class="children" [ngClass]="{'hidden': hide}">
+    <ng-container *ngFor="let node of requirement.requirements">
+      <cig-requirement-node *ngIf="!isLeaf(node)" #child [requirement]="node"></cig-requirement-node>
+      <cig-requirement-leaf *ngIf="isLeaf(node)" #child [requirement]="node"></cig-requirement-leaf>
+    </ng-container>
   </div>
 </div>

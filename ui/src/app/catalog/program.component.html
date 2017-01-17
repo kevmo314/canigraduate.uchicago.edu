@@ -1,4 +1,7 @@
 <md-card class="program">
+  <div class="status">
+    {{progress}} / {{total}}
+  </div>
   <md-card-header>
     <div md-card-avatar class="example-header-image"></div>
     <md-card-title class="header">{{title}}</md-card-title>
@@ -7,6 +10,6 @@
     </md-card-subtitle>
   </md-card-header>
   <md-card-content>
-    <cig-requirement-node [requirement]="program"></cig-requirement-node>
+    <cig-requirement-node [requirement]="program" [root]="true"></cig-requirement-node>
   </md-card-content>
 </md-card>

@@ -3,7 +3,8 @@
 }
 
 .record .id {
-  width: 100px;
+  width: 96px;
+  padding: 0 8px;
   flex-shrink: 0;
   text-align: right;
 }

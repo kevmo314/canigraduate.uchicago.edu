@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import url('https://identity.uchicago.edu/c/fonts/proximanova.css');
+@import '~@angular/material/core/theming/all-theme';
+@include md-core();
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow-y: scroll;
+}
+
+body.uchicago {
+  font-family: ProximaNova-Regular, "Helvetica Neue", Helvetica, Arial, "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
+  background-color: #D6D6CE;
+  $md-maroon: (
+    50 : #ff8a8a,
+    100 : #ff3e3e,
+    200 : #ff0606,
+    300 : #bd0000,
+    400 : #9f0000,
+    500 : #800000,
+    600 : #610000,
+    700 : #430000,
+    800 : #240000,
+    900 : #060000,
+    A100 : #ff8080,
+    A200 : #ff1a1a,
+    A400 : #b30000,
+    A700 : #990000,
+    contrast: (
+        50 : #000000,
+        100 : #ffffff,
+        200 : #ffffff,
+        300 : #ffffff,
+        400 : #ffffff,
+        500 : #ffffff,
+        600 : #ffffff,
+        700 : #ffffff,
+        800 : #ffffff,
+        900 : #ffffff,
+        A100 : #000000,
+        A200 : #ffffff,
+        A400 : #ffffff,
+        A700 : #ffffff,
+    )
+  );
+  $md-maroon-blue: (
+      50 : #afdcf2,
+      100 : #6dc0e8,
+      200 : #3daae0,
+      300 : #1d85b8,
+      400 : #19729d,
+      500 : #155f83,
+      600 : #114c69,
+      700 : #0d394e,
+      800 : #082634,
+      900 : #041219,
+      A100 : #98ddff,
+      A200 : #32bcff,
+      A400 : #0d84be,
+      A700 : #14709d,
+      contrast: (
+          50 : #000000,
+          100 : #000000,
+          200 : #000000,
+          300 : #ffffff,
+          400 : #ffffff,
+          500 : #ffffff,
+          600 : #ffffff,
+          700 : #ffffff,
+          800 : #ffffff,
+          900 : #ffffff,
+          A100 : #000000,
+          A200 : #000000,
+          A400 : #ffffff,
+          A700 : #ffffff,
+      )
+  );
+  $md-maroon-red: (
+      50 : #f2dad8,
+      100 : #dea49f,
+      200 : #d07d75,
+      300 : #bd4b41,
+      400 : #a64239,
+      500 : #8f3931,
+      600 : #783029,
+      700 : #612721,
+      800 : #4b1e1a,
+      900 : #341512,
+      A100 : #f8cbc7,
+      A200 : #ee766b,
+      A400 : #c7392c,
+      A700 : #a73c32,
+      contrast: (
+          50 : #000000,
+          100 : #000000,
+          200 : #000000,
+          300 : #ffffff,
+          400 : #ffffff,
+          500 : #ffffff,
+          600 : #ffffff,
+          700 : #ffffff,
+          800 : #ffffff,
+          900 : #ffffff,
+          A100 : #000000,
+          A200 : #000000,
+          A400 : #ffffff,
+          A700 : #ffffff,
+      )
+  );
+  $app-primary: md-palette($md-maroon);
+  $app-accent:  md-palette($md-maroon-blue);
+  $app-warn:    md-palette($md-maroon-red);
+  $app-theme:   md-light-theme($app-primary, $app-accent, $app-warn);
+  @include angular-material-theme($app-theme);
+
+  md-tab-header {
+      background-color: md-color($md-maroon, 500);
+      color: md-contrast($md-maroon, 500);
+  }
+
+  md-tab-header .md-tab-label-active {
+      color: white;
+  }
+
+  md-tab-header md-ink-bar {
+      background-color: white;
+  }
+}

@@ -1,0 +1,13 @@
+<!-- Render a leaf node. -->
+<div class="leaf">
+    <md-icon class="icon" *ngIf="complete">done</md-icon>
+    <div class="id">
+        <ng-container *ngIf="complete">{{satisfier}}</ng-container>
+        <ng-container *ngIf="!complete">{{displayName}}</ng-container>
+    </div>
+    <cig-course-name *ngIf="complete" class="name" [course]="satisfier"></cig-course-name>
+    <ng-container *ngIf="!complete">
+        <cig-course-name *ngIf="isExplicitRequirement" class="name" [course]="requirement"></cig-course-name>
+        <div *ngIf="!isExplicitRequirement">Elective</div>
+    </ng-container>
+</div>

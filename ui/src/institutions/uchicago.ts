@@ -1,6 +1,8 @@
 import { Base } from './base';
 
 export const UniversityOfChicago: Base = {
+    name: 'UChicago',
+    theme: 'uchicago',
     getDepartment(id: string): string {
         return id.substring(0, 4);
     },
