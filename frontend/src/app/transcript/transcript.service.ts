@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
 import { AuthenticationService } from 'app/authentication/authentication.service';
 import { environment } from 'environments/environment';
-import { Subject } from 'rxjs/Subject';
+import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 
 /**
@@ -12,15 +12,15 @@ import { ReplaySubject } from 'rxjs/ReplaySubject';
  */
 @Injectable()
 export class TranscriptService {
-  private _transcript: Subject<Transcript>;
+  private _transcript: ReplaySubject<Transcript>;
   constructor(private http: Http, private authenticationService: AuthenticationService) {
-    this._transcript = new ReplaySubject(1);
+    this._transcript = new ReplaySubject<Transcript>(1);
     this.authenticationService
       .filter(x => x.password != null)
       .subscribe(data => this.bind(data));
   }
 
-  get transcript(): Subject<Transcript> {
+  get transcript(): Observable<Transcript> {
     return this._transcript;
   }
 

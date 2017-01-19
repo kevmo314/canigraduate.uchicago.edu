@@ -22,6 +22,18 @@
                  (click)="termChip.toggleSelected()"  
                  #termChip>{{term.name}}</md-chip>
       </md-chip-list>
-    </md-card-content>  
+      
+
+    </md-card-content>
   </md-card>
+  <div class="results">
+    <div class="header">
+      
+    </div>
+    <md-list>
+      <md-list-item *ngFor="let result of results">
+        <cig-search-result [result]="result"></cig-search-result>
+      </md-list-item>
+    </md-list>
+  </div>
 </div>

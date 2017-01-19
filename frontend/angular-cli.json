@@ -18,7 +18,10 @@
       "prefix": "app",
       "mobile": false,
       "styles": ["styles.scss"],
-      "scripts": ["../node_modules/hammerjs/hammer.min.js"],
+      "scripts": [
+        "../node_modules/hammerjs/hammer.min.js",
+        "../node_modules/pouchdb/dist/pouchdb.min.js"
+      ],
       "environments": {
         "source": "environments/environment.ts",
         "dev": "environments/environment.ts",

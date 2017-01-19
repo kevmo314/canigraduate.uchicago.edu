@@ -1,5 +1,5 @@
 import { CourseInfoService } from '../course-info/course-info.service';
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy, AfterViewInit } from '@angular/core';
 import { Filters, DayOfWeek } from './filters';
 
 @Component({
@@ -7,9 +7,9 @@ import { Filters, DayOfWeek } from './filters';
   templateUrl: './course-search.component.html',
   styleUrls: ['./course-search.component.css']
 })
-export class CourseSearchComponent {
+export class CourseSearchComponent implements AfterViewInit {
   filters: Filters = new Filters();
-  
+
   get monday() { return this.filters.getDayOfWeekFilter(DayOfWeek.Monday); }
   set monday(value) { this.filters.setDayOfWeekFilter(DayOfWeek.Monday, value); }
   get tuesday() { return this.filters.getDayOfWeekFilter(DayOfWeek.Tuesday); }
@@ -24,4 +24,10 @@ export class CourseSearchComponent {
   set saturday(value) { this.filters.setDayOfWeekFilter(DayOfWeek.Saturday, value); }
   get sunday() { return this.filters.getDayOfWeekFilter(DayOfWeek.Sunday); }
   set sunday(value) { this.filters.setDayOfWeekFilter(DayOfWeek.Sunday, value); }
+
+  ngAfterViewInit() {
+    this.filters.changes.subscribe(filters => {
+      // Search the database using these filters.
+    });
+  }
 }

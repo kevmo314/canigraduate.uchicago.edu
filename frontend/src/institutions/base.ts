@@ -8,6 +8,8 @@ export type Term = {
  * Generic course specification interface.
  */
 export type Base = {
+    /** The unique identifier for this institution, should match the backend directory and identifier. */
+    id: string,
     /** The name to display for this institution. */
     name: string,
     /** The CSS class to use for theming. */

@@ -1,6 +1,7 @@
 import { Base } from './base';
 
 export const UniversityOfChicago: Base = {
+    id: 'uchicago',
     name: 'UChicago',
     theme: 'uchicago',
     terms: [
