@@ -1,3 +1,9 @@
+export type Term = {
+    name: string,
+    shorthand: string,
+    color: string
+};
+
 /**
  * Generic course specification interface.
  */
@@ -7,7 +13,7 @@ export type Base = {
     /** The CSS class to use for theming. */
     theme: string,
     /** An enum enumerating the terms (eg semesters, quarters) that this institution uses. */
-    terms: any,
+    terms: Term[],
     /**
      * Get the department of a given course id string.
      * @param id The course id to identify.

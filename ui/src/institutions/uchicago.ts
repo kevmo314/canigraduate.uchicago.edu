@@ -5,7 +5,7 @@ export const UniversityOfChicago: Base = {
     theme: 'uchicago',
     terms: [
         { name: 'Autumn', shorthand: 'F', color: '#FFA319' },
-        { name: 'Winter', shorthand: 'w', color: '#155F83' },
+        { name: 'Winter', shorthand: 'W', color: '#155F83' },
         { name: 'Spring', shorthand: 'S', color: '#8A9045' },
         { name: 'Summer', shorthand: 'S', color: '#8F3931' },
     ],

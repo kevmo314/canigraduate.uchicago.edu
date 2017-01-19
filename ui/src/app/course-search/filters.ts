@@ -1,3 +1,6 @@
+import { Term } from 'institutions/base';
+import { environment } from 'environments/environment';
+
 export const enum DayOfWeek {
     Monday = 1 << 0,
     Tuesday = 1 << 1,
@@ -12,26 +15,12 @@ export const enum DayOfWeek {
 
 export class Filters {
     private _dayOfWeek: DayOfWeek = DayOfWeek.Weekdays;
-
-    constructor() { }
+    private _terms: Set<Term> = new Set<Term>(environment.institution.terms);
 
     // Template helper functions...
-    private getDayOfWeekBit(x: DayOfWeek): boolean { return (this._dayOfWeek & x) > 0; }
-    private setDayOfWeekBit(x: DayOfWeek, value: boolean) {
-        this._dayOfWeek ^= (-value ^ this._dayOfWeek) & x;
-    }
-    get monday() { return this.getDayOfWeekBit(DayOfWeek.Monday); }
-    set monday(value) { this.setDayOfWeekBit(DayOfWeek.Monday, value); }
-    get tuesday() { return this.getDayOfWeekBit(DayOfWeek.Tuesday); }
-    set tuesday(value) { this.setDayOfWeekBit(DayOfWeek.Tuesday, value); }
-    get wednesday() { return this.getDayOfWeekBit(DayOfWeek.Wednesday); }
-    set wednesday(value) { this.setDayOfWeekBit(DayOfWeek.Wednesday, value); }
-    get thursday() { return this.getDayOfWeekBit(DayOfWeek.Thursday); }
-    set thursday(value) { this.setDayOfWeekBit(DayOfWeek.Thursday, value); }
-    get friday() { return this.getDayOfWeekBit(DayOfWeek.Friday); }
-    set friday(value) { this.setDayOfWeekBit(DayOfWeek.Friday, value); }
-    get saturday() { return this.getDayOfWeekBit(DayOfWeek.Saturday); }
-    set saturday(value) { this.setDayOfWeekBit(DayOfWeek.Saturday, value); }
-    get sunday() { return this.getDayOfWeekBit(DayOfWeek.Sunday); }
-    set sunday(value) { this.setDayOfWeekBit(DayOfWeek.Sunday, value); }
+    getDayOfWeekFilter(x: DayOfWeek): boolean { return (this._dayOfWeek & x) > 0; }
+    setDayOfWeekFilter(x: DayOfWeek, value: boolean) { this._dayOfWeek ^= (-value ^ this._dayOfWeek) & x; }
+
+    getTermFilter(x: Term): boolean { return this._terms.has(x); }
+    setTermFilter(x: Term, value: boolean) { (value ? this._terms.add : this._terms.delete)(x); }
 }

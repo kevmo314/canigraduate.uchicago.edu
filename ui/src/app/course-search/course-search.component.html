@@ -6,20 +6,21 @@
     <md-card-content>
       Show
       <md-chip-list>
-        <md-chip [selected]="filters.monday"
-                 (click)="filters.monday=!filters.monday">Monday</md-chip>
-        <md-chip [selected]="filters.tuesday"
-                 (click)="filters.tuesday=!filters.tuesday">Tuesday</md-chip>
-        <md-chip [selected]="filters.wednesday"
-                 (click)="filters.wednesday=!filters.wednesday">Wednesday</md-chip>
-        <md-chip [selected]="filters.thursday"
-                 (click)="filters.thursday=!filters.thursday">Thursday</md-chip>
-        <md-chip [selected]="filters.friday"
-                 (click)="filters.friday=!filters.friday">Friday</md-chip>
-        <md-chip [selected]="filters.saturday"
-                 (click)="filters.saturday=!filters.saturday">Saturday</md-chip>
-        <md-chip [selected]="filters.sunday"
-                 (click)="filters.sunday=!filters.sunday">Sunday</md-chip>
+        <md-chip [selected]="monday" (click)="monday=!monday">Monday</md-chip>
+        <md-chip [selected]="tuesday" (click)="tuesday=!tuesday">Tuesday</md-chip>
+        <md-chip [selected]="wednesday" (click)="wednesday=!wednesday">Wednesday</md-chip>
+        <md-chip [selected]="thursday" (click)="thursday=!thursday">Thursday</md-chip>
+        <md-chip [selected]="friday" (click)="friday=!friday">Friday</md-chip>
+        <md-chip [selected]="saturday" (click)="saturday=!saturday">Saturday</md-chip>
+        <md-chip [selected]="sunday" (click)="sunday=!sunday">Sunday</md-chip>
+      </md-chip-list>
+      sections in the
+      <md-chip-list>
+        <md-chip *ngFor="let term of terms"
+                 (select)="filters.setTermFilter(term, true)"
+                 (deselect)="filters.setTermFilter(term, false)"
+                 (click)="termChip.toggleSelected()"  
+                 #termChip>{{term.name}}</md-chip>
       </md-chip-list>
     </md-card-content>  
   </md-card>
