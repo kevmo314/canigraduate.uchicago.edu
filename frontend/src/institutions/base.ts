@@ -1,4 +1,4 @@
-export type Term = {
+export type Period = {
     name: string,
     shorthand: string,
     color: string
@@ -14,8 +14,8 @@ export type Base = {
     name: string,
     /** The CSS class to use for theming. */
     theme: string,
-    /** An enum enumerating the terms (eg semesters, quarters) that this institution uses. */
-    terms: Term[],
+    /** An enum enumerating the period (eg semesters, quarters) that this institution uses. */
+    periods: Period[],
     /**
      * Get the department of a given course id string.
      * @param id The course id to identify.
