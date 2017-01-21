@@ -1,4 +1,4 @@
-import { Term } from 'institutions/base';
+import { Period } from 'institutions/base';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { environment } from 'environments/environment';
@@ -17,7 +17,7 @@ export const enum DayOfWeek {
 
 export class Filters {
     private _dayOfWeek: DayOfWeek = DayOfWeek.Weekdays;
-    private _terms: Set<Term> = new Set<Term>(environment.institution.terms);
+    private _periods: Set<Period> = new Set<Period>(environment.institution.periods);
     private _changes: ReplaySubject<Filters> = new ReplaySubject<Filters>(1);
 
     // Template helper functions...
@@ -27,9 +27,9 @@ export class Filters {
         this._changes.next(this);
     }
 
-    getTermFilter(x: Term): boolean { return this._terms.has(x); }
-    setTermFilter(x: Term, value: boolean) {
-        (value ? this._terms.add : this._terms.delete)(x);
+    getPeriodFilter(x: Period): boolean { return this._periods.has(x); }
+    setPeriodFilter(x: Period, value: boolean) {
+        (value ? this._periods.add : this._periods.delete)(x);
         this._changes.next(this);
     }
 

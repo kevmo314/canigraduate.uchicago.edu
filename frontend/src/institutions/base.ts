@@ -49,4 +49,8 @@ export type Base = {
      * @returns True if the id appears valid.
      */
     isValid(id: string): boolean;
+
+    termToOrdinal(term: string): number;
+
+    termFromOrdinal(value: number): string;
 };
