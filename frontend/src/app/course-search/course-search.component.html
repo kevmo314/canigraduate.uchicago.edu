@@ -1,34 +1,55 @@
 <div class="course-search">
   <md-card>
-    <md-card-header>
-        Filters
-    </md-card-header>
     <md-card-content>
-      Show
-      <md-chip-list>
-        <md-chip [selected]="monday" (click)="monday=!monday">Monday</md-chip>
-        <md-chip [selected]="tuesday" (click)="tuesday=!tuesday">Tuesday</md-chip>
-        <md-chip [selected]="wednesday" (click)="wednesday=!wednesday">Wednesday</md-chip>
-        <md-chip [selected]="thursday" (click)="thursday=!thursday">Thursday</md-chip>
-        <md-chip [selected]="friday" (click)="friday=!friday">Friday</md-chip>
-        <md-chip [selected]="saturday" (click)="saturday=!saturday">Saturday</md-chip>
-        <md-chip [selected]="sunday" (click)="sunday=!sunday">Sunday</md-chip>
-      </md-chip-list>
-      sections in the
-      <md-chip-list>
-        <md-chip *ngFor="let term of terms"
-                 (select)="filters.setTermFilter(term, true)"
-                 (deselect)="filters.setTermFilter(term, false)"
-                 (click)="termChip.toggleSelected()"  
-                 #termChip>{{term.name}}</md-chip>
-      </md-chip-list>
-      
-
+      <md-list>
+        <md-list-item>
+          Show
+          <md-button-toggle-group multiple>
+            <md-button-toggle [(checked)]="sunday">Sunday</md-button-toggle>
+            <md-button-toggle [(checked)]="monday">Monday</md-button-toggle>
+            <md-button-toggle [(checked)]="tuesday">Tuesday</md-button-toggle>
+            <md-button-toggle [(checked)]="wednesday">Wednesday</md-button-toggle>
+            <md-button-toggle [(checked)]="thursday">Thursday</md-button-toggle>
+            <md-button-toggle [(checked)]="friday">Friday</md-button-toggle>
+            <md-button-toggle [(checked)]="saturday">Saturday</md-button-toggle>
+          </md-button-toggle-group>
+          sections
+        </md-list-item>
+        <md-list-item>
+          Show
+          <md-button-toggle-group multiple>
+            <md-button-toggle 
+              class="custom"
+              *ngFor="let period of periods"
+              [checked]="filters.getPeriodFilter(period)"
+              (change)="filters.setPeriodFilter(period, $event.source.checked)"
+              [ngStyle]="{'background-color': (periodButtonToggle.checked ? period.color : null),
+                          'color': (periodButtonToggle.checked ? 'white' : null)}"
+              #periodButtonToggle>
+              {{period.name}}
+            </md-button-toggle>
+          </md-button-toggle-group>
+          sections
+        </md-list-item>
+        <md-list-item>
+          Show departments:
+        </md-list-item>
+        <md-list-item>
+          Show sections taught by:
+        </md-list-item>
+        <md-list-item>
+          Hide classes that
+          <md-button-toggle [(checked)]="filters.taken">I've taken</md-button-toggle>
+          <md-button-toggle [(checked)]="filters.tested">I've tested out of</md-button-toggle>
+          <md-button-toggle [(checked)]="filters.prerequisite">I don't have prereqs for</md-button-toggle>
+          <md-button-toggle [(checked)]="filters.core">are core reqs</md-button-toggle>
+        </md-list-item>
+      </md-list>
     </md-card-content>
   </md-card>
   <div class="results">
     <div class="header">
-      
+      Showing {{results.length}} results
     </div>
     <md-list>
       <md-list-item *ngFor="let result of results">

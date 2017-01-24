@@ -1,7 +1,7 @@
 import { TranscriptRecord } from '../transcript/transcript-record';
 import { Transcript } from '../transcript/transcript';
 import { Component, Input, AfterViewInit } from '@angular/core';
-import { CatalogService } from './catalog.service';
+import { DatabaseService } from 'app/database/database.service';
 import { CourseInfoService } from 'app/course-info/course-info.service';
 import { Observable } from 'rxjs/Observable';
 import { AngularFire, FirebaseObjectObservable } from 'angularfire2';
@@ -26,10 +26,10 @@ export class RequirementLeafComponent extends RequirementNodeComponent implement
   force: boolean = false;
 
   constructor(
-    catalogService: CatalogService,
+    databaseService: DatabaseService,
     private courseInfoService: CourseInfoService,
     private angularFire: AngularFire) {
-    super(catalogService);
+    super(databaseService);
   }
 
   ngAfterViewInit() {

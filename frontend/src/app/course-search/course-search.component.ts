@@ -1,6 +1,9 @@
-import { CourseInfoService } from '../course-info/course-info.service';
-import { Component, Input, ChangeDetectionStrategy, AfterViewInit } from '@angular/core';
-import { Filters, DayOfWeek } from './filters';
+import { environment } from '../../environments/environment';
+import { DayOfWeek, Filters } from './filters';
+import { AfterViewInit, Component } from '@angular/core';
+import { MdButtonToggleChange } from '@angular/material';
+import { Course } from 'app/course';
+import { Period } from 'app/period';
 
 @Component({
   selector: 'cig-course-search',
@@ -9,6 +12,8 @@ import { Filters, DayOfWeek } from './filters';
 })
 export class CourseSearchComponent implements AfterViewInit {
   filters: Filters = new Filters();
+  periods: Period[] = environment.institution.periods;
+  results: Course[] = [];
 
   get monday() { return this.filters.getDayOfWeekFilter(DayOfWeek.Monday); }
   set monday(value) { this.filters.setDayOfWeekFilter(DayOfWeek.Monday, value); }

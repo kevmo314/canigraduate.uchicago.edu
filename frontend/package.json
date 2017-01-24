@@ -4,7 +4,7 @@
   "license": "MIT",
   "angular-cli": {},
   "scripts": {
-    "start": "ng serve --hmr",
+    "start": "ng serve",
     "lint": "tslint \"src/**/*.ts\"",
     "test": "ng test",
     "pree2e": "webdriver-manager update",
@@ -21,6 +21,7 @@
     "@angular/platform-browser": "^2.2.3",
     "@angular/platform-browser-dynamic": "^2.2.3",
     "@angular/router": "^3.2.3",
+    "@types/pouchdb": "^5.4.28",
     "angular2-cookie": "^1.2.6",
     "angularfire2": "2.0.0-beta.6",
     "core-js": "^2.4.1",

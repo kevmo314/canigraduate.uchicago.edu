@@ -1,6 +1,6 @@
 import { Transcript } from '../transcript/transcript';
 import { TranscriptRecord } from '../transcript/transcript-record';
-import { CatalogService } from './catalog.service';
+import { DatabaseService } from 'app/database/database.service';
 import { Component, Input, QueryList, ViewChildren, OnInit, AfterViewInit } from '@angular/core';
 import { CrosslistInvariantPrefixMultiSet } from 'app/course-info/crosslist-invariant-prefix-multi-set';
 import { Observable } from 'rxjs/Observable';
@@ -22,7 +22,7 @@ export class RequirementNodeComponent implements OnInit, AfterViewInit {
 
   @ViewChildren('child') children: QueryList<RequirementNodeComponent>;
 
-  constructor(private catalogService: CatalogService) {
+  constructor(private databaseService: DatabaseService) {
     this._initPromise = new Promise<void>((resolve, reject) => {
       this._initResolver = resolve;
     });
@@ -36,7 +36,7 @@ export class RequirementNodeComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     // If it's a string, then it's a reference node, so graft it in.
-    (typeof this.requirement === 'string' ? this.catalogService.sequences(this.requirement) : Observable.of(this.requirement))
+    (typeof this.requirement === 'string' ? this.databaseService.object(this.requirement.substring(1)) : Observable.of(this.requirement))
       .subscribe(node => {
       this.requirement = node;
       this._initResolver();

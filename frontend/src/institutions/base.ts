@@ -1,15 +1,9 @@
-export type Period = {
-    name: string,
-    shorthand: string,
-    color: string
-};
+import { Period } from 'app/period';
 
 /**
  * Generic course specification interface.
  */
 export type Base = {
-    /** The unique identifier for this institution, should match the backend directory and identifier. */
-    id: string,
     /** The name to display for this institution. */
     name: string,
     /** The CSS class to use for theming. */

@@ -13,6 +13,11 @@ body {
   overflow-y: scroll;
 }
 
+/** Override some styles. */
+body md-button-toggle.md-button-toggle-checked.custom .md-button-toggle-label-content {
+  background-color: inherit;
+}
+
 body.uchicago {
   font-family: ProximaNova-Regular, "Helvetica Neue", Helvetica, Arial, "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
   background-color: #D6D6CE;

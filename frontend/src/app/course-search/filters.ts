@@ -1,4 +1,4 @@
-import { Period } from 'institutions/base';
+import { Period } from 'app/period';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { environment } from 'environments/environment';
@@ -20,6 +20,11 @@ export class Filters {
     private _periods: Set<Period> = new Set<Period>(environment.institution.periods);
     private _changes: ReplaySubject<Filters> = new ReplaySubject<Filters>(1);
 
+    taken: boolean = false;
+    tested: boolean = false;
+    prequisites: boolean = false;
+    core: boolean = false;
+
     // Template helper functions...
     getDayOfWeekFilter(x: DayOfWeek): boolean { return (this._dayOfWeek & x) > 0; }
     setDayOfWeekFilter(x: DayOfWeek, value: boolean) {
@@ -29,7 +34,12 @@ export class Filters {
 
     getPeriodFilter(x: Period): boolean { return this._periods.has(x); }
     setPeriodFilter(x: Period, value: boolean) {
-        (value ? this._periods.add : this._periods.delete)(x);
+        if (value) {
+            this._periods.add(x);
+        } else {
+            this._periods.delete(x);
+        }
+        console.log(this._periods);
         this._changes.next(this);
     }
 

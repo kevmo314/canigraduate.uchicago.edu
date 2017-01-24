@@ -1,4 +1,3 @@
-import { CatalogService } from 'app/catalog/catalog.service';
 import { AppComponent, ContentComponent } from './app.component';
 import { CatalogModule } from 'app/catalog/catalog.module';
 import { SidebarModule } from 'app/sidebar/sidebar.module';
@@ -50,8 +49,7 @@ export class StickyOutletReuseStrategy implements RouteReuseStrategy {
   ],
   providers: [
     { provide: RouteReuseStrategy, useClass: StickyOutletReuseStrategy },
-    TranscriptService,
-    CatalogService
+    TranscriptService
   ],
   bootstrap: [AppComponent]
 })
