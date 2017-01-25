@@ -1,4 +1,3 @@
-import { CourseInfoService } from '../course-info/course-info.service';
 import { TranscriptRecord } from '../transcript/transcript-record';
 import { Transcript } from '../transcript/transcript';
 import { TranscriptService } from '../transcript/transcript.service';
@@ -21,7 +20,7 @@ export class ProgramComponent implements AfterViewInit {
   private _coursesUsed: TranscriptRecord[] = [];
   hide: boolean = true;
 
-  constructor(private transcriptService: TranscriptService, private courseInfoService: CourseInfoService) {}
+  constructor(private transcriptService: TranscriptService) {}
 
   ngAfterViewInit() {
     this.transcriptService.transcript.subscribe(t => this.evaluateTranscript(t));

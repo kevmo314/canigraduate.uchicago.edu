@@ -1,4 +1,3 @@
-import { CourseInfoService } from 'app/course-info/course-info.service';
 import { Component, Input, ChangeDetectionStrategy, AfterViewInit } from '@angular/core';
 import { Filters, DayOfWeek } from './filters';
 import { Course } from 'app/course';

@@ -2,7 +2,6 @@ import { Transcript } from '../transcript/transcript';
 import { TranscriptRecord } from '../transcript/transcript-record';
 import { DatabaseService } from 'app/database/database.service';
 import { Component, Input, QueryList, ViewChildren, OnInit, AfterViewInit } from '@angular/core';
-import { CrosslistInvariantPrefixMultiSet } from 'app/course-info/crosslist-invariant-prefix-multi-set';
 import { Observable } from 'rxjs/Observable';
 
 @Component({

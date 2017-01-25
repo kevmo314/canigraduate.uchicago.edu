@@ -5,15 +5,35 @@
         <md-list-item>
           Show
           <md-button-toggle-group multiple>
-            <md-button-toggle [(checked)]="sunday">Sunday</md-button-toggle>
-            <md-button-toggle [(checked)]="monday">Monday</md-button-toggle>
-            <md-button-toggle [(checked)]="tuesday">Tuesday</md-button-toggle>
-            <md-button-toggle [(checked)]="wednesday">Wednesday</md-button-toggle>
-            <md-button-toggle [(checked)]="thursday">Thursday</md-button-toggle>
-            <md-button-toggle [(checked)]="friday">Friday</md-button-toggle>
-            <md-button-toggle [(checked)]="saturday">Saturday</md-button-toggle>
+            <md-button-toggle [(checked)]="monday">
+              <span fxHide="false" fxHide.gt-md>M</span>
+              <span fxShow="false" fxShow.gt-md>Monday</span>
+            </md-button-toggle>
+            <md-button-toggle [(checked)]="tuesday">
+              <span fxHide="false" fxHide.gt-md>T</span>
+              <span fxShow="false" fxShow.gt-md>Tuesday</span>
+            </md-button-toggle>
+            <md-button-toggle [(checked)]="wednesday">
+              <span fxHide="false" fxHide.gt-md>W</span>
+              <span fxShow="false" fxShow.gt-md>Wednesday</span>
+            </md-button-toggle>
+            <md-button-toggle [(checked)]="thursday">
+              <span fxHide="false" fxHide.gt-md>Th</span>
+              <span fxShow="false" fxShow.gt-md>Thursday</span>
+            </md-button-toggle>
+            <md-button-toggle [(checked)]="friday">
+              <span fxHide="false" fxHide.gt-md>F</span>
+              <span fxShow="false" fxShow.gt-md>Friday</span>
+            </md-button-toggle>
+            <md-button-toggle [(checked)]="saturday">
+              <span fxHide="false" fxHide.gt-md>Sa</span>
+              <span fxShow="false" fxShow.gt-md>Saturday</span>
+            </md-button-toggle>
+            <md-button-toggle [(checked)]="sunday">
+              <span fxHide="false" fxHide.gt-md>Su</span>
+              <span fxShow="false" fxShow.gt-md>Sunday</span>
+            </md-button-toggle>
           </md-button-toggle-group>
-          sections
         </md-list-item>
         <md-list-item>
           Show
@@ -29,7 +49,6 @@
               {{period.name}}
             </md-button-toggle>
           </md-button-toggle-group>
-          sections
         </md-list-item>
         <md-list-item>
           Show departments:

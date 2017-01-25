@@ -39,7 +39,7 @@ export class DatabaseService {
       .then(doc => {
         doc['views'] = {
           'programs': {
-            'map': 'function(doc) { if (doc.type == "program") { emit(doc); } }'
+            'map': 'function(doc) { if (!doc._id.indexOf("programs/")) { emit(doc); } }'
           }
         };
         this._localDB.changes({
@@ -75,13 +75,17 @@ export class DatabaseService {
     return replaySubject;
   }
 
+  courseInfo(id: string): ReplaySubject<{ name: string, crosslists: string[] }> {
+    return this.object('course-info/' + id);
+  }
+
   @Memoize()  
-  object(uri: string) {
+  object(id: string) {
     const replaySubject = new ReplaySubject(1);
-    this._localDB.get(uri)
+    this._localDB.get(id)
       .then(result => replaySubject.next(result))
       .catch(error => {
-        console.error("Error resolving ", uri);
+        console.error("Error resolving ", id);
         console.error(error);
       });
     return replaySubject;
