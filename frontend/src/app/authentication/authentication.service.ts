@@ -6,13 +6,13 @@ import { Subject } from 'rxjs/Subject';
 import { environment } from 'environments/environment';
 
 /**
- * An authentication service. 
+ * An authentication service.
  */
 @Injectable()
 export class AuthenticationService extends Subject<{username: string, password: string}> {
   private _data: {username: string, password: string} = null;
-  private _valid: boolean = true;
-  private _authenticated: boolean = false;
+  private _valid = true;
+  private _authenticated = false;
   constructor(
     private http: Http,
     private cookieService: CookieService) {
