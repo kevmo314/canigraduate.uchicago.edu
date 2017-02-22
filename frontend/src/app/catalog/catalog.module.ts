@@ -20,7 +20,7 @@ import { environment } from 'environments/environment';
   imports: [
     BrowserModule,
     HttpModule,
-    MaterialModule.forRoot(),
+    MaterialModule,
     CourseInfoModule,
     DatabaseModule
   ],

@@ -67,7 +67,11 @@ export class DatabaseService {
     const replaySubject = new ReplaySubject(1);
     this._changeObservable.subscribe(() => {
       this._localDB.query('canigraduate/programs')
-        .then(result => replaySubject.next(result.rows.map(x => x.key)))
+        .then(result => replaySubject.next(result.rows.map(x => {
+          let record = x.key;
+          record.name = record['_id'].split('/')[1];
+          return record;
+        })))
         .catch(error => {
           console.error(error);
         });
@@ -84,10 +88,9 @@ export class DatabaseService {
     const replaySubject = new ReplaySubject(1);
     this._localDB.get(id)
       .then(result => replaySubject.next(result))
-      .catch(error => {
-        console.error("Error resolving ", id);
-        console.error(error);
-      });
+      // The subscriber is expecting a result, so we must give one to them.
+      // Since they are subscribed it's not a big deal since a later update will come.
+      .catch(error => replaySubject.next(null));
     return replaySubject;
   }
 }

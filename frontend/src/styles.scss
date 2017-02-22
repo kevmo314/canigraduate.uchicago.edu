@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 @import url('https://identity.uchicago.edu/c/fonts/proximanova.css');
 @import '~@angular/material/core/theming/all-theme';
-@include md-core();
+@include mat-core();
 
 html,
 body {
@@ -14,14 +14,14 @@ body {
 }
 
 /** Override some styles. */
-body md-button-toggle.md-button-toggle-checked.custom .md-button-toggle-label-content {
+body mat-button-toggle.mat-button-toggle-checked.custom .mat-button-toggle-label-content {
   background-color: inherit;
 }
 
 body.uchicago {
   font-family: ProximaNova-Regular, "Helvetica Neue", Helvetica, Arial, "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
   background-color: #D6D6CE;
-  $md-maroon: (
+  $mat-maroon: (
     50 : #ff8a8a,
     100 : #ff3e3e,
     200 : #ff0606,
@@ -53,7 +53,7 @@ body.uchicago {
         A700 : #ffffff,
     )
   );
-  $md-maroon-blue: (
+  $mat-maroon-blue: (
       50 : #afdcf2,
       100 : #6dc0e8,
       200 : #3daae0,
@@ -85,7 +85,7 @@ body.uchicago {
           A700 : #ffffff,
       )
   );
-  $md-maroon-red: (
+  $mat-maroon-red: (
       50 : #f2dad8,
       100 : #dea49f,
       200 : #d07d75,
@@ -117,22 +117,22 @@ body.uchicago {
           A700 : #ffffff,
       )
   );
-  $app-primary: md-palette($md-maroon);
-  $app-accent:  md-palette($md-maroon-blue);
-  $app-warn:    md-palette($md-maroon-red);
-  $app-theme:   md-light-theme($app-primary, $app-accent, $app-warn);
+  $app-primary: mat-palette($mat-maroon);
+  $app-accent:  mat-palette($mat-maroon-blue);
+  $app-warn:    mat-palette($mat-maroon-red);
+  $app-theme:   mat-light-theme($app-primary, $app-accent, $app-warn);
   @include angular-material-theme($app-theme);
 
-  md-tab-header {
-      background-color: md-color($md-maroon, 500);
-      color: md-contrast($md-maroon, 500);
+  mat-tab-header {
+      background-color: mat-color($mat-maroon, 500);
+      color: mat-contrast($mat-maroon, 500);
   }
 
-  md-tab-header .md-tab-label-active {
+  mat-tab-header .mat-tab-label-active {
       color: white;
   }
 
-  md-tab-header md-ink-bar {
+  mat-tab-header mat-ink-bar {
       background-color: white;
   }
 }

@@ -45,7 +45,7 @@ export class StickyOutletReuseStrategy implements RouteReuseStrategy {
     SidebarModule,
     CatalogModule,
     CourseSearchModule,
-    MaterialModule.forRoot()
+    MaterialModule
   ],
   providers: [
     { provide: RouteReuseStrategy, useClass: StickyOutletReuseStrategy },

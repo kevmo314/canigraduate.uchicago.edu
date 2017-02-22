@@ -14,7 +14,7 @@ import { TranscriptService } from 'app/transcript/transcript.service';
     ReactiveFormsModule,
     FormsModule,
     TranscriptModule,
-    MaterialModule.forRoot()
+    MaterialModule
   ],
   exports: [SidebarComponent],
   providers: [AuthenticationService, TranscriptService]

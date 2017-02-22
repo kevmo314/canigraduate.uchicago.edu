@@ -15,6 +15,6 @@ export class CourseNameComponent {
 
   get name() {
     return this.databaseService.courseInfo(this.course)
-        .map(x => (x && x.hasOwnProperty('name')) ? x.name : UNKNOWN_COURSE_NAME);
+        .map(x => (x && x.name) ? x.name : UNKNOWN_COURSE_NAME);
   }
 }

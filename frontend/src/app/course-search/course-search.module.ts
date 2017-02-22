@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { MaterialModule } from '@angular/material';
 import { CourseSearchComponent } from './course-search.component';
-import { FlexLayoutModule } from "@angular/flex-layout";
+import { FlexLayoutModule } from '@angular/flex-layout';
 import { environment } from 'environments/environment';
 
 // This should really be named SectionSearchModule, but we name it
@@ -13,8 +13,8 @@ import { environment } from 'environments/environment';
   declarations: [CourseSearchComponent, SearchResultComponent],
   imports: [
     BrowserModule,
-    MaterialModule.forRoot(),
-    FlexLayoutModule.forRoot()
+    MaterialModule,
+    FlexLayoutModule
   ],
   exports: [CourseSearchComponent],
   providers: [],
