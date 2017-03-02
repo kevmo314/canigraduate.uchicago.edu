@@ -1,3 +1,5 @@
+import collections
+
 class Course(object):
     def __init__(self, id):
         self.id = id

@@ -15,6 +15,7 @@ class TranscriptRecord(object):
             'section': self.section.id,
             'complete': self.complete,
             'quality': self.grade.quality if self.complete else None,
+            'credit': self.grade.credit if self.complete else None,
             'grade': self.grade.grade if self.complete else None,
             'gpa': self.grade.gpa if self.complete else None
         }

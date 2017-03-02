@@ -43,7 +43,7 @@ class CourseSearch(object):
               id=match.group('section'),
               name=course_name,
               units=None,
-              instructor=None,
+              instructors=[],
               schedule=None,
               type=match.group('type'),
               enrollment=[0, 0],

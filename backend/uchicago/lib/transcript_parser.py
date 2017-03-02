@@ -20,6 +20,8 @@ class TranscriptParser(object):
             'j_password': self.password,
             '_eventId_proceed': ''
         }).text, 'lxml')
+        if secondary_page.find('input', {'name': 'RelayState'}) is None:
+            raise ValueError('Invalid CNetID or password.')
         relay_state = secondary_page.find('input', {'name': 'RelayState'})['value']
         saml_response = secondary_page.find('input', {'name': 'SAMLResponse'})['value']
         session.post('https://aisweb.uchicago.edu/Shibboleth.sso/SAML2/POST', {'RelayState': relay_state, 'SAMLResponse': saml_response})
