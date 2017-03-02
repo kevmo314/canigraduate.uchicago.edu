@@ -6,7 +6,6 @@ import { MaterialModule } from '@angular/material';
 import { AuthenticationModule } from 'app/authentication/authentication.module';
 import { AuthenticationService } from 'app/authentication/authentication.service';
 import { CourseInfoModule } from 'app/course-info/course-info.module';
-import { CourseInfoService } from 'app/course-info/course-info.service';
 import { ReauthenticationDialogComponent } from 'app/authentication/reauthentication-dialog.component';
 
 import { TranscriptComponent } from './transcript.component';
@@ -25,10 +24,10 @@ import { TranscriptService } from './transcript.service';
     CourseInfoModule,
     BrowserModule,
     HttpModule,
-    MaterialModule.forRoot()
+    MaterialModule
   ],
   exports: [TranscriptComponent],
-  providers: [AuthenticationService, CourseInfoService],
+  providers: [AuthenticationService],
   entryComponents: [ReauthenticationDialogComponent],
 })
 export class TranscriptModule { }

@@ -1,14 +1,14 @@
 import { Base } from './base';
+import { Period } from 'app/period';
 
 export const UniversityOfChicago: Base = {
-    id: 'uchicago',
     name: 'UChicago',
     theme: 'uchicago',
     periods: [
-        { name: 'Autumn', shorthand: 'F', color: '#FFA319' },
-        { name: 'Winter', shorthand: 'W', color: '#155F83' },
-        { name: 'Spring', shorthand: 'S', color: '#8A9045' },
-        { name: 'Summer', shorthand: 'S', color: '#8F3931' },
+        <Period> { name: 'Autumn', shorthand: 'F', color: '#FFA319' },
+        <Period> { name: 'Winter', shorthand: 'W', color: '#155F83' },
+        <Period> { name: 'Spring', shorthand: 'S', color: '#8A9045' },
+        <Period> { name: 'Summer', shorthand: 'S', color: '#8F3931' },
     ],
     getDepartment(id: string): string {
         return id.substring(0, 4);

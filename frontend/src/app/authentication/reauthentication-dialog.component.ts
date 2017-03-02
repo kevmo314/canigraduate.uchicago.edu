@@ -10,7 +10,7 @@ import { AuthenticationService } from './authentication.service';
 })
 export class ReauthenticationDialogComponent {
   password: string;
-  private _valid: boolean = true;
+  private _valid = true;
   constructor(
     private mdDialogRef: MdDialogRef<ReauthenticationDialogComponent>,
     private authenticationService: AuthenticationService) {}

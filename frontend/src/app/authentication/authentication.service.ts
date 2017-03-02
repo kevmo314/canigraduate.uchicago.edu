@@ -6,13 +6,14 @@ import { Subject } from 'rxjs/Subject';
 import { environment } from 'environments/environment';
 
 /**
- * An authentication service. 
+ * An authentication service.
  */
 @Injectable()
 export class AuthenticationService extends Subject<{username: string, password: string}> {
-  private _data: {username: string, password: string} = null;
-  private _valid: boolean = true;
-  private _authenticated: boolean = false;
+  private _data: {username: string, password: string};
+  private _valid = true;
+  private _authenticated = false;
+  private _error: string;
   constructor(
     private http: Http,
     private cookieService: CookieService) {
@@ -31,6 +32,11 @@ export class AuthenticationService extends Subject<{username: string, password: 
     return this._valid;
   }
 
+  get message() {
+    // Unfortunately we have no way to notify failures.
+    return this._error;
+  }
+
   get authenticated(): boolean {
     return this._authenticated;
   }
@@ -47,11 +53,12 @@ export class AuthenticationService extends Subject<{username: string, password: 
     }
   }
 
-  error(err: any): void {
+  error(err: string): void {
     this._data = null;
     // Intercept error as we don't want to terminate the stream.
     // Instead, flag the state as invalid.
     this._valid = false;
+    this._error = err;
   }
 
   complete(): void {

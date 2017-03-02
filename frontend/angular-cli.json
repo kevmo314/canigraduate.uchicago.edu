@@ -19,11 +19,10 @@
       "mobile": false,
       "styles": ["styles.scss"],
       "scripts": [
-        "../node_modules/hammerjs/hammer.min.js",
-        "../node_modules/pouchdb/dist/pouchdb.min.js"
+        "../node_modules/hammerjs/hammer.min.js"
       ],
+      "environmentSource": "environments/environment.ts",
       "environments": {
-        "source": "environments/environment.ts",
         "dev": "environments/environment.ts",
         "uchicago": "environments/environment.uchicago.ts"
       }

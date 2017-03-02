@@ -1,9 +1,7 @@
-import { CourseInfoService } from '../course-info/course-info.service';
 import { TranscriptRecord } from '../transcript/transcript-record';
 import { Transcript } from '../transcript/transcript';
 import { TranscriptService } from '../transcript/transcript.service';
 import { RequirementNodeComponent } from './requirement-node.component';
-import { CatalogService } from './catalog.service';
 import { Component, ViewChild, QueryList, AfterViewInit, Input } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 
@@ -20,8 +18,9 @@ export class ProgramComponent implements AfterViewInit {
   private _progress = 0;
   private _total = 0;
   private _coursesUsed: TranscriptRecord[] = [];
+  hide: boolean = true;
 
-  constructor(private transcriptService: TranscriptService, private courseInfoService: CourseInfoService) {}
+  constructor(private transcriptService: TranscriptService) {}
 
   ngAfterViewInit() {
     this.transcriptService.transcript.subscribe(t => this.evaluateTranscript(t));

@@ -1,13 +1,10 @@
 import { TranscriptRecord } from '../transcript/transcript-record';
 import { Transcript } from '../transcript/transcript';
 import { Component, Input, AfterViewInit } from '@angular/core';
-import { CatalogService } from './catalog.service';
-import { CourseInfoService } from 'app/course-info/course-info.service';
+import { DatabaseService } from 'app/database/database.service';
 import { Observable } from 'rxjs/Observable';
-import { AngularFire, FirebaseObjectObservable } from 'angularfire2';
 import { Memoize } from 'typescript-memoize';
 import { RequirementNodeComponent } from './requirement-node.component';
-import { CrosslistInvariantPrefixMultiSet } from 'app/course-info/crosslist-invariant-prefix-multi-set';
 import { environment } from 'environments/environment';
 
 /**
@@ -25,11 +22,8 @@ export class RequirementLeafComponent extends RequirementNodeComponent implement
   satisfier: string = null;
   force: boolean = false;
 
-  constructor(
-    catalogService: CatalogService,
-    private courseInfoService: CourseInfoService,
-    private angularFire: AngularFire) {
-    super(catalogService);
+  constructor(private leafDatabaseService: DatabaseService) {
+    super(leafDatabaseService);
   }
 
   ngAfterViewInit() {
@@ -101,7 +95,7 @@ export class RequirementLeafComponent extends RequirementNodeComponent implement
           state.delete(this.satisfier = this.requirement);
           return resolve(this.progress);
         }
-        this.courseInfoService.lookup(this.requirement).first().subscribe(result => {
+        this.leafDatabaseService.courseInfo(this.requirement).first().subscribe(result => {
           for (let crosslist of (result.crosslists || [])) {
             if (state.has(crosslist)) {
               // The list of classes has a crosslisted course.
@@ -124,7 +118,7 @@ export class RequirementLeafComponent extends RequirementNodeComponent implement
             resolved = true;
             return resolve(this.progress);
           }
-          this.courseInfoService.lookup(course).first().subscribe(result => {
+          this.leafDatabaseService.courseInfo(course).first().subscribe(result => {
             if (resolved) { return; }
             for (let crosslist of (result.crosslists || [])) {
               if (this.satisfiesRequirement(crosslist)) {

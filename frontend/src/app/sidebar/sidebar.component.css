@@ -20,3 +20,8 @@
 .sidebar .header .grades-toggle {
   margin: 0;
 }
+
+.sidebar .error {
+  color: red;
+  white-space: nowrap;
+}

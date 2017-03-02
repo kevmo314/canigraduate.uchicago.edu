@@ -7,7 +7,7 @@ import { NgModule } from '@angular/core';
 import { HttpModule } from '@angular/http';
 import { MaterialModule } from '@angular/material';
 import { BrowserModule } from '@angular/platform-browser';
-import { AngularFireModule } from 'angularfire2';
+import { DatabaseModule } from 'app/database/database.module';
 import { environment } from 'environments/environment';
 
 @NgModule({
@@ -20,13 +20,11 @@ import { environment } from 'environments/environment';
   imports: [
     BrowserModule,
     HttpModule,
-    MaterialModule.forRoot(),
+    MaterialModule,
     CourseInfoModule,
-    AngularFireModule.initializeApp(environment.firebaseConfig)
+    DatabaseModule
   ],
-  exports: [
-    CatalogComponent, ProgramComponent, RequirementNodeComponent, RequirementLeafComponent
-  ],
+  exports: [CatalogComponent, ProgramComponent, RequirementNodeComponent, RequirementLeafComponent],
   providers: [],
 })
 export class CatalogModule { }

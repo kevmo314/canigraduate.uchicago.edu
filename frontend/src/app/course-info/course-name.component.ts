@@ -1,4 +1,4 @@
-import { CourseInfoService } from '../course-info/course-info.service';
+import { DatabaseService } from '../database/database.service';
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
 const UNKNOWN_COURSE_NAME = 'Unknown';
@@ -11,10 +11,10 @@ const UNKNOWN_COURSE_NAME = 'Unknown';
 })
 export class CourseNameComponent {
   @Input() course: string;
-  constructor(private courseInfoService: CourseInfoService) {}
+  constructor(private databaseService: DatabaseService) {}
 
   get name() {
-    return this.courseInfoService.lookup(this.course)
-        .map(x => (x && x.hasOwnProperty('name')) ? x.name : UNKNOWN_COURSE_NAME);
+    return this.databaseService.courseInfo(this.course)
+        .map(x => (x && x.name) ? x.name : UNKNOWN_COURSE_NAME);
   }
 }

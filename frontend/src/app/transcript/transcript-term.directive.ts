@@ -1,6 +1,5 @@
 import { Directive, Input } from '@angular/core';
 
-import { CourseInfoService } from 'app/course-info/course-info.service';
 import { TranscriptRecord } from './transcript-record';
 
 @Directive({ selector: '[cigTranscriptTerm]', exportAs: 'cigTranscriptTerm' })

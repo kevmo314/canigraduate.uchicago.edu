@@ -1,8 +1,8 @@
-<md-card class="program">
+<md-card class="program" [ngClass]="{'hidden': hide}">
   <div class="status">
     {{progress}} / {{total}}
   </div>
-  <md-card-header>
+  <md-card-header (click)="hide=!hide">
     <div md-card-avatar class="example-header-image"></div>
     <md-card-title class="header">{{title}}</md-card-title>
     <md-card-subtitle>
