@@ -6,7 +6,9 @@ import { Program } from 'app/program';
 
 @Component({
   selector: 'cig-catalog',
-  template: `<div class="catalog"><cig-program *ngFor="let program of majors" [title]="program.name" [program]="program"></cig-program></div>`,
+  template: '<div class="catalog">' +
+    '<cig-program *ngFor="let program of majors" [title]="program.name" [program]="program"></cig-program>' +
+    '</div>',
   styleUrls: ['./catalog.component.css']
 })
 export class CatalogComponent {

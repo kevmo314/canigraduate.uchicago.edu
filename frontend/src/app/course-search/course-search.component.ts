@@ -1,12 +1,12 @@
 import { DatabaseService } from 'app/database/database.service';
 import { FormControl } from '@angular/forms';
 import { environment } from '../../environments/environment';
-import { Filters } from './filters';
+import { Filters } from 'app/filters';
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { MdButtonToggleChange } from '@angular/material';
-import { Course } from 'app/course';
 import { Period } from 'app/period';
 import { Observable } from 'rxjs/Observable';
+import { Subscription } from 'rxjs/Subscription';
 
 @Component({
   selector: 'cig-course-search',
@@ -16,9 +16,11 @@ import { Observable } from 'rxjs/Observable';
 export class CourseSearchComponent implements AfterViewInit, OnInit {
   filters: Filters = new Filters();
   periods: Period[] = environment.institution.periods;
-  results: Course[] = [];
+  results: string[] = [];
   instructors: string[] = [];
   departments: string[] = [];
+  page = 0;
+  queryTime = 0;
 
   instructorControl = new FormControl();
   departmentControl = new FormControl();
@@ -35,8 +37,12 @@ export class CourseSearchComponent implements AfterViewInit, OnInit {
   ngAfterViewInit() {
     this.filters.changes.subscribe(filters => {
       // Search the database using these filters.
-      console.log('changes!', filters);
-      this.databaseService.schedules(filters);
+      console.log(filters);
+      const start = new Date().getTime();
+      this.databaseService.schedules(filters).then(results => {
+        this.results = results;
+        this.queryTime = new Date().getTime() - start;
+      });
     });
 
   }
@@ -54,6 +60,7 @@ export class CourseSearchComponent implements AfterViewInit, OnInit {
     const results = this.searchDepartments(value);
     if (results.length > 0) {
       this.filters.departments.add(results[0]);
+      this.filters.emitChange();
     }
   }
 

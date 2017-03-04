@@ -1,0 +1,8 @@
+<div class="id">{{course}}</div>
+<div>
+  <cig-course-name [course]="course" class="name"></cig-course-name>
+  <div class="crosslists">
+    <!-- Crosslisted courses should have the same name, so just render the crosslisting. -->
+    {{getCrosslists(course) | async}}
+  </div>
+</div>
