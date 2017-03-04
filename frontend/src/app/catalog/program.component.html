@@ -1,12 +1,11 @@
 <md-card class="program" [ngClass]="{'hidden': hide}">
-  <div class="status">
-    {{progress}} / {{total}}
-  </div>
   <md-card-header (click)="hide=!hide">
     <div md-card-avatar class="example-header-image"></div>
     <md-card-title class="header">{{title}}</md-card-title>
     <md-card-subtitle>
-      <a [href]="program?.metadata?.catalog" target="_blank">College Catalog</a>
+      <a [href]="program?.metadata?.catalog" target="_blank">College Catalog</a> - 
+    {{total - progress}} classes remaining
+    {{gpa | number : '1.2-2'}}
     </md-card-subtitle>
   </md-card-header>
   <md-card-content>

@@ -1,4 +1,3 @@
-import { Transcript } from '../transcript/transcript';
 import { TranscriptService } from '../transcript/transcript.service';
 import { DatabaseService } from 'app/database/database.service';
 import { RequirementNodeComponent } from './requirement-node.component';
@@ -19,9 +18,15 @@ export class CatalogComponent {
   constructor(
     private databaseService: DatabaseService,
     private transcriptService: TranscriptService) {
-    this.databaseService.programs.subscribe(data => {
-      this.majors = data.filter(x => !x.name.endsWith('Minor')).sort();
-      this.minors = data.filter(x => x.name.endsWith('Minor')).sort();
+    this.databaseService.programs.first().subscribe(data => {
+      Promise.all(data.filter(x => !x.name.endsWith('Minor'))
+        .sort(Program.compare)
+        .map(p => p.ready.then(() => p)))
+        .then(programs => this.majors = programs);
+      Promise.all(data.filter(x => x.name.endsWith('Minor'))
+        .sort(Program.compare)
+        .map(p => p.ready.then(() => p)))
+        .then(programs => this.minors = programs);
     });
   }
 }

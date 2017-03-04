@@ -48,6 +48,7 @@ export class AuthenticationService extends Subject<{username: string, password: 
   }
 
   error(err: any): void {
+    console.error(err);
     this._data = null;
     // Intercept error as we don't want to terminate the stream.
     // Instead, flag the state as invalid.

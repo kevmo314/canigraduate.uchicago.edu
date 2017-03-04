@@ -20,31 +20,36 @@ export class Filters {
     private _periods: Set<Period> = new Set<Period>(environment.institution.periods);
     private _changes: ReplaySubject<Filters> = new ReplaySubject<Filters>(1);
 
-    taken: boolean = false;
-    tested: boolean = false;
-    prequisites: boolean = false;
-    core: boolean = false;
+    taken = false;
+    tested = false;
+    prequisites = false;
+    core = false;
 
     // Template helper functions...
-    getDayOfWeekFilter(x: DayOfWeek): boolean { return (this._dayOfWeek & x) > 0; }
+    getDayOfWeekFilter(x: DayOfWeek) { return (this._dayOfWeek & x) > 0; }
     setDayOfWeekFilter(x: DayOfWeek, value: boolean) {
         this._dayOfWeek ^= (-value ^ this._dayOfWeek) & x;
         this._changes.next(this);
     }
 
-    getPeriodFilter(x: Period): boolean { return this._periods.has(x); }
+    getPeriodFilter(x: Period) { return this._periods.has(x); }
     setPeriodFilter(x: Period, value: boolean) {
         if (value) {
             this._periods.add(x);
         } else {
             this._periods.delete(x);
         }
-        console.log(this._periods);
         this._changes.next(this);
     }
 
     /** Returns an observable that emits the latest version of the filters. */
     get changes(): Observable<Filters> {
         return this._changes;
+    }
+
+    get selector(): PouchDB.Find.Selector {
+        return {
+            'period': { $in: Array.from(this._periods).map(p => p.name) }
+        };
     }
 }

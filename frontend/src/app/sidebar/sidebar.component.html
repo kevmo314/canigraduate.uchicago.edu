@@ -5,7 +5,7 @@
       <p><strong>Can I Graduate?</strong> works better if you're signed in. Enter your UChicago CNetID and password to import your data from AIS.</p>
       <md-input-container [dividerColor]="authenticationService.valid ? null : 'warn'">
         <input md-input placeholder="CNetID" formControlName="username" required>
-        <md-hint *ngIf="!authenticationService.valid" [ngStyle]="{'color': 'red'}">Invalid CNetID or password.</md-hint>
+        <md-hint *ngIf="!authenticationService.valid" [ngStyle]="{'color': 'red'}">Invalid CNetID or password, or other connection error idk.</md-hint>
       </md-input-container>
       <md-input-container [dividerColor]="authenticationService.valid ? null : 'warn'">
         <input md-input placeholder="Password" required type="password" formControlName="password">

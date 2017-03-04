@@ -4,6 +4,7 @@ import { AfterViewInit, Component } from '@angular/core';
 import { MdButtonToggleChange } from '@angular/material';
 import { Course } from 'app/course';
 import { Period } from 'app/period';
+import { DatabaseService } from 'app/database/database.service';
 
 @Component({
   selector: 'cig-course-search',
@@ -14,6 +15,8 @@ export class CourseSearchComponent implements AfterViewInit {
   filters: Filters = new Filters();
   periods: Period[] = environment.institution.periods;
   results: Course[] = [];
+
+  constructor(private databaseService: DatabaseService) { }
 
   get monday() { return this.filters.getDayOfWeekFilter(DayOfWeek.Monday); }
   set monday(value) { this.filters.setDayOfWeekFilter(DayOfWeek.Monday, value); }
@@ -33,6 +36,8 @@ export class CourseSearchComponent implements AfterViewInit {
   ngAfterViewInit() {
     this.filters.changes.subscribe(filters => {
       // Search the database using these filters.
+      console.log('changes!', filters);
+      this.databaseService.schedules(filters);
     });
   }
 }

@@ -14,7 +14,6 @@ export class CourseNameComponent {
   constructor(private databaseService: DatabaseService) {}
 
   get name() {
-    return this.databaseService.courseInfo(this.course)
-        .map(x => (x && x.hasOwnProperty('name')) ? x.name : UNKNOWN_COURSE_NAME);
+    return this.databaseService.courseInfo(this.course).map(x => x.name || UNKNOWN_COURSE_NAME);
   }
 }
