@@ -1,5 +1,5 @@
 import { Component, Input, ChangeDetectionStrategy, AfterViewInit } from '@angular/core';
-import { Filters, DayOfWeek } from './filters';
+import { Filters } from './filters';
 import { Course } from 'app/course';
 
 @Component({

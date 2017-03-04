@@ -1,4 +1,3 @@
-import { TranscriptService } from '../transcript/transcript.service';
 import { DatabaseService } from 'app/database/database.service';
 import { RequirementNodeComponent } from './requirement-node.component';
 import { Component, ViewChildren, QueryList, AfterViewInit } from '@angular/core';
@@ -15,9 +14,7 @@ export class CatalogComponent {
   minors: Program[] = [];
   progress: Map<string, {completed: number, remaining: number}>;
 
-  constructor(
-    private databaseService: DatabaseService,
-    private transcriptService: TranscriptService) {
+  constructor(private databaseService: DatabaseService) {
     this.databaseService.programs.first().subscribe(data => {
       Promise.all(data.filter(x => !x.name.endsWith('Minor'))
         .sort(Program.compare)

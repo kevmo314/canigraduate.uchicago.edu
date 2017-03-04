@@ -1,4 +1,4 @@
-import { DatabaseService } from '../database/database.service';
+import { DatabaseService } from 'app/database/database.service';
 import { FormControl } from '@angular/forms';
 import { environment } from '../../environments/environment';
 import { Filters } from './filters';
@@ -6,11 +6,7 @@ import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { MdButtonToggleChange } from '@angular/material';
 import { Course } from 'app/course';
 import { Period } from 'app/period';
-<<<<<<< HEAD
-import { DatabaseService } from 'app/database/database.service';
-=======
 import { Observable } from 'rxjs/Observable';
->>>>>>> 8a8f39224bd6875919edb163b9992cea23a53096
 
 @Component({
   selector: 'cig-course-search',
