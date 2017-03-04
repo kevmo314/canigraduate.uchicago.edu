@@ -17,3 +17,7 @@ class Grade(object):
     @property
     def quality(self):
         return self.gpa is not None
+
+    @property
+    def credit(self):
+        return self.grade[-1] == 'P' or (self.quality and self.gpa > 0)

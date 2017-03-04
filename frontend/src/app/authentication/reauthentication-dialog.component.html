@@ -4,7 +4,7 @@
     <div>Please re-enter your CNetID password</div>
     <md-input-container [dividerColor]="valid ? null : 'warn'" class="password-input">
       <input
-        md-input
+        mdInput
         type="password"
         [(ngModel)]="password"
         name="password"
@@ -14,7 +14,7 @@
     </md-input-container>
   </md-dialog-content>
   <md-dialog-actions>
-    <button md-raised-button color="primary">Submit</button>
-    <button md-button md-dialog-close>Cancel</button>
+    <button mdRaisedButton color="primary">Submit</button>
+    <button mdButton mdDialogClose>Cancel</button>
   </md-dialog-actions>
 </form>

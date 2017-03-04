@@ -31,7 +31,7 @@ export class TranscriptService {
         // Notify the authentication service that login was successful.
         this.authenticationService.complete();
       },
-      err => this.authenticationService.error(err),
+      err => this.authenticationService.error(err.json()['error']),
       () => {});
   }
 }

@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { DatabaseModule } from 'app/database/database.module';
 import { MaterialModule } from '@angular/material';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CourseSearchComponent } from './course-search.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { environment } from 'environments/environment';
@@ -14,9 +15,10 @@ import { environment } from 'environments/environment';
   declarations: [CourseSearchComponent, SearchResultComponent],
   imports: [
     BrowserModule,
-    DatabaseModule,
-    MaterialModule.forRoot(),
-    FlexLayoutModule.forRoot()
+    MaterialModule,
+    FormsModule,
+    ReactiveFormsModule,
+    FlexLayoutModule
   ],
   exports: [CourseSearchComponent],
   providers: [],

@@ -15,7 +15,7 @@ import { ReauthenticationDialogComponent } from './reauthentication-dialog.compo
     BrowserModule,
     HttpModule,
     FormsModule,
-    MaterialModule.forRoot()
+    MaterialModule
   ],
   exports: [],
   providers: [ CookieService ]

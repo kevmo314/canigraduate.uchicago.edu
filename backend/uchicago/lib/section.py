@@ -1,11 +1,11 @@
 class Section(object):
-    def __init__(self, id, course=None, name=None, units=None, instructor=None, schedule=None, type=None, enrollment=None, location=None):
+    def __init__(self, id, course=None, name=None, units=None, instructors=[], schedule=None, type=None, enrollment=None, location=None):
         self.id = id
         self.course = course
         self.notes = []
         self.name = name
         self.units = units
-        self.instructor = instructor
+        self.instructors = instructors
         self.schedule = schedule
         self.type = type
         self.enrollment = enrollment

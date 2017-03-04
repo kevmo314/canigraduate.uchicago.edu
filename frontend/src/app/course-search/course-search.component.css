@@ -1,3 +1,28 @@
 .course-search {
   padding: 16px;
 }
+
+.filters, .query {
+  padding: 8px 16px;
+}
+
+.query {
+  margin-top: 16px;
+  cursor: text;
+}
+
+.query md-card-content {
+  display: flex;
+  align-items: center;
+}
+
+.query md-card-content md-icon {
+  flex-shrink: 0;
+  padding-right: 8px;
+}
+
+.query md-card-content input {
+  flex-grow: 1;
+  border: 0;
+  outline: none;
+}

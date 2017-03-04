@@ -9,9 +9,11 @@ import { HttpModule } from '@angular/http';
 import { MaterialModule } from '@angular/material';
 import { RouterModule, RouteReuseStrategy, DetachedRouteHandle, ActivatedRouteSnapshot } from '@angular/router';
 import { BrowserModule } from '@angular/platform-browser';
+import { AngularFireModule } from 'angularfire2';
 
 import { CatalogComponent } from 'app/catalog/catalog.component';
 import { CourseSearchComponent } from 'app/course-search/course-search.component';
+import { environment } from 'environments/environment';
 
 export class StickyOutletReuseStrategy implements RouteReuseStrategy {
   handlers: Map<string, DetachedRouteHandle> = new Map<string, DetachedRouteHandle>();
@@ -45,7 +47,8 @@ export class StickyOutletReuseStrategy implements RouteReuseStrategy {
     SidebarModule,
     CatalogModule,
     CourseSearchModule,
-    MaterialModule.forRoot()
+    MaterialModule,
+    AngularFireModule.initializeApp(environment.firebaseConfig)
   ],
   providers: [
     { provide: RouteReuseStrategy, useClass: StickyOutletReuseStrategy },

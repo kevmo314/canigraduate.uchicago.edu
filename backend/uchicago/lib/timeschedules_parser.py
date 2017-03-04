@@ -1,12 +1,17 @@
 import bs4
 import collections
+import datetime
 import multiprocessing
+import os
 import re
 import requests
 
 from .course import Course
 from .section import Section
 from .activity import PrimaryActivity, SecondaryActivity
+
+SCHEDULE_REGEX = re.compile(r'(.+?)([\d:APM]+)-([\d:APM]+)')
+MIDNIGHT = datetime.datetime.strptime('12:00AM', '%I:%M%p')
 
 class FSM(object):
     def __init__(self, cells):
@@ -24,6 +29,44 @@ class FSM(object):
     def next_string(self):
         return self.next().getText().strip()
 
+    def next_schedule(self):
+        s = self.next_string()
+        if s.startswith('ARR') or s == '':
+            return []
+        tokens = SCHEDULE_REGEX.match(s)
+        if tokens is None:
+            raise Exception('Could not parse "%s"' % s)
+        days = tokens.group(1)
+        from_time = int((datetime.datetime.strptime(tokens.group(2), '%I:%M%p') - MIDNIGHT).total_seconds() / 60)
+        to_time = int((datetime.datetime.strptime(tokens.group(3), '%I:%M%p') - MIDNIGHT).total_seconds() / 60)
+        intervals = []
+        if days == 'M-F':
+            days = 'MTWThF'
+        for i in range(len(days)):
+            if days[i].isupper():
+                offset = None
+                if days[i] == 'S':
+                    offset = 0
+                if days[i] == 'M':
+                    offset = 1
+                if days[i] == 'T':
+                    offset = 2
+                if days[i] == 'W':
+                    offset = 3
+                if days[i:(i + 2)] == 'Th':
+                    offset = 4
+                if days[i] == 'F':
+                    offset = 5
+                if days[i:(i + 2)] == 'Sa':
+                    offset = 6
+                if offset is None:
+                    raise Exception('Could not determine offset for "%s"' % s)
+                intervals.append([offset * 24 * 60 + from_time, offset * 24 * 60 + to_time])
+        if len(intervals) == 0:
+            raise Exception('No intervals resulted from "%s"' % s)
+        return intervals
+
+
     def next_section(self):
         text = self.next_string()
         data = re.split('\s[/-]\s', text)
@@ -32,30 +75,32 @@ class FSM(object):
             raise ValueError()
         name = self.next_string()
         units = self.next_string()
-        instructor = self.next_string()
-        schedule = self.next_string()
+        instructors = list(filter(None, self.next_string().replace('.', '').split(' ; ')))
+        schedule = self.next_schedule()
         type = self.next_string()
         self.index += 2
         enrollment = self.next_string()
         enrollment_limit = self.next_string()
         location = self.next_string()
-        self.index += 3
+        self.index += 1
+        crosslists = [x for x in self.next_string().split(',') if len(x) > 0]
+        self.index += 1
         if name == 'CANCELLED':
             raise ValueError()
         return Course(id='%s %s' % (data[0], data[1])), Section(
                 id=data[2],
                 name=name,
                 units=units,
-                instructor=instructor,
+                instructors=instructors,
                 schedule=schedule,
                 type=type,
                 enrollment=[enrollment, enrollment_limit],
-                location=location)
+                location=location), crosslists
 
     def next_activity(self):
         self.index += 3
-        instructor = self.next_string()
-        schedule = self.next_string()
+        instructors = list(filter(None, self.next_string().replace('.', '').split(' ; ')))
+        schedule = self.next_schedule()
         section_type = self.next_string()
         activity_id = self.next_string()
         activity_type = self.next_string()
@@ -65,14 +110,14 @@ class FSM(object):
         self.index += 3
         if not activity_type:
             return PrimaryActivity(
-                    instructor=instructor if instructor else self.section.instructor,
+                    instructors=instructors if instructors else self.section.instructors,
                     schedule=schedule,
                     type=section_type,
                     location=location)
         else:
             return SecondaryActivity(
                     id=activity_id,
-                    instructor=instructor,
+                    instructors=instructors,
                     schedule=schedule,
                     type=activity_type,
                     location=location,
@@ -82,10 +127,14 @@ class FSM(object):
     def execute(self):
         while self.index < len(self.cells):
             try:
-                course, section = self.next_section()
+                course, section, crosslists = self.next_section()
                 self.section = section
                 self.course = course
                 self.results[course][section.id] = section
+                # This is sort of a hack...
+                if '_crosslists' not in self.results[course]:
+                    self.results[course]['_crosslists'] = set()
+                self.results[course]['_crosslists'].update(crosslists)
             except ValueError:
                 if self.section:
                     if self.cells[self.index].has_attr('colspan') and self.cells[self.index]['colspan'] == '24':

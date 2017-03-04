@@ -24,7 +24,7 @@ import { TranscriptService } from './transcript.service';
     CourseInfoModule,
     BrowserModule,
     HttpModule,
-    MaterialModule.forRoot()
+    MaterialModule
   ],
   exports: [TranscriptComponent],
   providers: [AuthenticationService],
