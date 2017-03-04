@@ -71,10 +71,4 @@ export class Filters {
     get changes(): Observable<Filters> {
         return this._changes;
     }
-
-    get selector(): PouchDB.Find.Selector {
-        return {
-            'period': { $in: Array.from(this._periods).map(p => p.name) }
-        };
-    }
 }
