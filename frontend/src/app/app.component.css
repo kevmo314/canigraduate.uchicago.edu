@@ -5,3 +5,11 @@
 .content {
 	flex-grow: 1;
 }
+
+md-tab-group {
+  width: calc(100vw - 540px);
+}
+
+cig-sidebar {
+  width: 540px;
+}

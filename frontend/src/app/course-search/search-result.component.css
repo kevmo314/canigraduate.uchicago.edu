@@ -1,20 +1,25 @@
 :host {
-    display: flex;
+  display: flex;
+  white-space: nowrap;
+  width: 100%;
 }
 
 .id {
-    width: 110px;
-    padding-right: 8px;
-    text-align: right;
-    padding-bottom: 14px;
+  flex: 0 0 110px;
+  padding-right: 8px;
+  text-align: right;
+  padding-bottom: 14px;
+}
+
+.description {
+  overflow: hidden;
 }
 
 .crosslists {
-    font-style: italic;
-    color: rgba(0, 0, 0, 0.54);
-    font-size: 12px;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-    height: 14px;
+  font-style: italic;
+  color: rgba(0, 0, 0, 0.54);
+  font-size: 12px;
+  height: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
