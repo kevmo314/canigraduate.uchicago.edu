@@ -13,6 +13,9 @@ firebase = pyrebase.initialize_app({
     'serviceAccount': 'service_account_key.json'
 })
 
+def transform(a):
+    return dict([(i, j) for i, j in enumerate(a) if j is not None])
+
 def rebuild_indexes(db):
     schedules = db.child('schedules').get().val()
     instructors = collections.defaultdict(set)
@@ -22,6 +25,9 @@ def rebuild_indexes(db):
     for course_id, a in schedules.items():
         for year, b in a.items():
             for period, c in b.items():
+                if isinstance(c, list):
+                    # Deal with Firebase's array heuristic.
+                    c = transform(c)
                 for id, section in c.items():
                     for instructor in section.get('instructors', []):
                         instructors[instructor].add(course_id)
@@ -29,12 +35,12 @@ def rebuild_indexes(db):
                     periods[period].add(course_id)
                     # Firebase doesn't store empty arrays.
                     for schedule in section.get('schedule', []):
-                        print(section)
                         intervals['%d-%d' % (schedule[0], schedule[1])].add(course_id)
     db.child('indexes').child('instructors').set(dict([(a, list(b)) for a, b in instructors.items()]))
     db.child('indexes').child('departments').set(dict([(a, list(b)) for a, b in departments.items()]))
     db.child('indexes').child('periods').set(dict([(a, list(b)) for a, b in periods.items()]))
     db.child('indexes').child('schedules').set(dict([(a, list(b)) for a, b in intervals.items()]))
+    db.child('indexes').child('all').set(list(schedules.keys()))
 
 def scrape_data(db):
     terms = sorted(list(Term.all()))
@@ -46,6 +52,7 @@ def scrape_data(db):
         updates = {}
         for course, sections in term.courses.items():
             data = known_course_info.get(course.id, {'crosslists': []})
+            data['description'] = data.get('description', course.description)
             for id, section in sections.items():
                 if id == '_crosslists':
                     continue
@@ -56,6 +63,8 @@ def scrape_data(db):
                 year = term.id[-4:]
                 period = term.id[:6]
                 updates['schedules/%s/%s/%s/%s' % (course.id, year, period, id)] = {
+                    'term': '%s %s' % (period, year),
+                    'department': course.id[:4],
                     'notes': section.notes,
                     'instructors': section.instructors,
                     'schedule': section.schedule,
