@@ -14,10 +14,10 @@
       <ng-container *ngIf="!force">finished</ng-container>
     </div>
   </div>
-  <div class="children" [ngClass]="{'hidden': hide}">
+  <div class="children" *ngIf="!hide || root">
     <ng-container *ngFor="let node of requirement.requirements">
-      <cig-requirement-node *ngIf="!isLeaf(node)" #child [requirement]="node"></cig-requirement-node>
-      <cig-requirement-leaf *ngIf="isLeaf(node)" #child [requirement]="node"></cig-requirement-leaf>
+      <cig-requirement-node *ngIf="!isLeaf(node)" #subnode [requirement]="node"></cig-requirement-node>
+      <cig-requirement-leaf *ngIf="isLeaf(node)" [requirement]="node"></cig-requirement-leaf>
     </ng-container>
   </div>
 </div>

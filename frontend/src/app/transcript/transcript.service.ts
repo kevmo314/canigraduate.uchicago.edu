@@ -1,5 +1,5 @@
 import 'rxjs/Rx';
-import { Transcript } from './transcript';
+import { Transcript } from 'app/transcript';
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
 import { AuthenticationService } from 'app/authentication/authentication.service';

@@ -21,11 +21,13 @@ export class Filters {
     excludedTimes = [SUNDAY, SATURDAY];
     instructors = new Set<string>();
     departments = new Set<string>();
-    query = '';
+    _query = '';
     taken = false;
     tested = false;
     prequisites = false;
     core = false;
+
+    public constructor() { this._changes.next(this); }
 
     private setExcludedInterval(x, value) {
         const index = this.getExcludedInterval(x);
@@ -43,7 +45,7 @@ export class Filters {
 
     // Monday should return true if the entire day of the week is not excluded.
     get monday() { return this.getExcludedInterval(MONDAY) === -1; }
-    set monday(value) { debugger; this.setExcludedInterval(MONDAY, value); }
+    set monday(value) { this.setExcludedInterval(MONDAY, value); }
     get tuesday() { return this.getExcludedInterval(TUESDAY) === -1; }
     set tuesday(value) { this.setExcludedInterval(TUESDAY, value); }
     get wednesday() { return this.getExcludedInterval(WEDNESDAY) === -1; }
@@ -57,6 +59,12 @@ export class Filters {
     get sunday() { return this.getExcludedInterval(SUNDAY) === -1; }
     set sunday(value) { this.setExcludedInterval(SUNDAY, value); }
 
+    get query() { return this._query; }
+    set query(value) {
+        this._query = value;
+        this.emitChange();
+    }
+
     getPeriodFilter(x: Period): boolean { return this._periods.has(x); }
     setPeriodFilter(x: Period, value: boolean) {
         if (value) {
@@ -64,7 +72,11 @@ export class Filters {
         } else {
             this._periods.delete(x);
         }
-        console.log(this._periods);
+        this._changes.next(this);
+    }
+
+    emitChange() {
+        console.log('marking change');
         this._changes.next(this);
     }
 

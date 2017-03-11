@@ -10,6 +10,7 @@ export class TranscriptRecord {
   gpa: number;
   grade: string;
   quality: boolean;
+  credit: boolean;
   section: string;
   term: string;
 
