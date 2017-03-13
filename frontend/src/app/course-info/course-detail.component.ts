@@ -5,7 +5,7 @@ import { Component, Input, ChangeDetectionStrategy, AfterViewInit } from '@angul
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'cig-course-detail',
-  template: `{{course}}`,
+  templateUrl: 'course-detail.component.html',
   styleUrls: ['./course-detail.component.scss']
 })
 export class CourseDetailComponent implements AfterViewInit {
@@ -15,5 +15,9 @@ export class CourseDetailComponent implements AfterViewInit {
   constructor(private databaseService: DatabaseService) { }
 
   ngAfterViewInit() {
+  }
+
+  get description() {
+    return this.databaseService.description(this.course);
   }
 }
