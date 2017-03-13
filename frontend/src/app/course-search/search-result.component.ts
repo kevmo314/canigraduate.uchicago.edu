@@ -1,6 +1,8 @@
 import { DatabaseService } from 'app/database/database.service';
 import { Component, Input, ChangeDetectionStrategy, AfterViewInit } from '@angular/core';
 import { Filters } from 'app/filters';
+import { environment } from 'environments/environment';
+import { Period } from 'app/period';
 
 @Component({
   selector: 'cig-search-result',
@@ -9,6 +11,7 @@ import { Filters } from 'app/filters';
 })
 export class SearchResultComponent implements AfterViewInit {
   @Input() course: string;
+  periods: Period[] = environment.institution.periods;
 
   constructor(private databaseService: DatabaseService) { }
 
@@ -19,6 +22,6 @@ export class SearchResultComponent implements AfterViewInit {
   }
 
   getCrosslists(id: string) {
-    return this.databaseService.courseInfo(id).map(info => (info['crosslists'] || []).join(', '));
+    return this.databaseService.crosslists(id).map(info => (info || []).join(', '));
   }
 }

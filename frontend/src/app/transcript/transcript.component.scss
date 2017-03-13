@@ -1,3 +1,5 @@
+@import '~@angular/material/core/style/variables';
+
 .term {
   padding-top: 0;
 }
@@ -20,7 +22,7 @@
 
 .subheader md-icon {
   margin: 6px;
-  transition: transform 250ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: $swift-ease-in-out;
 }
 
 .subheader md-icon.flip {
@@ -45,7 +47,7 @@
 }
 
 .records {
-  transition: max-height 250ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: $swift-ease-in-out;
   max-height: 1000px;
   overflow: hidden;
 }

@@ -7,6 +7,8 @@ import { Memoize } from 'typescript-memoize';
 import { Program, Node } from 'app/program';
 import { Filters } from 'app/filters';
 import { AngularFire } from 'angularfire2';
+import { Section } from 'app/section';
+import { Term } from 'app/term';
 
 /** Course catalog information service. */
 @Injectable()
@@ -37,8 +39,17 @@ export class DatabaseService {
     });
   }
 
-  courseInfo(id: string): Observable<{ name: string, crosslists: string[] }> {
-    return this.object('course-info/' + id);
+  // TODO: This can probably be refactored.
+  name(id: string): Observable<string> {
+    return this.object(`course-info/${id}/name`);
+  }
+
+  crosslists(id: string): Observable<string[]> {
+    return this.object(`course-info/${id}/crosslists`);
+  }
+
+  description(id: string): Observable<string> {
+    return this.object(`course-info/${id}/description`);
   }
 
   /** Returns an unmemoized program Node. */
@@ -52,9 +63,32 @@ export class DatabaseService {
     return new Set<T>(Array.from(a.values()).filter(x => b.has(x)));
   }
 
+  schedules(id: string): Observable<any> {
+    return this.object('schedules/' + id);
+  }
+
+  sections(id: string, filters: Filters): Observable<Section[]> {
+    return this.schedules(id).map(data => {
+      const results = [];
+      for (const year of Object.keys(data)) {
+        for (const period of (data[year] ? Object.keys(data[year]) : [])) {
+          for (const sectionId of (data[year][period] ? Object.keys(data[year][period]) : [])) {
+            if (data[year][period][sectionId]) {
+              results.push(<Section>{
+                id: sectionId,
+                term: data[year][period][sectionId]['term']
+              });
+            }
+          }
+        }
+      }
+      return results.sort((a, b) => -Term.compare(a.term, b.term) || -(a.id < b.id) || +(a.id !== b.id));
+    });
+  }
+
   private _indexesCache;
 
-  schedules(filters: Filters): Promise<string[]> {
+  courses(filters: Filters): Promise<string[]> {
     // Return all the course id's that match a specific filter set.
     return (this._indexesCache ? Observable.of(this._indexesCache) : this.angularFire.database.object('indexes').map(indexes => {
       return this._indexesCache = indexes;

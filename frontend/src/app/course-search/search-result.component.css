@@ -8,17 +8,27 @@
   flex: 0 0 110px;
   padding-right: 8px;
   text-align: right;
-  padding-bottom: 14px;
+  padding-bottom: 20px;
 }
 
 .description {
   overflow: hidden;
+  flex-grow: 1;
+}
+
+.description .row {
+  display: flex;
+}
+
+.description .row cig-course-name {
+  flex-grow: 1;
 }
 
 .crosslists {
   font-style: italic;
   color: rgba(0, 0, 0, 0.54);
   font-size: 12px;
+  padding-top: 6px;
   height: 14px;
   overflow: hidden;
   text-overflow: ellipsis;

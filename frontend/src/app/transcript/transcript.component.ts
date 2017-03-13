@@ -6,7 +6,7 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'cig-transcript',
   templateUrl: './transcript.component.html',
-  styleUrls: ['./transcript.component.css']
+  styleUrls: ['./transcript.component.scss']
 })
 export class TranscriptComponent {
   @Input() transcript: Transcript;

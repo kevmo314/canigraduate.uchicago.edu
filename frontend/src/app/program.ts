@@ -76,7 +76,7 @@ export class Program extends Node {
     // equivalence classes, only one child will succeed.
     let resolved = false;
     return new Promise<void>((resolve, reject) => {
-      for (let course of Array.from(state)) {
+      for (const course of Array.from(state)) {
         if (Program.satisfiesRequirement(course, leaf.requirement)) {
           resolved = true;
           state.delete(leaf.satisfier = course);
@@ -86,8 +86,8 @@ export class Program extends Node {
       }
       Promise.all(
         Array.from(state).map(course =>
-          this.databaseService.courseInfo(course).first().toPromise().then(result => {
-            for (let crosslist of (result.crosslists || [])) {
+          this.databaseService.crosslists(course).first().toPromise().then(result => {
+            for (const crosslist of (result || [])) {
               if (Program.satisfiesRequirement(crosslist, leaf.requirement)) {
                 resolved = true;
                 state.delete(leaf.satisfier = course);

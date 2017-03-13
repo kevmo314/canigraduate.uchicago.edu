@@ -1,6 +1,6 @@
 import { DatabaseService } from 'app/database/database.service';
 import { FormControl } from '@angular/forms';
-import { environment } from '../../environments/environment';
+import { environment } from 'environments/environment';
 import { Filters } from 'app/filters';
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { MdButtonToggleChange } from '@angular/material';
@@ -39,7 +39,7 @@ export class CourseSearchComponent implements AfterViewInit, OnInit {
       // Search the database using these filters.
       console.log(filters);
       const start = new Date().getTime();
-      this.databaseService.schedules(filters).then(results => {
+      this.databaseService.courses(filters).then(results => {
         this.results = results;
         this.queryTime = new Date().getTime() - start;
       });

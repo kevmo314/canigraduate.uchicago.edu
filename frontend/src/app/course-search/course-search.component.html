@@ -103,20 +103,15 @@
     </md-card-content>
   </md-card>
   <div class="results">
-    <md-card>
+    <md-card *ngFor="let result of results | slice:(10 * page):(10 * page + 10)">
       <md-card-content>
-        <md-list>
-          <md-list-item *ngFor="let result of results | slice:(10 * page):(10 * page + 10)">
-            <cig-search-result [course]="result"></cig-search-result>
-          </md-list-item>
-        </md-list>
+        <cig-search-result course="{{result}}"></cig-search-result>
+        <cig-course-detail course="{{result}}" [filters]="filters"></cig-course-detail>
       </md-card-content>
-      <md-card-footer>
-        <cig-pagination [items]="results.length" [pageSize]="10" [(page)]="page"></cig-pagination>
-        <div class="metadata" *ngIf="queryTime > 0">
-          {{results.length}} results fetched in {{queryTime}}ms
-        </div>
-      </md-card-footer>
     </md-card>
+    <cig-pagination [items]="results.length" [pageSize]="10" [(page)]="page"></cig-pagination>
+    <div class="metadata" *ngIf="queryTime > 0">
+      {{results.length}} results fetched in {{queryTime}}ms
+    </div>
   </div>
 </div>

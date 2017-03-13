@@ -26,9 +26,9 @@ export const UniversityOfChicago: Base = {
         return id.length <= 10 && /^[A-Z]{4} \d*/.test(id);
     },
     termToOrdinal(term: string): number {
-        return UniversityOfChicago.periods.findIndex(x => term.startsWith(x.name)) + parseInt(term.substring(term.length - 4)) * 4;
+        return UniversityOfChicago.periods.findIndex(x => term.startsWith(x.name)) + parseInt(term.substring(term.length - 4), 10) * 4;
     },
     termFromOrdinal(value: number): string {
-        return UniversityOfChicago.periods[value % 4].name + " " + Math.floor(value / 4);
+        return UniversityOfChicago.periods[value % 4].name + ' ' + Math.floor(value / 4);
     }
 };

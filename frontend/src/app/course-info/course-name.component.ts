@@ -6,7 +6,7 @@ const UNKNOWN_COURSE_NAME = 'Unknown';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'cig-course-name',
-  templateUrl: './course-name.component.html',
+  template: `<span [class.unknown]="(name | async) == '${UNKNOWN_COURSE_NAME}'">{{name | async}}</span>`,
   styles: ['.unknown { font-style: italic; opacity: 0.54; }']
 })
 export class CourseNameComponent {
@@ -14,7 +14,7 @@ export class CourseNameComponent {
   constructor(private databaseService: DatabaseService) {}
 
   get name() {
-    return this.databaseService.courseInfo(this.course)
-        .map(x => (x && x.name) ? x.name : UNKNOWN_COURSE_NAME);
+    return this.databaseService.name(this.course)
+        .map(x => x || UNKNOWN_COURSE_NAME);
   }
 }
