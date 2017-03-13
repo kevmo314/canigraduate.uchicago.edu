@@ -42,26 +42,27 @@ class FSM(object):
         intervals = []
         if days == 'M-F':
             days = 'MTWThF'
-        for i in range(len(days)):
-            if days[i].isupper():
-                offset = None
-                if days[i] == 'S':
-                    offset = 0
-                if days[i] == 'M':
-                    offset = 1
-                if days[i] == 'T':
-                    offset = 2
-                if days[i] == 'W':
-                    offset = 3
-                if days[i:(i + 2)] == 'Th':
-                    offset = 4
-                if days[i] == 'F':
-                    offset = 5
-                if days[i:(i + 2)] == 'Sa':
-                    offset = 6
-                if offset is None:
-                    raise Exception('Could not determine offset for "%s"' % s)
-                intervals.append([offset * 24 * 60 + from_time, offset * 24 * 60 + to_time])
+        search_space = [
+            ['Sun'],
+            ['M', 'MO', 'Mo', 'Mon'],
+            ['T', 'TU', 'Tu', 'Tue'],
+            ['W', 'WE', 'We', 'Wed'],
+            ['T', 'H', 'R', 'TH', 'Th', 'Thu'],
+            ['F', 'FR', 'Fr', 'Fri'],
+            ['Sat']
+        ]
+        offset = 0
+        i = 0
+        while i < len(days):
+            if offset == len(search_space):
+                raise Exception('No valid parsing for "%s"' % s)
+            for search in sorted(search_space[offset], key=len, reverse=True):
+                if days[i:(i+len(search))] == search:
+                    # We found a match!
+                    intervals.append([offset * 24 * 60 + from_time, offset * 24 * 60 + to_time])
+                    i += len(search)
+                    break
+            offset += 1
         if len(intervals) == 0:
             raise Exception('No intervals resulted from "%s"' % s)
         return intervals
