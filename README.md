@@ -7,8 +7,8 @@
 - `department` is a substring of course identifiers that represents the host department, for example, `MATH`.
 - `id` is a fully-qualified course identifier that includes a department, for example, `MATH 15100`.
 - `period` is a name of a course offering period, for example, `Winter`.
-- `term` is a fully-qualified course offering period, for example, `Winter 2016`.
-- `course` is an individual course offering. A course is uniquely identified by its `id` and its term, for example, `MATH 15100` offered in `Autumn 2015`.
+- `term` is a fully-qualified course offering period, for example, `Winter 2016`. Note that these are not referred to as semesters or quarters to avoid dependence on any temporal regularity. There is no guarantee that a university stays on a semester or quarter system.
+- `course` is an individual course offering. A course is uniquely identified by its `id` and its term, for example, `MATH 15100` offered in `Autumn 2015`. Note that we explicitly choose to use `course` instead of `class` to avoid reserved word conflicts. Additionally, note that in some cases, a `Course` object may refer to a term-invariant course. This is done for convenience, as naming the object `Id` is less desirable.
 - `section` is an identifier that represents the specific course selection within a quarter. This permits multiple sections of courses
   to be offered each term, for example, `MATH 15100` section `01` offered in `Autumn 2015`. Typically, different sections have different schedules,
   however this is not required.
