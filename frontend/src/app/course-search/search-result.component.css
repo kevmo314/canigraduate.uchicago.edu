@@ -1,37 +1,47 @@
 :host {
-  display: flex;
   white-space: nowrap;
   width: 100%;
 }
 
+md-card-header, md-card-header /deep/ .mat-card-header-text {
+  width: 100%;
+}
+
+md-card-header {
+  margin: 0;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
 .id {
-  flex: 0 0 110px;
+  flex: 0 0 100px;
   padding-right: 8px;
   text-align: right;
-  padding-bottom: 20px;
 }
 
-.description {
+md-card-title {
   overflow: hidden;
-  flex-grow: 1;
-}
-
-.description .row {
   display: flex;
+  margin-bottom: 8px;
 }
 
-.description .row cig-course-name {
+md-card-title .id {
+  flex-shrink: 0;
+}
+
+md-card-title cig-course-name {
   flex-grow: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.description .row cig-term-offer-indicator {
+md-card-title cig-term-offer-indicator {
   flex-shrink: 0;
 }
 
-.crosslists {
+md-card-subtitle {
+  margin-left: 108px;
   font-style: italic;
   color: rgba(0, 0, 0, 0.54);
   font-size: 12px;

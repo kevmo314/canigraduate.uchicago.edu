@@ -104,8 +104,8 @@
   </md-card>
   <div class="results">
     <md-card *ngFor="let result of results | slice:(10 * page):(10 * page + 10)">
-      <md-card-content>
-        <cig-search-result course="{{result}}"></cig-search-result>
+      <cig-search-result course="{{result}}" (click)="shown.has(result) ? shown.delete(result) : shown.add(result)"></cig-search-result>
+      <md-card-content *ngIf="shown.has(result)">
         <cig-course-detail course="{{result}}" [filters]="filters"></cig-course-detail>
       </md-card-content>
     </md-card>

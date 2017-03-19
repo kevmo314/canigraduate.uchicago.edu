@@ -31,13 +31,12 @@
   margin-top: 16px;
 }
 
+.results md-card {
+  padding: 0;
+}
+
 .results .metadata {
   color: rgba(0, 0, 0, 0.54);
   text-align: center;
   font-size: 12px;
-}
-
-.results md-list {
-  margin: -24px -24px 0 -24px;
-  padding: 0;
 }

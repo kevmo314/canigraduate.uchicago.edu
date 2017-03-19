@@ -1,13 +1,10 @@
-<div class="id">{{course}}</div>
-<div class="description">
-  <div class="row">
+<md-card-header>
+  <md-card-title>
+    <div class="id">{{course}}</div>
     <cig-course-name course="{{course}}" class="name"></cig-course-name>
     <cig-term-offer-indicator *ngFor="let period of periods" course="{{course}}" period="{{period.name}}" color="{{period.color}}">
       {{period.shorthand}}
     </cig-term-offer-indicator>
-  </div>
-  <div class="crosslists" mdTooltip="Crosslistings" mdTooltipPosition="left">
-    <!-- Crosslisted courses should have the same name, so just render the crosslisting. -->
-    {{getCrosslists(course) | async}}
-  </div>
-</div>
+  </md-card-title>
+  <md-card-subtitle>{{getCrosslists(course) | async}}</md-card-subtitle>
+</md-card-header>

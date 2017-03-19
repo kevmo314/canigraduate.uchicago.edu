@@ -22,10 +22,13 @@ export class CourseSearchComponent implements AfterViewInit, OnInit {
   page = 0;
   queryTime = 0;
 
+
   instructorControl = new FormControl();
   departmentControl = new FormControl();
   filteredInstructors: Observable<string[]>;
   filteredDepartments: Observable<string[]>;
+
+  shown = new Set<string>();
 
   ngOnInit() {
     this.databaseService.instructors.subscribe(instructors => this.instructors = instructors);

@@ -2,20 +2,19 @@
 
 <md-tab-group>
   <md-tab label="Sections">
-    <!--
-    <md-progress-bar *ngIf="quarters.length == 0" color="primary" mode="indeterminate"></md-progress-bar>
-    <ng-container *ngFor="let quarter of quarters | slice:0:numQuarters">
-      <h3 md-subheader>Folders</h3>
+    <ng-container *ngFor="let term of terms | slice:0:numTerms">
+      <h3 md-subheader>{{term}}</h3>
       <md-list>
-        <md-list-item *ngFor="let section of sections | async | slice:0:numSections">
-          <md-icon md-list-icon>folder</md-icon>
-          <h4 md-line>{{folder.name}}</h4>
-          <p md-line class="demo-2"> {{folder.updated}} </p>
+        <md-list-item *ngFor="let section of sectionsByTerm(term) | async">
+          <h4 md-line>{{section}}</h4>
+          <p md-line class="demo-2"> asdf </p>
         </md-list-item>
       </md-list>
     </ng-container>
-    <button *ngIf="numQuarters < quarters.length" md-button>Show {{quarters[numQuarters]}}</button>
-    -->
+    <button *ngIf="numTerms < terms.length" (click)="showNextTerm()" md-button>
+      <md-icon>history</md-icon>
+      Show {{terms[numTerms]}}
+    </button>
   </md-tab>
   <md-tab label="Grades">
     <h1>Some more tab content</h1>

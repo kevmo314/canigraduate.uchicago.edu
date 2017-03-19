@@ -112,8 +112,7 @@ export class DatabaseService {
         // Convert matches to corresponding course objects.
         return Array.from(matches).sort();
       })
-      // Convert to a promise because we do not surface future updates for performance
-      // reasons, instead the user will have to reload the search results.
+      // Convert to a promise because we do not surface future updates for performance reasons.
       .toPromise();
   }
 
