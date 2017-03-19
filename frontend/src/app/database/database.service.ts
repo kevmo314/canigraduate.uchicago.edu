@@ -118,7 +118,15 @@ export class DatabaseService {
   @Memoize()
   object(id: string) {
     const replaySubject = new ReplaySubject(1);
-    this.angularFire.database.object(id).subscribe(replaySubject);
+    this.angularFire.database.object(id).map(x => {
+      if (!x.$exists()) {
+        return null;
+      }
+      if ('$value' in x) {
+        return x['$value'];
+      }
+      return x;
+    }).subscribe(replaySubject);
     return replaySubject;
   }
 }

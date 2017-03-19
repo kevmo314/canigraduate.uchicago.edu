@@ -8,7 +8,7 @@ import { TranscriptService } from 'app/transcript/transcript.service';
 @Component({
   selector: 'cig-sidebar',
   templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.css']
+  styleUrls: ['./sidebar.component.scss']
 })
 export class SidebarComponent implements OnInit {
   private credentials: FormGroup;

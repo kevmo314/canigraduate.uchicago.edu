@@ -1,20 +1,21 @@
-{{description | async}}
+<div class="description">{{description | async}}</div>
 
 <md-tab-group>
   <md-tab label="Sections">
-    <md-list dense>
-      <md-progress-bar *ngIf="quarters.length == 0" color="primary" mode="indeterminate"></md-progress-bar>
-      <ng-container *ngFor="let quarter of quarters | slice:0:numQuarters">
-        <h3 md-subheader>Folders</h3>
+    <!--
+    <md-progress-bar *ngIf="quarters.length == 0" color="primary" mode="indeterminate"></md-progress-bar>
+    <ng-container *ngFor="let quarter of quarters | slice:0:numQuarters">
+      <h3 md-subheader>Folders</h3>
+      <md-list>
         <md-list-item *ngFor="let section of sections | async | slice:0:numSections">
           <md-icon md-list-icon>folder</md-icon>
           <h4 md-line>{{folder.name}}</h4>
           <p md-line class="demo-2"> {{folder.updated}} </p>
         </md-list-item>
-        <md-divider></md-divider>
-      </ng-container>
-      <button *ngIf="numQuarters < quarters.length" md-button>Show {{quarters[numQuarters]}}</button>
-    </md-list>
+      </md-list>
+    </ng-container>
+    <button *ngIf="numQuarters < quarters.length" md-button>Show {{quarters[numQuarters]}}</button>
+    -->
   </md-tab>
   <md-tab label="Grades">
     <h1>Some more tab content</h1>

@@ -1,8 +1,8 @@
 <md-card class="sidebar" *ngIf="!authenticationService.authenticated">
+  <md-progress-bar [ngClass]="{'visible': authenticationService.locked}" color="accent" mode="indeterminate"></md-progress-bar>
   <form (ngSubmit)="signIn(credentials)" [formGroup]="credentials">
     <md-card-title>Sign In</md-card-title>
     <md-card-content>
-      <md-progress-bar *ngIf="!authenticationService.locked" color="primary" mode="indeterminate"></md-progress-bar>
       <p><strong>Can I Graduate?</strong> works better if you're signed in. Enter your UChicago CNetID and password to import your data from AIS.</p>
       <md-input-container [dividerColor]="authenticationService.valid ? null : 'warn'">
         <input mdInput placeholder="CNetID" formControlName="username" required>

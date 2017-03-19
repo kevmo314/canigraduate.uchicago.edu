@@ -1,7 +1,10 @@
+@import '~@angular/material/core/style/variables';
+
 .sidebar {
   margin: 0 12px;
   margin-top: -22px;
   padding-bottom: 0;
+
 }
 
 .sidebar.transcript md-card-content {
@@ -18,6 +21,20 @@
 
 .sidebar .header .grades-toggle {
   margin: 0;
+}
+
+md-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 0;
+  opacity: 0;
+  transition: $swift-ease-in-out;
+}
+
+md-progress-bar.visible {
+  height: 2px;
+  opacity: 1;
 }
 
 .sidebar .error {
