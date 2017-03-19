@@ -6,7 +6,7 @@
       {{period.shorthand}}
     </cig-term-offer-indicator>
   </div>
-  <div class="crosslists">
+  <div class="crosslists" mdTooltip="Crosslistings" mdTooltipPosition="left">
     <!-- Crosslisted courses should have the same name, so just render the crosslisting. -->
     {{getCrosslists(course) | async}}
   </div>

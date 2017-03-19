@@ -9,6 +9,7 @@ import { Filters } from 'app/filters';
 import { AngularFire } from 'angularfire2';
 import { Section } from 'app/section';
 import { Term } from 'app/term';
+import localforage from 'localforage';
 
 /** Course catalog information service. */
 @Injectable()
@@ -91,6 +92,7 @@ export class DatabaseService {
   courses(filters: Filters): Promise<string[]> {
     // Return all the course id's that match a specific filter set.
     return (this._indexesCache ? Observable.of(this._indexesCache) : this.angularFire.database.object('indexes').map(indexes => {
+      // This seems to yield much better performance than caching the underlying observable.
       return this._indexesCache = indexes;
     }).first())
       .map(indexes => {

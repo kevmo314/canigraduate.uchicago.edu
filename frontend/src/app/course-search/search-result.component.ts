@@ -22,8 +22,6 @@ export class SearchResultComponent implements AfterViewInit {
   }
 
   getCrosslists(id: string) {
-    return this.databaseService.crosslists(id).map(info => {
-      return (info || []).join(', ');
-    });
+    return this.databaseService.crosslists(id).map(info => (info || []).join(', '));
   }
 }
