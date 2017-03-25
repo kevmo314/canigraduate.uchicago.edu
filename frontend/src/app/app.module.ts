@@ -10,6 +10,7 @@ import { MaterialModule } from '@angular/material';
 import { RouterModule, RouteReuseStrategy, DetachedRouteHandle, ActivatedRouteSnapshot } from '@angular/router';
 import { BrowserModule } from '@angular/platform-browser';
 import { AngularFireModule } from 'angularfire2';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 
 import { CatalogComponent } from 'app/catalog/catalog.component';
 import { CourseSearchComponent } from 'app/course-search/course-search.component';
@@ -46,6 +47,7 @@ export class StickyOutletReuseStrategy implements RouteReuseStrategy {
     HttpModule,
     SidebarModule,
     CatalogModule,
+    BrowserAnimationsModule,
     CourseSearchModule,
     MaterialModule,
     AngularFireModule.initializeApp(environment.firebaseConfig)
