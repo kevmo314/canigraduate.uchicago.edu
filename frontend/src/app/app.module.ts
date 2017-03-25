@@ -16,6 +16,7 @@ import {environment} from 'environments/environment';
 
 import {AppComponent, ContentComponent} from './app.component';
 import {WatchesComponent} from './watches/watches.component';
+import {WatchesModule} from './watches/watches.module';
 
 export class StickyOutletReuseStrategy implements RouteReuseStrategy {
   handlers: Map<string, DetachedRouteHandle> =
@@ -61,7 +62,7 @@ export class StickyOutletReuseStrategy implements RouteReuseStrategy {
       {path: '', pathMatch: 'full', redirectTo: '/catalog'}
     ]),
     BrowserModule, FormsModule, HttpModule, SidebarModule, CatalogModule,
-    BrowserAnimationsModule, CourseSearchModule, MaterialModule,
+    WatchesModule, BrowserAnimationsModule, CourseSearchModule, MaterialModule,
     AngularFireModule.initializeApp(environment.firebaseConfig)
   ],
   providers: [
