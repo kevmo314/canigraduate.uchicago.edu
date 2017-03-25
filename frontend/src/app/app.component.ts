@@ -1,7 +1,7 @@
-import { Component, AfterViewInit, HostBinding } from '@angular/core';
-import { MdTabChangeEvent } from '@angular/material';
-import { Router, NavigationEnd } from '@angular/router';
-import { environment } from 'environments/environment';
+import {AfterViewInit, Component, HostBinding} from '@angular/core';
+import {MdTabChangeEvent} from '@angular/material';
+import {NavigationEnd, Router} from '@angular/router';
+import {environment} from 'environments/environment';
 
 const TAB_LINKS = ['/catalog', '/search', '/watches'];
 
@@ -12,16 +12,19 @@ const TAB_LINKS = ['/catalog', '/search', '/watches'];
 })
 export class ContentComponent implements AfterViewInit {
   selectedIndex: number = 0;
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
   ngAfterViewInit() {
     this.router.events.subscribe(e => {
       if (e instanceof NavigationEnd) {
-        this.selectedIndex = TAB_LINKS.findIndex(link => e.url.startsWith(link));
+        this.selectedIndex =
+            TAB_LINKS.findIndex(link => e.url.startsWith(link));
       }
     });
   }
 
-  get institutionName(): string { return environment.institution.name; }
+  get institutionName(): string {
+    return environment.institution.name;
+  }
   get institutionTheme(): string {
     return environment.institution.theme;
   }
