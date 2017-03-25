@@ -3,7 +3,7 @@ import pyrebase
 import json
 import httplib2
 
-from lib import Term
+from src import Term
 
 firebase = pyrebase.initialize_app({
     'apiKey': 'AIzaSyCjBDyhwbXcp9kEIA2pMHLDGxmCM4Sn6Eg',

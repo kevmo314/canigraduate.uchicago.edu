@@ -5,7 +5,7 @@ import json
 import pyrebase
 import requests
 import traceback
-from lib import TranscriptParser
+from src import TranscriptParser
 
 app = flask.Flask(__name__)
 firebase = pyrebase.initialize_app({
