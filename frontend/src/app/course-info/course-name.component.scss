@@ -1,0 +1,14 @@
+@import '~@angular/material/core/style/variables';
+
+:host.unknown {
+  font-style: italic;
+  opacity: 0.54;
+}
+
+:host:empty {
+  opacity: 0;
+}
+
+:host {
+  transition: $swift-ease-in-out;
+}
