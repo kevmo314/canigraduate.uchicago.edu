@@ -5,12 +5,14 @@ import {BrowserModule} from '@angular/platform-browser';
 import {AuthenticationModule} from 'app/authentication/authentication.module';
 import {AuthenticationService} from 'app/authentication/authentication.service';
 
+import {WatchesComponent} from './watches.component';
+
 @NgModule({
-  declarations: [],
+  declarations: [WatchesComponent],
   imports: [BrowserModule, AuthenticationModule, HttpModule, MaterialModule],
   exports: [],
   providers: [AuthenticationService],
-  entryComponents: [],
+  entryComponents: [WatchesComponent],
 })
 export class WatchesModule {
 }

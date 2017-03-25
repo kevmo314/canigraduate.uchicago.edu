@@ -3,7 +3,7 @@ import {FormsModule} from '@angular/forms';
 import {HttpModule} from '@angular/http';
 import {MaterialModule} from '@angular/material';
 import {BrowserModule} from '@angular/platform-browser';
-import {BrowserAnimationsModule} from '@angular/platform-browser/animations'
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {ActivatedRouteSnapshot, DetachedRouteHandle, RouteReuseStrategy, RouterModule} from '@angular/router';
 import {AngularFireModule} from 'angularfire2';
 import {CatalogComponent} from 'app/catalog/catalog.component';
@@ -15,6 +15,7 @@ import {TranscriptService} from 'app/transcript/transcript.service';
 import {environment} from 'environments/environment';
 
 import {AppComponent, ContentComponent} from './app.component';
+import {WatchesComponent} from './watches/watches.component';
 
 export class StickyOutletReuseStrategy implements RouteReuseStrategy {
   handlers: Map<string, DetachedRouteHandle> =
@@ -51,6 +52,11 @@ export class StickyOutletReuseStrategy implements RouteReuseStrategy {
         component: ContentComponent,
         children:
             [{path: '', component: CourseSearchComponent, outlet: 'search'}]
+      },
+      {
+        path: 'watches',
+        component: ContentComponent,
+        children: [{path: '', component: WatchesComponent, outlet: 'watches'}]
       },
       {path: '', pathMatch: 'full', redirectTo: '/catalog'}
     ]),
