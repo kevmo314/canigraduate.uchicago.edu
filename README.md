@@ -36,3 +36,71 @@ Departments must have one unique identifier.
 ### Crosslistings
 
 Course crosslistings must be valid equivalence classes. Missing or incomplete crosslisting information can produce unexpected behavior.
+
+## Data schema
+
+### Schedule listings
+
+Schedules are stored in an object at `/schedules/<course id>/<year>/<period>` (e.g. https://canigraduate-43286.firebaseio.com/schedules/PHYS%2013200/2007/Winter.json) that looks like the following
+
+```
+{  
+   "XX":{  # Section ID.
+      "department":"PHYS",
+      "enrollment":[86, null], # null is used to represent unknown or no value. If the total is 0, then it represents consent required.
+      "primaries":[  # Primaries do not have identifiers as all of them are required. 
+         {  
+            "instructors":[  
+               "Nagel Sidney R"
+            ],
+            "location":"KPTC-106",
+            "schedule":[  # A list of tuples representing time ranges of minutes from midnight, Sunday.
+               [  
+                  2010,
+                  2060
+               ],
+               [  
+                  4890,
+                  4940
+               ],
+               [  
+                  7770,
+                  7820
+               ]
+            ],
+            "type":"Lecture"
+         },
+         {  
+            "location":"KPTC-ARR",
+            "schedule":[  
+               [  
+                  4020,
+                  4070
+               ]
+            ],
+            "type":"Discussion"
+         }
+      ],
+      "secondaries":{  
+         "01":{ # Secondary activity ID. 
+            "enrollment":[  
+               "17",
+               "CONSENT REQUIRED"
+            ],
+            "instructors":[  
+               "Nagel Sidney R"
+            ],
+            "location":"KPTC-ARR",
+            "schedule":[  
+               [  
+                  3690,
+                  3920
+               ]
+            ],
+            "type":"Lab"
+         },
+         ...
+      }
+   }
+}
+```
