@@ -1,17 +1,17 @@
-import { DatabaseService } from 'app/database/database.service';
-import { FormControl } from '@angular/forms';
-import { environment } from 'environments/environment';
-import { Filters } from 'app/filters';
-import { AfterViewInit, Component, OnInit } from '@angular/core';
-import { MdButtonToggleChange } from '@angular/material';
-import { Period } from 'app/period';
-import { Observable } from 'rxjs/Observable';
-import { Subscription } from 'rxjs/Subscription';
+import {AfterViewInit, Component, OnInit} from '@angular/core';
+import {FormControl} from '@angular/forms';
+import {MdButtonToggleChange} from '@angular/material';
+import {DatabaseService} from 'app/database/database.service';
+import {Filters} from 'app/filters';
+import {Period} from 'app/period';
+import {environment} from 'environments/environment';
+import {Observable} from 'rxjs/Observable';
+import {Subscription} from 'rxjs/Subscription';
 
 @Component({
   selector: 'cig-course-search',
   templateUrl: './course-search.component.html',
-  styleUrls: ['./course-search.component.css']
+  styleUrls: ['./course-search.component.scss']
 })
 export class CourseSearchComponent implements AfterViewInit, OnInit {
   filters: Filters = new Filters();
@@ -31,10 +31,14 @@ export class CourseSearchComponent implements AfterViewInit, OnInit {
   shown = new Set<string>();
 
   ngOnInit() {
-    this.databaseService.instructors.subscribe(instructors => this.instructors = instructors);
-    this.filteredInstructors = this.instructorControl.valueChanges.map(value => this.searchInstructors(value));
-    this.databaseService.departments.subscribe(departments => this.departments = departments);
-    this.filteredDepartments = this.departmentControl.valueChanges.map(value => this.searchDepartments(value));
+    this.databaseService.instructors.subscribe(
+        instructors => this.instructors = instructors);
+    this.filteredInstructors = this.instructorControl.valueChanges.map(
+        value => this.searchInstructors(value));
+    this.databaseService.departments.subscribe(
+        departments => this.departments = departments);
+    this.filteredDepartments = this.departmentControl.valueChanges.map(
+        value => this.searchDepartments(value));
   }
 
   ngAfterViewInit() {
@@ -47,10 +51,9 @@ export class CourseSearchComponent implements AfterViewInit, OnInit {
         this.queryTime = new Date().getTime() - start;
       });
     });
-
   }
 
-  constructor(private databaseService: DatabaseService) { }
+  constructor(private databaseService: DatabaseService) {}
 
   addInstructor(value) {
     const results = this.searchInstructors(value);
@@ -69,15 +72,21 @@ export class CourseSearchComponent implements AfterViewInit, OnInit {
 
   private searchInstructors(value): string[] {
     const targets = value.toLowerCase().split(' ');
-    return this.instructors.filter(instructor => {
-      const match = instructor.toLowerCase();
-      return !this.filters.instructors.has(instructor) && targets.every(target => match.indexOf(target) > -1);
-    }).sort();
+    return this.instructors
+        .filter(instructor => {
+          const match = instructor.toLowerCase();
+          return !this.filters.instructors.has(instructor) &&
+              targets.every(target => match.indexOf(target) > -1);
+        })
+        .sort();
   }
 
   private searchDepartments(value): string[] {
-    return this.departments.filter(department => {
-      return !this.filters.departments.has(department) && department.toLowerCase().indexOf(value) > -1;
-    }).sort();
+    return this.departments
+        .filter(department => {
+          return !this.filters.departments.has(department) &&
+              department.toLowerCase().indexOf(value) > -1;
+        })
+        .sort();
   }
 }

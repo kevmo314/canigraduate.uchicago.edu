@@ -2,19 +2,15 @@
 
 <md-tab-group>
   <md-tab label="Sections">
-    <ng-container *ngFor="let term of terms | slice:0:numTerms">
-      <h3 md-subheader>{{term}}</h3>
-      <md-list>
-        <md-list-item *ngFor="let section of sectionsByTerm(term) | async">
-          <h4 md-line>{{section}}</h4>
-          <p md-line class="demo-2"> asdf </p>
-        </md-list-item>
-      </md-list>
-    </ng-container>
-    <button *ngIf="numTerms < terms.length" (click)="showNextTerm()" md-button>
-      <md-icon>history</md-icon>
-      Show {{terms[numTerms]}}
-    </button>
+    <div class="sections">
+      <ng-container *ngFor="let term of terms | slice:0:numTerms">
+        <cig-section *ngFor="let section of sectionsByTerm(term) | async" [section]="section"></cig-section>
+      </ng-container>
+      <button *ngIf="numTerms < terms.length" (click)="showNextTerm()" md-button>
+        <md-icon>history</md-icon>
+        Show {{terms[numTerms]}}
+      </button>
+    </div>
   </md-tab>
   <md-tab label="Grades">
     <h1>Some more tab content</h1>

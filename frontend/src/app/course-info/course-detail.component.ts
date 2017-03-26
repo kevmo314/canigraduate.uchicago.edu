@@ -1,7 +1,7 @@
-import { DatabaseService } from 'app/database/database.service';
-import { Filters } from 'app/filters';
-import { Observable } from 'rxjs/Observable';
-import { Component, Input, ChangeDetectionStrategy, AfterViewInit } from '@angular/core';
+import {AfterViewInit, ChangeDetectionStrategy, Component, Input} from '@angular/core';
+import {DatabaseService} from 'app/database/database.service';
+import {Filters} from 'app/filters';
+import {Observable} from 'rxjs/Observable';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -13,19 +13,22 @@ export class CourseDetailComponent implements AfterViewInit {
   @Input() course: string;
   @Input() filters: Filters;
 
-  // Do not store the index directly to ensure consistent behavior if new data arrives.
+  // Do not store the index directly to ensure consistent behavior if new data
+  // arrives.
   private lastTerm = null;
   terms: string[] = [];
   sections: Observable<any>;
 
-  constructor(private databaseService: DatabaseService) { }
+  constructor(private databaseService: DatabaseService) {}
 
   ngAfterViewInit() {
     this.sections = this.databaseService.sections(this.course, this.filters);
     this.sections.subscribe(data => {
-      this.terms = Array.from(new Set<string>(data.map(x => x.term)).values());
+      const termList = data.map(x => x.term);
+      this.terms = Array.from(new Set<string>(termList).values());
       if (this.terms.length > 0) {
-        this.lastTerm = this.terms[0];
+        // Show around 10 courses.
+        this.lastTerm = termList[Math.min(termList.length, 10) - 1];
       }
     });
   }

@@ -1,0 +1,17 @@
+<div class="section-header">
+  <div class="identifier">
+    {{section.term}} - §{{section.id}}
+  </div>
+  <div class="primaries">
+    <div *ngFor="let primary of section.primaries" class="primary">
+      <div class="type">{{primary.type}}</div>
+      <div class="instructors">{{primary.instructors.join(', ')}}</div>
+      <div class="location">{{primary.location}}</div>
+      <div class="schedule">{{primary.schedule}}</div>
+    </div>
+  </div>
+  <div class="enrollment">
+    {{section.enrollment.join('/')}}
+  </div>
+</div>
+<p *ngFor="let notes of section.notes" md-line>{{notes}}</p>

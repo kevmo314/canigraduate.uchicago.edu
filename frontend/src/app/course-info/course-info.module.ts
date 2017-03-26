@@ -1,18 +1,22 @@
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { CourseNameComponent } from './course-name.component';
-import { CourseDetailComponent } from './course-detail.component';
-import { TermOfferIndicatorComponent } from './term-offer-indicator.component';
-import { MaterialModule } from '@angular/material';
-import { environment } from 'environments/environment';
+import {NgModule} from '@angular/core';
+import {MaterialModule} from '@angular/material';
+import {BrowserModule} from '@angular/platform-browser';
+import {environment} from 'environments/environment';
+
+import {CourseDetailComponent} from './course-detail.component';
+import {CourseNameComponent} from './course-name.component';
+import {SectionComponent} from './section.component';
+import {TermOfferIndicatorComponent} from './term-offer-indicator.component';
 
 @NgModule({
-  declarations: [CourseNameComponent, CourseDetailComponent, TermOfferIndicatorComponent],
-  imports: [
-    BrowserModule,
-    MaterialModule
+  declarations: [
+    CourseNameComponent, CourseDetailComponent, TermOfferIndicatorComponent,
+    SectionComponent
   ],
-  exports: [CourseNameComponent, CourseDetailComponent, TermOfferIndicatorComponent],
+  imports: [BrowserModule, MaterialModule],
+  exports:
+      [CourseNameComponent, CourseDetailComponent, TermOfferIndicatorComponent],
   providers: [],
 })
-export class CourseInfoModule { }
+export class CourseInfoModule {
+}

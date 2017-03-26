@@ -38,14 +38,9 @@
         <div class="form-group">
           Show
           <md-button-toggle-group multiple>
-            <md-button-toggle 
-              class="custom"
-              *ngFor="let period of periods"
-              [checked]="filters.getPeriodFilter(period)"
-              (change)="filters.setPeriodFilter(period, $event.source.checked)"
+            <md-button-toggle class="custom" *ngFor="let period of periods" [checked]="filters.getPeriodFilter(period)" (change)="filters.setPeriodFilter(period, $event.source.checked)"
               [ngStyle]="{'background-color': (periodButtonToggle.checked ? period.color : null),
-                          'color': (periodButtonToggle.checked ? 'white' : null)}"
-              #periodButtonToggle>
+                          'color': (periodButtonToggle.checked ? 'white' : null)}" #periodButtonToggle>
               {{period.name}}
             </md-button-toggle>
           </md-button-toggle-group>
@@ -56,12 +51,7 @@
             <md-chip-list mdPrefix>
               <md-chip *ngFor="let department of filters.departments">{{department}}</md-chip>
             </md-chip-list>
-            <input
-              type="text"
-              mdInput
-              #departmentInput
-              [formControl]="departmentControl"
-              (change)="addDepartment(departmentInput.value);departmentInput.value = '';departmentAutocomplete.showPanel = false"
+            <input type="text" mdInput #departmentInput [formControl]="departmentControl" (change)="addDepartment(departmentInput.value);departmentInput.value = '';departmentAutocomplete.showPanel = false"
               [mdAutocomplete]="departmentAutocomplete">
           </md-input-container>
           <md-autocomplete #departmentAutocomplete="mdAutocomplete">
@@ -74,12 +64,7 @@
             <md-chip-list mdPrefix>
               <md-chip *ngFor="let instructor of filters.instructors">{{instructor}}</md-chip>
             </md-chip-list>
-            <input
-              type="text"
-              mdInput
-              #instructorInput
-              [formControl]="instructorControl"
-              (change)="addInstructor(instructorInput.value);instructorInput.value = '';instructorAutocomplete.showPanel = false"
+            <input type="text" mdInput #instructorInput [formControl]="instructorControl" (change)="addInstructor(instructorInput.value);instructorInput.value = '';instructorAutocomplete.showPanel = false"
               [mdAutocomplete]="instructorAutocomplete">
           </md-input-container>
           <md-autocomplete #instructorAutocomplete="mdAutocomplete">
@@ -103,7 +88,7 @@
     </md-card-content>
   </md-card>
   <div class="results">
-    <md-card *ngFor="let result of results | slice:(10 * page):(10 * page + 10)">
+    <md-card *ngFor="let result of results | slice:(10 * page):(10 * page + 10)" [ngClass]="{'expanded': shown.has(result)}">
       <cig-search-result course="{{result}}" (click)="shown.has(result) ? shown.delete(result) : shown.add(result)"></cig-search-result>
       <md-card-content *ngIf="shown.has(result)">
         <cig-course-detail course="{{result}}" [filters]="filters"></cig-course-detail>
