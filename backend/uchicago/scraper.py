@@ -29,8 +29,9 @@ def rebuild_indexes(db):
                     # Deal with Firebase's array heuristic.
                     c = transform(c)
                 for id, section in c.items():
-                    for instructor in section.get('instructors', []):
-                        instructors[instructor].add(course_id)
+                    for section in section['primaries'] + section['secondaries'].values():
+                        for instructor in section.instructors:
+                            instructors[instructor].add(course_id)
                     departments[course_id[:4]].add(course_id)
                     periods[period].add(course_id)
                     # Firebase doesn't store empty arrays.
@@ -66,11 +67,20 @@ def scrape_data(db):
                     'term': '%s %s' % (period, year),
                     'department': course.id[:4],
                     'notes': section.notes,
-                    'instructors': section.instructors,
-                    'schedule': section.schedule,
-                    'type': section.type,
                     'enrollment': section.enrollment,
-                    'location': section.location
+                    'primaries': [{
+                        'instructors': secondary.instructors,
+                        'schedule': secondary.schedule,
+                        'type': secondary.type,
+                        'location': secondary.location
+                    } for primary in section.primaries],
+                    'secondaries': dict([(secondary.id, {
+                        'instructors': secondary.instructors,
+                        'schedule': secondary.schedule,
+                        'type': secondary.type,
+                        'location': secondary.location,
+                        'enrollment': secondary.enrollment
+                    }) for secondary in section.secondaries])
                 }
             known_course_info[course.id] = data
             updates['course-info/%s' % course.id] = data
@@ -83,6 +93,6 @@ def scrape_data(db):
 
 if __name__ == '__main__':
     db = firebase.database()
-    #db.child('schedules').set({})
-    #scrape_data(db)
-    rebuild_indexes(db)
+    db.child('schedules').set({})
+    scrape_data(db)
+    # rebuild_indexes(db)
