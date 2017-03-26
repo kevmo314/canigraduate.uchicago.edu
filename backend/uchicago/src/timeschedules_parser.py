@@ -43,27 +43,26 @@ class FSM(object):
         if days == 'M-F':
             days = 'MTWThF'
         search_space = [
-            ['Sun'],
-            ['M', 'MO', 'Mo', 'Mon'],
-            ['T', 'TU', 'Tu', 'Tue'],
-            ['W', 'WE', 'We', 'Wed'],
-            ['T', 'H', 'R', 'TH', 'Th', 'Thu'],
-            ['F', 'FR', 'Fr', 'Fri'],
-            ['Sat']
+            ['sun'],
+            ['mon'],
+            ['tue'],
+            ['wed'],
+            ['h', 'r', 'thu'],
+            ['fri'],
+            ['sat']
         ]
-        offset = 0
-        i = 0
-        while i < len(days):
+        def dfs(offset, index):
             if offset == len(search_space):
-                raise Exception('No valid parsing for "%s"' % s)
-            for search in sorted(search_space[offset], key=len, reverse=True):
-                if days[i:(i+len(search))] == search:
-                    # We found a match!
-                    intervals.append([offset * 24 * 60 + from_time, offset * 24 * 60 + to_time])
-                    i += len(search)
-                    break
-            offset += 1
-        if len(intervals) == 0:
+                return [] if index == len(days) else None
+            for search in search_space[offset]:
+                for j in range(1, len(search) + 1):
+                    if days[index:(index + j)].lower() == search[:j]:
+                        result = dfs(offset + 1, index + j)
+                        if result is not None:
+                            return [[offset * 24 * 60 + from_time, offset * 24 * 60 + to_time]] + result
+            return dfs(offset + 1, index)
+        intervals = dfs(0, 0)
+        if not intervals:
             raise Exception('No intervals resulted from "%s"' % s)
         return intervals
 
@@ -76,30 +75,26 @@ class FSM(object):
             raise ValueError()
         name = self.next_string()
         units = self.next_string()
-        instructors = list(filter(None, self.next_string().replace('.', '').split(' ; ')))
-        schedule = self.next_schedule()
-        type = self.next_string()
-        self.index += 2
+        activity = self.next_activity()
+        # Pull the enrollment.
+        self.index -= 3
         enrollment = self.next_string()
         enrollment_limit = self.next_string()
-        location = self.next_string()
+        self.index += 1
         self.index += 1
         crosslists = [x for x in self.next_string().split(',') if len(x) > 0]
         self.index += 1
         if name == 'CANCELLED':
             raise ValueError()
-        return Course(id='%s %s' % (data[0], data[1])), Section(
+        section = Section(
                 id=data[2],
                 name=name,
-                units=units,
-                instructors=instructors,
-                schedule=schedule,
-                type=type,
                 enrollment=[enrollment, enrollment_limit],
-                location=location), crosslists
+                units=units)
+        section.primaries.append(activity)
+        return Course(id='%s %s' % (data[0], data[1])), section, crosslists
 
     def next_activity(self):
-        self.index += 3
         instructors = list(filter(None, self.next_string().replace('.', '').split(' ; ')))
         schedule = self.next_schedule()
         section_type = self.next_string()
@@ -108,10 +103,9 @@ class FSM(object):
         enrollment = self.next_string()
         enrollment_limit = self.next_string()
         location = self.next_string()
-        self.index += 3
         if not activity_type:
             return PrimaryActivity(
-                    instructors=instructors if instructors else self.section.instructors,
+                    instructors=instructors,
                     schedule=schedule,
                     type=section_type,
                     location=location)
@@ -141,7 +135,9 @@ class FSM(object):
                     if self.cells[self.index].has_attr('colspan') and self.cells[self.index]['colspan'] == '24':
                         self.course.notes.append(self.next_string())
                     else:
+                        self.index += 3
                         activity = self.next_activity()
+                        self.index += 3
                         if isinstance(activity, PrimaryActivity):
                             self.section.primaries.append(activity)
                         if isinstance(activity, SecondaryActivity):
