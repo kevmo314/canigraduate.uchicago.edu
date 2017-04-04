@@ -16,7 +16,7 @@ export class SidebarComponent implements OnInit {
 
   constructor(
       private transcriptService: TranscriptService,
-      private authenticationService: AuthenticationService,
+      public authenticationService: AuthenticationService,
       private mdDialog: MdDialog) {}
 
   ngOnInit(): void {

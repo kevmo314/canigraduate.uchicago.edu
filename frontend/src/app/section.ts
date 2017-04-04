@@ -7,4 +7,5 @@ export interface Section {
   notes: string[];
   primaries: Activity[];
   secondaries: Activity[];
+  enrollment: any;
 }

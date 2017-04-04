@@ -1,4 +1,4 @@
-import {NgModule} from '@angular/core';
+import {NgModule, Type} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {HttpModule} from '@angular/http';
 import {MaterialModule} from '@angular/material';
@@ -13,8 +13,10 @@ import {CourseSearchModule} from 'app/course-search/course-search.module';
 import {SidebarModule} from 'app/sidebar/sidebar.module';
 import {TranscriptService} from 'app/transcript/transcript.service';
 import {environment} from 'environments/environment';
+import {StoreModule} from 'filnux/store_module';
 
 import {AppComponent, ContentComponent} from './app.component';
+import {filtersReducer} from './course-search/filters/filters.store';
 import {WatchesComponent} from './watches/watches.component';
 import {WatchesModule} from './watches/watches.module';
 
@@ -63,7 +65,8 @@ export class StickyOutletReuseStrategy implements RouteReuseStrategy {
     ]),
     BrowserModule, FormsModule, HttpModule, SidebarModule, CatalogModule,
     WatchesModule, BrowserAnimationsModule, CourseSearchModule, MaterialModule,
-    AngularFireModule.initializeApp(environment.firebaseConfig)
+    AngularFireModule.initializeApp(environment.firebaseConfig),
+    StoreModule.forRoot({module: AppModule, children: [CourseSearchModule]})
   ],
   providers: [
     {provide: RouteReuseStrategy, useClass: StickyOutletReuseStrategy},
