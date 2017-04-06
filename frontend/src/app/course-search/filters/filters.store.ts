@@ -34,7 +34,7 @@ export class State {
   }
 }
 
-class ToggleDayOfWeekAction implements Action {
+export class ToggleDayOfWeekAction implements Action {
   constructor(private dayOfWeek: DayOfWeek) {}
   reduce(state: State) {
     state = new State(state);
@@ -47,7 +47,7 @@ function toggleSet<T>(set: Set<T>, value: T) {
   set.has(value) ? set.delete(value) : set.add(value);
 }
 
-class TogglePeriodAction implements Action {
+export class TogglePeriodAction implements Action {
   constructor(private period: Period) {}
   reduce(state: State): State {
     state = new State(state);
@@ -62,7 +62,7 @@ class TogglePeriodAction implements Action {
   }
 }
 
-class ToggleDepartmentAction implements Action {
+export class ToggleDepartmentAction implements Action {
   constructor(private department: string) {}
   reduce(state: State) {
     state = new State(state);
@@ -71,7 +71,7 @@ class ToggleDepartmentAction implements Action {
   }
 }
 
-class ToggleInstructorAction implements Action {
+export class ToggleInstructorAction implements Action {
   constructor(private instructor: string) {}
   reduce(state: State) {
     state = new State(state);
@@ -80,7 +80,7 @@ class ToggleInstructorAction implements Action {
   }
 }
 
-class ToggleSimpleAction implements Action {
+export class ToggleSimpleAction implements Action {
   constructor(private toggle: (State) => void) {}
   reduce(state: State) {
     state = new State(state);
