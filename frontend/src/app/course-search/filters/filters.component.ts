@@ -6,7 +6,7 @@ import {DatabaseService} from 'app/database/database.service';
 import {Filters} from 'app/filters';
 import {Period} from 'app/period';
 import {environment} from 'environments/environment';
-import {Store} from 'filnux/store';
+import {Store} from 'filnux';
 import {Observable} from 'rxjs/Observable';
 import {Subscription} from 'rxjs/Subscription';
 

@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {Period} from 'app/period';
-import {BuildableAction, ReducerBuilder} from 'buildable-reducer';
 import {environment} from 'environments/environment';
+import {Action} from 'filnux';
 
 export enum DayOfWeek {
   SUNDAY = 1 << 0,
@@ -34,10 +34,8 @@ export class State {
   }
 }
 
-export class ToggleDayOfWeekAction extends BuildableAction<State> {
-  constructor(private dayOfWeek: DayOfWeek) {
-    super();
-  }
+class ToggleDayOfWeekAction implements Action {
+  constructor(private dayOfWeek: DayOfWeek) {}
   reduce(state: State) {
     state = new State(state);
     state.days ^= this.dayOfWeek;
@@ -49,10 +47,8 @@ function toggleSet<T>(set: Set<T>, value: T) {
   set.has(value) ? set.delete(value) : set.add(value);
 }
 
-export class TogglePeriodAction extends BuildableAction<State> {
-  constructor(private period: Period) {
-    super();
-  }
+class TogglePeriodAction implements Action {
+  constructor(private period: Period) {}
   reduce(state: State): State {
     state = new State(state);
     const index =
@@ -66,10 +62,8 @@ export class TogglePeriodAction extends BuildableAction<State> {
   }
 }
 
-export class ToggleDepartmentAction extends BuildableAction<State> {
-  constructor(private department: string) {
-    super();
-  }
+class ToggleDepartmentAction implements Action {
+  constructor(private department: string) {}
   reduce(state: State) {
     state = new State(state);
     toggleSet(state.departments, this.department);
@@ -77,10 +71,8 @@ export class ToggleDepartmentAction extends BuildableAction<State> {
   }
 }
 
-export class ToggleInstructorAction extends BuildableAction<State> {
-  constructor(private instructor: string) {
-    super();
-  }
+class ToggleInstructorAction implements Action {
+  constructor(private instructor: string) {}
   reduce(state: State) {
     state = new State(state);
     toggleSet(state.instructors, this.instructor);
@@ -88,10 +80,8 @@ export class ToggleInstructorAction extends BuildableAction<State> {
   }
 }
 
-export class ToggleSimpleAction extends BuildableAction<State> {
-  constructor(private toggle: (State) => void) {
-    super();
-  }
+class ToggleSimpleAction implements Action {
+  constructor(private toggle: (State) => void) {}
   reduce(state: State) {
     state = new State(state);
     this.toggle(state);
@@ -99,7 +89,7 @@ export class ToggleSimpleAction extends BuildableAction<State> {
   }
 }
 
-const INITIAL_STATE = {
+export const INITIAL_STATE = {
   days: DayOfWeek.MONDAY | DayOfWeek.TUESDAY | DayOfWeek.WEDNESDAY |
       DayOfWeek.THURSDAY | DayOfWeek.FRIDAY,
   periods: [...environment.institution.periods],
@@ -111,10 +101,7 @@ const INITIAL_STATE = {
   core: false
 };
 
-export function filtersReducer() {
-  return new ReducerBuilder<State>(INITIAL_STATE)
-      .add(
-          TogglePeriodAction, ToggleDayOfWeekAction, ToggleDepartmentAction,
-          ToggleInstructorAction)
-      .build();
-}
+export const ACTIONS = [
+  ToggleDayOfWeekAction, TogglePeriodAction, ToggleDepartmentAction,
+  ToggleInstructorAction, ToggleSimpleAction
+];

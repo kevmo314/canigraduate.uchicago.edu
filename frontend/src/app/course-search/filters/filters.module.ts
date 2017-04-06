@@ -6,17 +6,20 @@ import {BrowserModule} from '@angular/platform-browser';
 import {CourseInfoModule} from 'app/course-info/course-info.module';
 import {DatabaseModule} from 'app/database/database.module';
 import {environment} from 'environments/environment';
-import {StoreModule} from 'filnux/store_module';
+import {FilnuxModule} from 'filnux';
 
 import {FiltersComponent, RemovePipe, SearchPipe} from './filters.component';
-import {filtersReducer, State} from './filters.store';
+import {ACTIONS, INITIAL_STATE, State} from './filters.store';
 
 @NgModule({
   declarations: [FiltersComponent, RemovePipe, SearchPipe],
   imports: [
     BrowserModule, MaterialModule, FormsModule, ReactiveFormsModule,
-    CourseInfoModule, FlexLayoutModule,
-    StoreModule.forChild({module: FiltersModule, reducer: filtersReducer()})
+    CourseInfoModule, FlexLayoutModule, FilnuxModule.forChild({
+      module: FiltersModule,
+      actions: ACTIONS,
+      initialState: INITIAL_STATE
+    })
   ],
   exports: [FiltersComponent],
   providers: [],

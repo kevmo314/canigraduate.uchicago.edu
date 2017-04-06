@@ -6,11 +6,10 @@ import {BrowserModule} from '@angular/platform-browser';
 import {CourseInfoModule} from 'app/course-info/course-info.module';
 import {DatabaseModule} from 'app/database/database.module';
 import {environment} from 'environments/environment';
-import {StoreModule} from 'filnux/store_module';
+import {FilnuxModule} from 'filnux';
 
 import {CourseSearchComponent} from './course-search.component';
 import {FiltersModule} from './filters/filters.module';
-import {filtersReducer} from './filters/filters.store';
 import {PaginationComponent} from './pagination.component';
 import {SearchResultComponent} from './search-result.component';
 
@@ -23,7 +22,7 @@ import {SearchResultComponent} from './search-result.component';
   imports: [
     BrowserModule, MaterialModule, FormsModule, ReactiveFormsModule,
     CourseInfoModule, FlexLayoutModule, FiltersModule,
-    StoreModule.forChild(
+    FilnuxModule.forChild(
         {module: CourseSearchModule, children: [FiltersModule]})
   ],
   exports: [CourseSearchComponent],
