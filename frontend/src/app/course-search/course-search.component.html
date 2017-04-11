@@ -1,25 +1,15 @@
 <div class="course-search">
-  <md-card class="filters">
-    <md-card-content>
-      <cig-filters></cig-filters>
-    </md-card-content>
-  </md-card>
-  <md-card class="query" (click)="query.focus()">
-    <md-card-content>
-      <md-icon>search</md-icon>
-      <input type="text" placeholder="Math 161" [(ngModel)]="filters.query" #query>
-    </md-card-content>
-  </md-card>
+  <cig-filters></cig-filters>
   <div class="results">
-    <md-card *ngFor="let result of results | slice:(10 * page):(10 * page + 10)" [ngClass]="{'expanded': shown.has(result)}">
-      <cig-search-result course="{{result}}" (click)="shown.has(result) ? shown.delete(result) : shown.add(result)"></cig-search-result>
-      <md-card-content *ngIf="shown.has(result)">
-        <cig-course-detail course="{{result}}" [filters]="filters"></cig-course-detail>
+    <md-card *ngFor="let result of results | async | slice:(10 * page):(10 * page + 10)" [ngClass]="{'expanded': getShown(result) | async}">
+      <cig-search-result course="{{result}}" (click)="toggleShown(result)"></cig-search-result>
+      <md-card-content *ngIf="getShown(result) | async">
+        <cig-course-detail course="{{result}}" [sections]="getSections(result) | async"></cig-course-detail>
       </md-card-content>
     </md-card>
-    <cig-pagination [items]="results.length" [pageSize]="10" [(page)]="page"></cig-pagination>
+    <cig-pagination [items]="results | count | async" [pageSize]="10" [(page)]="page"></cig-pagination>
     <div class="metadata" *ngIf="queryTime > 0">
-      {{results.length}} results fetched in {{queryTime}}ms
+      {{results | count | async}} results fetched in {{queryTime}}ms
     </div>
   </div>
 </div>

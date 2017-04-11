@@ -1,6 +1,5 @@
 import {Injectable} from '@angular/core';
 import {AngularFire} from 'angularfire2';
-import {Filters} from 'app/filters';
 import {Node, Program} from 'app/program';
 import {Section} from 'app/section';
 import {Term} from 'app/term';
@@ -8,8 +7,9 @@ import {environment} from 'environments/environment';
 import localforage from 'localforage';
 import {Observable} from 'rxjs/Observable';
 import {ReplaySubject} from 'rxjs/ReplaySubject';
-import {Subject} from 'rxjs/Subject';
-import {Memoize} from 'typescript-memoize';
+import { Subject } from 'rxjs/Subject';
+import { Memoize } from 'typescript-memoize';
+import 'localforage';
 
 /** Course catalog information service. */
 @Injectable()
@@ -65,69 +65,16 @@ export class DatabaseService {
     });
   }
 
-  private intersect<T>(a: Set<T>, b: Set<T>): Set<T> {
-    return new Set<T>(Array.from(a.values()).filter(x => b.has(x)));
-  }
-
   schedules(id: string): Observable<any> {
     return this.object('schedules/' + id);
   }
 
-  sections(id: string, filters: Filters): Observable<Section[]> {
-    return this.schedules(id).map(data => {
-      const results = [];
-      for (const year of Object.keys(data)) {
-        for (const period of (data[year] ? Object.keys(data[year]) : [])) {
-          for (const sectionId of (
-                   data[year][period] ? Object.keys(data[year][period]) : [])) {
-            console.log(data[year][period][sectionId]);
-            if (data[year][period][sectionId]) {
-              results.push(Object.assign(
-                  {id: sectionId}, data[year][period][sectionId]) as Section);
-            }
-          }
-        }
-      }
-      return results.sort(
-          (a, b) => -Term.compare(a.term, b.term) || -(a.id < b.id) ||
-              +(a.id !== b.id));
-    });
-  }
-
-  private _indexesCache;
-
-  courses(filters: Filters): Promise<string[]> {
-    // Return all the course id's that match a specific filter set.
-    return (this._indexesCache ? Observable.of(this._indexesCache) :
-                                 this.angularFire.database.object('indexes')
-                                     .map(indexes => {
-                                       // This seems to yield much better
-                                       // performance than caching the
-                                       // underlying observable.
-                                       return this._indexesCache = indexes;
-                                     })
-                                     .first())
-        .map(indexes => {
-          let matches = new Set<string>(indexes['all']);
-          // Attempt broad course-based matching.
-          if (filters.departments.size > 0) {
-            // Remove any matches that do not appear in the requested
-            // departments.
-            const departmentMatches = new Set<string>();
-            filters.departments.forEach(department => {
-              for (const course of indexes['departments'][department]) {
-                departmentMatches.add(course);
-              }
-            });
-            matches = this.intersect(matches, departmentMatches);
-          }
-
-          // Convert matches to corresponding course objects.
-          return Array.from(matches).sort();
-        })
-        // Convert to a promise because we do not surface future updates for
-        // performance reasons.
-        .toPromise();
+  indexes(): Observable<any> {
+    const subject = new ReplaySubject(1);
+    const indexes = this.angularFire.database.object('indexes');
+    Observable.fromPromise(localforage.getItem('indexes')).filter(Boolean).takeUntil(indexes).concat(indexes).subscribe(subject);
+    indexes.subscribe(value =>  localforage.setItem('indexes', value));
+    return subject;
   }
 
   @Memoize()

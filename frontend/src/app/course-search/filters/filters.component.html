@@ -1,80 +1,14 @@
-<form>
-  <div class="form-group">
-    Show
-    <md-button-toggle-group multiple>
-      <md-button-toggle [checked]="getDayOfWeek(DayOfWeek.MONDAY) | async" (change)="toggleDayOfWeek(DayOfWeek.MONDAY)">
-        <span fxHide="false" fxHide.gt-md>M</span>
-        <span fxShow="false" fxShow.gt-md>Monday</span>
-      </md-button-toggle>
-      <md-button-toggle [checked]="getDayOfWeek(DayOfWeek.TUESDAY) | async" (change)="toggleDayOfWeek(DayOfWeek.TUESDAY)">
-        <span fxHide="false" fxHide.gt-md>T</span>
-        <span fxShow="false" fxShow.gt-md>Tuesday</span>
-      </md-button-toggle>
-      <md-button-toggle [checked]="getDayOfWeek(DayOfWeek.WEDNESDAY) | async" (change)="toggleDayOfWeek(DayOfWeek.WEDNESDAY)">
-        <span fxHide="false" fxHide.gt-md>W</span>
-        <span fxShow="false" fxShow.gt-md>Wednesday</span>
-      </md-button-toggle>
-      <md-button-toggle [checked]="getDayOfWeek(DayOfWeek.THURSDAY) | async" (change)="toggleDayOfWeek(DayOfWeek.THURSDAY)">
-        <span fxHide="false" fxHide.gt-md>Th</span>
-        <span fxShow="false" fxShow.gt-md>Thursday</span>
-      </md-button-toggle>
-      <md-button-toggle [checked]="getDayOfWeek(DayOfWeek.FRIDAY) | async" (change)="toggleDayOfWeek(DayOfWeek.FRIDAY)">
-        <span fxHide="false" fxHide.gt-md>F</span>
-        <span fxShow="false" fxShow.gt-md>Friday</span>
-      </md-button-toggle>
-      <md-button-toggle [checked]="getDayOfWeek(DayOfWeek.SATURDAY) | async" (change)="toggleDayOfWeek(DayOfWeek.SATURDAY)">
-        <span fxHide="false" fxHide.gt-md>Sa</span>
-        <span fxShow="false" fxShow.gt-md>Saturday</span>
-      </md-button-toggle>
-      <md-button-toggle [checked]="getDayOfWeek(DayOfWeek.SUNDAY) | async" (change)="toggleDayOfWeek(DayOfWeek.SUNDAY)">
-        <span fxHide="false" fxHide.gt-md>Su</span>
-        <span fxShow="false" fxShow.gt-md>Sunday</span>
-      </md-button-toggle>
-    </md-button-toggle-group>
-  </div>
-  <div class="form-group">
-    Show
-    <md-button-toggle-group multiple>
-      <md-button-toggle class="custom" *ngFor="let period of institution.periods" [checked]="getPeriod(period) | async" (change)="togglePeriod(period)"
-        [ngStyle]="{'background-color': (periodButtonToggle.checked ? period.color : null),
-                    'color': (periodButtonToggle.checked ? 'white' : null)}" #periodButtonToggle>
-        {{period.name}}
-      </md-button-toggle>
-    </md-button-toggle-group>
-  </div>
-  <div class="form-group">
-    Show departments:
-    <md-input-container>
-      <md-chip-list mdPrefix>
-        <md-chip *ngFor="let department of departments | async" (click)="toggleDepartment(department)">{{department}}</md-chip>
-      </md-chip-list>
-      <input type="text" mdInput #departmentInput [mdAutocomplete]="departmentAutocomplete">
-    </md-input-container>
-    <md-autocomplete #departmentAutocomplete="mdAutocomplete">
-      <md-option *ngFor="let option of allDepartments | remove:departments | search:departmentInput.value | async | slice:0:25"
-        [value]="option" (onSelect)="toggleDepartment(option)">{{option}}</md-option>
-    </md-autocomplete>
-  </div>
-  <div class="form-group">
-    Show sections taught by:
-    <md-input-container>
-      <md-chip-list mdPrefix>
-        <md-chip *ngFor="let instructor of instructors | async" (click)="toggleInstructor(instructor)">{{instructor}}</md-chip>
-      </md-chip-list>
-      <input type="text" mdInput #instructorInput [mdAutocomplete]="instructorAutocomplete">
-    </md-input-container>
-    <md-autocomplete #instructorAutocomplete="mdAutocomplete">
-      <md-option *ngFor="let option of allInstructors | remove:instructors | search:instructorInput.value | async | slice:0:25"
-        [value]="option" (onSelect)="toggleInstructor(option)">{{option}}</md-option>
-    </md-autocomplete>
-  </div>
-  <div class="form-group">
-    Hide classes that
-    <md-button-toggle-group multiple>
-      <md-button-toggle [checked]="taken" (change)="toggleTaken()">I've taken</md-button-toggle>
-      <md-button-toggle [checked]="tested" (change)="toggleTested()">I've tested out of</md-button-toggle>
-      <md-button-toggle [checked]="prerequisites" (change)="togglePrerequisites()">I don't have prereqs for</md-button-toggle>
-      <md-button-toggle [checked]="core" (change)="toggleCore()">are core reqs</md-button-toggle>
-    </md-button-toggle-group>
-  </div>
-</form>
+<md-card class="filters">
+  <md-card-content>
+    <cig-section-filters [days]="days | async"
+        [periods]="periods | async"
+        [instructors]="instructors | async"
+        [departments]="departments | async"></cig-section-filters>
+  </md-card-content>
+</md-card>
+<md-card class="query" (click)="queryInput.focus()">
+  <md-card-content>
+    <md-icon>search</md-icon>
+    <input type="text" placeholder="Math 161" [ngModel]="query | async" (ngModelChange)="setQuery(queryInput.value)" #queryInput>
+  </md-card-content>
+</md-card>

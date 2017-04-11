@@ -1,92 +1,92 @@
-import {AfterViewInit, Component, OnInit} from '@angular/core';
+import {AfterViewInit, Component, OnInit, PipeTransform, Pipe} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {MdButtonToggleChange} from '@angular/material';
 import {DatabaseService} from 'app/database/database.service';
-import {Filters} from 'app/filters';
 import {Period} from 'app/period';
 import {environment} from 'environments/environment';
 import {Observable} from 'rxjs/Observable';
-import {Subscription} from 'rxjs/Subscription';
+import { Subscription } from 'rxjs/Subscription';
+import { Section } from 'app/section';
+import { Term } from 'app/term';
+import { FiltersModule } from './filters/filters.module';
+import { Store } from 'filnux';
+import { FiltersState } from './filters/filters.store';
+import { CourseSearchState, ToggleShownAction } from './course-search.store';
+import { CourseSearchModule } from './course-search.module';
 
 @Component({
   selector: 'cig-course-search',
   templateUrl: './course-search.component.html',
   styleUrls: ['./course-search.component.scss']
 })
-export class CourseSearchComponent implements AfterViewInit, OnInit {
-  filters: Filters = new Filters();
-  periods: Period[] = environment.institution.periods;
-  results: string[] = [];
-  instructors: string[] = [];
-  departments: string[] = [];
+export class CourseSearchComponent {
   page = 0;
   queryTime = 0;
 
+  results: Observable<string[]>;
 
-  instructorControl = new FormControl();
-  departmentControl = new FormControl();
-  filteredInstructors: Observable<string[]>;
-  filteredDepartments: Observable<string[]>;
-
-  shown = new Set<string>();
-
-  ngOnInit() {
-    this.databaseService.instructors.subscribe(
-        instructors => this.instructors = instructors);
-    this.filteredInstructors = this.instructorControl.valueChanges.map(
-        value => this.searchInstructors(value));
-    this.databaseService.departments.subscribe(
-        departments => this.departments = departments);
-    this.filteredDepartments = this.departmentControl.valueChanges.map(
-        value => this.searchDepartments(value));
-  }
-
-  ngAfterViewInit() {
-    this.filters.changes.subscribe(filters => {
-      // Search the database using these filters.
-      console.log(filters);
-      const start = new Date().getTime();
-      this.databaseService.courses(filters).then(results => {
-        this.results = results;
-        this.queryTime = new Date().getTime() - start;
+  constructor(private databaseService: DatabaseService, private store: Store) {
+    this.results = Observable.combineLatest(this.store.select<FiltersState>(FiltersModule), this.databaseService.indexes())
+      .debounceTime(150)
+      .map(([filters, indexes]) => {
+        console.log(filters, indexes);
+        let matches = new Set<string>(indexes['all']);
+        // Attempt broad course-based matching.
+        if (filters.departments.size > 0) {
+          // Remove any matches that do not appear in the requested
+          // departments.
+          const departmentMatches = new Set<string>();
+          filters.departments.forEach(department => {
+            for (const course of indexes['departments'][department]) {
+              departmentMatches.add(course);
+            }
+          });
+          matches = this.intersect(matches, departmentMatches);
+        }
+        // Convert matches to corresponding course objects.
+        return Array.from(matches);
       });
-    });
   }
 
-  constructor(private databaseService: DatabaseService) {}
-
-  addInstructor(value) {
-    const results = this.searchInstructors(value);
-    if (results.length > 0) {
-      this.filters.instructors.add(results[0]);
-    }
+  getShown(course: string): Observable<boolean> {
+    return Observable.from(this.store.select<CourseSearchState>(CourseSearchModule)).map(s => s.shown.has(course));
   }
 
-  addDepartment(value) {
-    const results = this.searchDepartments(value);
-    if (results.length > 0) {
-      this.filters.departments.add(results[0]);
-      this.filters.emitChange();
-    }
+  toggleShown(course: string) {
+    this.store.dispatch(new ToggleShownAction(course));
   }
 
-  private searchInstructors(value): string[] {
-    const targets = value.toLowerCase().split(' ');
-    return this.instructors
-        .filter(instructor => {
-          const match = instructor.toLowerCase();
-          return !this.filters.instructors.has(instructor) &&
-              targets.every(target => match.indexOf(target) > -1);
-        })
-        .sort();
+  private intersect<T>(a: Set<T>, b: Set<T>): Set<T> {
+    return new Set<T>(Array.from(a.values()).filter(x => b.has(x)));
   }
 
-  private searchDepartments(value): string[] {
-    return this.departments
-        .filter(department => {
-          return !this.filters.departments.has(department) &&
-              department.toLowerCase().indexOf(value) > -1;
-        })
-        .sort();
+  getSections(course: string): Observable<Section[]> {
+    return Observable.combineLatest(this.store.select<FiltersState>(FiltersModule), this.databaseService.schedules(course))
+    .debounceTime(150)
+      .map(([filters, schedules]) => {
+        const results = [];
+        for (const year of Object.keys(schedules)) {
+          for (const period of (schedules[year] ? Object.keys(schedules[year]) : [])) {
+            for (const sectionId of (
+                    schedules[year][period] ? Object.keys(schedules[year][period]) : [])) {
+              console.log(schedules[year][period][sectionId]);
+              if (schedules[year][period][sectionId]) {
+                results.push(Object.assign(
+                    {id: sectionId}, schedules[year][period][sectionId]) as Section);
+              }
+            }
+          }
+        }
+        return results.sort(
+            (a, b) => -Term.compare(a.term, b.term) || -(a.id < b.id) ||
+                +(a.id !== b.id));
+      });
+  }
+}
+
+@Pipe({name: 'count'})
+export class CountPipe implements PipeTransform {
+  transform(values: Observable<any[]>): Observable<number> {
+    return values.map(x => x.length);
   }
 }
