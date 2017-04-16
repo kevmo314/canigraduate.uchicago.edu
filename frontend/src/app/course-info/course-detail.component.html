@@ -4,7 +4,7 @@
   <md-tab label="Sections">
     <div class="sections">
       <ng-container *ngFor="let term of terms | slice:0:numTerms">
-        <cig-section *ngFor="let section of sectionsByTerm(term) | async" [section]="section"></cig-section>
+        <cig-section *ngFor="let section of sectionsByTerm(term)" [section]="section"></cig-section>
       </ng-container>
       <button *ngIf="numTerms < terms.length" (click)="showNextTerm()" md-button>
         <md-icon>history</md-icon>

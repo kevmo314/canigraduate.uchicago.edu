@@ -1,7 +1,7 @@
-import { OnChanges, ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import {ChangeDetectionStrategy, Component, Input, OnChanges} from '@angular/core';
 import {DatabaseService} from 'app/database/database.service';
-import { Observable } from 'rxjs/Observable';
-import { Section } from 'app/section';
+import {Section} from 'app/section';
+import {Observable} from 'rxjs/Observable';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -16,16 +16,18 @@ export class CourseDetailComponent implements OnChanges {
   // arrives.
   private lastTerm = null;
   terms: string[] = [];
-  @Input() sections: Section[];
+  @Input() sections: Section[] = [];
 
   constructor(private databaseService: DatabaseService) {}
 
   ngOnChanges() {
-    const termList = this.sections.map(x => x.term);
-    this.terms = Array.from(new Set<string>(termList).values());
-    if (this.terms.length > 0) {
-      // Show around 10 courses.
-      this.lastTerm = termList[Math.min(termList.length, 10) - 1];
+    if (this.sections) {
+      const termList = this.sections.map(x => x.term);
+      this.terms = Array.from(new Set<string>(termList).values());
+      if (this.terms.length > 0) {
+        // Show around 10 courses.
+        this.lastTerm = termList[Math.min(termList.length, 10) - 1];
+      }
     }
   }
 

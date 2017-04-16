@@ -27,13 +27,16 @@ export class FiltersComponent {
   institution = environment.institution;
   DayOfWeek = DayOfWeek;
 
-  constructor(
-      private store: Store, private databaseService: DatabaseService) {
-    this.days = Observable.from(this.store.select<FiltersState>(FiltersModule).map(s => s.days));
-    this.periods = Observable.from(this.store.select<FiltersState>(FiltersModule).map(s => s.periods));
-    this.instructors = Observable.from(this.store.select<FiltersState>(FiltersModule).map(s => s.instructors));
-    this.departments = Observable.from(this.store.select<FiltersState>(FiltersModule).map(s => s.departments));
-    this.query = Observable.from(this.store.select<FiltersState>(FiltersModule).map(s => s.query));
+  constructor(private store: Store, private databaseService: DatabaseService) {
+    this.days = this.store.select<FiltersState>(FiltersModule).map(s => s.days);
+    this.periods =
+        this.store.select<FiltersState>(FiltersModule).map(s => s.periods);
+    this.instructors =
+        this.store.select<FiltersState>(FiltersModule).map(s => s.instructors);
+    this.departments =
+        this.store.select<FiltersState>(FiltersModule).map(s => s.departments);
+    this.query =
+        this.store.select<FiltersState>(FiltersModule).map(s => s.query);
   }
 
   setQuery(value: string) {

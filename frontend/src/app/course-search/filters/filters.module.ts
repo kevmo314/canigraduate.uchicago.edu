@@ -8,12 +8,13 @@ import {DatabaseModule} from 'app/database/database.module';
 import {environment} from 'environments/environment';
 import {FilnuxModule} from 'filnux';
 
-import { FiltersComponent, RemovePipe, SearchPipe } from './filters.component';
-import { SectionFiltersComponent } from './section-filters.component';
-import {ACTIONS, INITIAL_STATE, FiltersState} from './filters.store';
+import {FiltersComponent, RemovePipe, SearchPipe} from './filters.component';
+import {ACTIONS, FiltersState, INITIAL_STATE} from './filters.store';
+import {SectionFiltersComponent} from './section-filters.component';
 
 @NgModule({
-  declarations: [FiltersComponent, SectionFiltersComponent, RemovePipe, SearchPipe],
+  declarations:
+      [FiltersComponent, SectionFiltersComponent, RemovePipe, SearchPipe],
   imports: [
     BrowserModule, MaterialModule, FormsModule, ReactiveFormsModule,
     CourseInfoModule, FlexLayoutModule, FilnuxModule.forChild({
