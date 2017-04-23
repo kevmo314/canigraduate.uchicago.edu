@@ -14,30 +14,35 @@ export enum DayOfWeek {
 }
 
 export class FiltersState {
-  days: DayOfWeek;
-  periods: Period[];
-  instructors: Set<string>;
-  departments: Set<string>;
-  core: boolean;
-  prerequisites: boolean;
-  taken: boolean;
-  tested: boolean;
-  query: string;
-  constructor(previous: FiltersState) {
-    this.days = previous.days;
-    this.periods = [...previous.periods];
-    this.instructors = new Set<string>(previous.instructors);
-    this.departments = new Set<string>(previous.departments);
-    this.core = previous.core;
-    this.prerequisites = previous.prerequisites;
-    this.taken = previous.taken;
-    this.tested = previous.tested;
-    this.query = previous.query;
+  days: DayOfWeek = DayOfWeek.MONDAY | DayOfWeek.TUESDAY | DayOfWeek.WEDNESDAY |
+      DayOfWeek.THURSDAY | DayOfWeek.FRIDAY;
+  periods: Period[] = [...environment.institution.periods];
+  instructors: Set<string> = new Set();
+  departments: Set<string> = new Set();
+  core: boolean = false;
+  prerequisites: boolean = false;
+  taken: boolean = false;
+  tested: boolean = false;
+  query: string = '';
+  constructor(previous: FiltersState = null) {
+    if (previous) {
+      this.days = previous.days;
+      this.periods = [...previous.periods];
+      this.instructors = new Set<string>(previous.instructors);
+      this.departments = new Set<string>(previous.departments);
+      this.core = previous.core;
+      this.prerequisites = previous.prerequisites;
+      this.taken = previous.taken;
+      this.tested = previous.tested;
+      this.query = previous.query;
+    }
   }
 }
 
-export class ToggleDayOfWeekAction implements Action {
-  constructor(private dayOfWeek: DayOfWeek) {}
+export class ToggleDayOfWeekAction extends Action<FiltersState> {
+  constructor(private dayOfWeek: DayOfWeek) {
+    super();
+  }
   reduce(state: FiltersState) {
     state = new FiltersState(state);
     state.days ^= this.dayOfWeek;
@@ -49,8 +54,10 @@ function toggleSet<T>(set: Set<T>, value: T) {
   set.has(value) ? set.delete(value) : set.add(value);
 }
 
-export class TogglePeriodAction implements Action {
-  constructor(private period: Period) {}
+export class TogglePeriodAction extends Action<FiltersState> {
+  constructor(private period: Period) {
+    super();
+  }
   reduce(state: FiltersState): FiltersState {
     state = new FiltersState(state);
     const index =
@@ -64,8 +71,10 @@ export class TogglePeriodAction implements Action {
   }
 }
 
-export class ToggleDepartmentAction implements Action {
-  constructor(private department: string) {}
+export class ToggleDepartmentAction extends Action<FiltersState> {
+  constructor(private department: string) {
+    super();
+  }
   reduce(state: FiltersState) {
     state = new FiltersState(state);
     toggleSet(state.departments, this.department);
@@ -73,8 +82,10 @@ export class ToggleDepartmentAction implements Action {
   }
 }
 
-export class ToggleInstructorAction implements Action {
-  constructor(private instructor: string) {}
+export class ToggleInstructorAction extends Action<FiltersState> {
+  constructor(private instructor: string) {
+    super();
+  }
   reduce(state: FiltersState) {
     state = new FiltersState(state);
     toggleSet(state.instructors, this.instructor);
@@ -82,8 +93,10 @@ export class ToggleInstructorAction implements Action {
   }
 }
 
-export class ToggleSimpleAction implements Action {
-  constructor(private toggle: (State) => void) {}
+export class ToggleSimpleAction extends Action<FiltersState> {
+  constructor(private toggle: (State) => void) {
+    super();
+  }
   reduce(state: FiltersState) {
     state = new FiltersState(state);
     this.toggle(state);
@@ -91,27 +104,16 @@ export class ToggleSimpleAction implements Action {
   }
 }
 
-export class SetQueryAction implements Action {
-  constructor(private query: string) { }
+export class SetQueryAction extends Action<FiltersState> {
+  constructor(private query: string) {
+    super();
+  }
   reduce(state: FiltersState) {
     state = new FiltersState(state);
     state.query = this.query;
     return state;
   }
 }
-
-export const INITIAL_STATE = {
-  days: DayOfWeek.MONDAY | DayOfWeek.TUESDAY | DayOfWeek.WEDNESDAY |
-      DayOfWeek.THURSDAY | DayOfWeek.FRIDAY,
-  periods: [...environment.institution.periods],
-  instructors: new Set(),
-  departments: new Set(),
-  taken: false,
-  tested: false,
-  prerequisites: false,
-  core: false,
-  query: ''
-};
 
 export const ACTIONS = [
   ToggleDayOfWeekAction, TogglePeriodAction, ToggleDepartmentAction,

@@ -10,7 +10,7 @@ import {Observable} from 'rxjs/Observable';
 import {Subscription} from 'rxjs/Subscription';
 
 import {FiltersModule} from './filters.module';
-import {DayOfWeek, FiltersState, SetQueryAction} from './filters.store';
+import {ACTIONS, DayOfWeek, FiltersState, SetQueryAction} from './filters.store';
 
 @Component({
   selector: 'cig-filters',
@@ -26,36 +26,24 @@ export class FiltersComponent {
   query: Observable<string>;
   institution = environment.institution;
   DayOfWeek = DayOfWeek;
+  store: Store<FiltersState> = null;
 
-  constructor(private store: Store, private databaseService: DatabaseService) {
-    this.days = this.store.select<FiltersState>(FiltersModule).map(s => s.days);
-    this.periods =
-        this.store.select<FiltersState>(FiltersModule).map(s => s.periods);
-    this.instructors =
-        this.store.select<FiltersState>(FiltersModule).map(s => s.instructors);
-    this.departments =
-        this.store.select<FiltersState>(FiltersModule).map(s => s.departments);
-    this.query =
-        this.store.select<FiltersState>(FiltersModule).map(s => s.query);
+  constructor(private databaseService: DatabaseService) {
+    this.store = new Store<FiltersState>({
+                   context: FiltersModule,
+                   initialState: new FiltersState()
+                 }).addActions(ACTIONS);
+    this.days = this.store.select(s => s.days);
+    this.periods = this.store.select(s => s.periods);
+    this.instructors = this.store.select(s => s.instructors);
+    this.departments = this.store.select(s => s.departments).map(d => {
+      debugger;
+      return d;
+    });
+    this.query = this.store.select(s => s.query);
   }
 
   setQuery(value: string) {
     this.store.dispatch(new SetQueryAction(value));
-  }
-}
-
-@Pipe({name: 'remove'})
-export class RemovePipe implements PipeTransform {
-  transform(values: Observable<string[]>, remove: Observable<Set<string>>):
-      Observable<string[]> {
-    return values.combineLatest(remove, (v, r) => v.filter(x => !r.has(x)));
-  }
-}
-
-@Pipe({name: 'search'})
-export class SearchPipe implements PipeTransform {
-  transform(values: Observable<string[]>, query: string): Observable<string[]> {
-    return values.map(
-        v => v.filter(x => x.toLowerCase().indexOf(query.toLowerCase()) > -1));
   }
 }

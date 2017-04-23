@@ -1,5 +1,5 @@
-import {AfterViewInit, ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
-import {Pipe, PipeTransform, Input} from '@angular/core';
+import {AfterViewInit, ChangeDetectionStrategy, Component, OnChanges, OnInit} from '@angular/core';
+import {Input, Pipe, PipeTransform} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {MdButtonToggleChange} from '@angular/material';
 import {DatabaseService} from 'app/database/database.service';
@@ -16,9 +16,9 @@ import {DayOfWeek, FiltersState, ToggleDayOfWeekAction, ToggleDepartmentAction, 
   selector: 'cig-section-filters',
   templateUrl: './section-filters.component.html',
   styleUrls: ['./section-filters.component.scss'],
- // changeDetection: ChangeDetectionStrategy.OnPush,
+  // changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SectionFiltersComponent {
+export class SectionFiltersComponent implements OnChanges {
   @Input() days: DayOfWeek;
   @Input() periods: Period[];
   @Input() instructors: Set<string>;
@@ -26,45 +26,48 @@ export class SectionFiltersComponent {
   public institution = environment.institution;
   public DayOfWeek = DayOfWeek;
 
-  constructor(private store: Store, private databaseService: DatabaseService) {
+  constructor(private databaseService: DatabaseService) {}
+
+  ngOnChanges() {
+    debugger;
   }
 
   getDayOfWeek(dayOfWeek: DayOfWeek) {
     return this.days & dayOfWeek;
   }
   toggleDayOfWeek(dayOfWeek: DayOfWeek) {
-    this.store.dispatch(new ToggleDayOfWeekAction(dayOfWeek));
+    //  this.store.dispatch(new ToggleDayOfWeekAction(dayOfWeek));
   }
   getPeriod(period: Period) {
     return Boolean(this.periods.find(y => y.name === period.name));
   }
   togglePeriod(period: Period) {
-    this.store.dispatch(new TogglePeriodAction(period));
+    //  this.store.dispatch(new TogglePeriodAction(period));
   }
   get allDepartments() {
     return this.databaseService.departments.map(x => x.sort());
   }
   toggleDepartment(department) {
-    this.store.dispatch(new ToggleDepartmentAction(department));
+    //  this.store.dispatch(new ToggleDepartmentAction(department));
   }
   get allInstructors() {
     return this.databaseService.instructors.map(x => x.sort());
   }
   toggleInstructor(instructor) {
-    this.store.dispatch(new ToggleInstructorAction(instructor));
+    //   this.store.dispatch(new ToggleInstructorAction(instructor));
   }
   toggleTaken() {
-    this.store.dispatch(new ToggleSimpleAction(s => s.taken = !s.taken));
+    //  this.store.dispatch(new ToggleSimpleAction(s => s.taken = !s.taken));
   }
   toggleTested() {
-    this.store.dispatch(new ToggleSimpleAction(s => s.tested = !s.tested));
+    //  this.store.dispatch(new ToggleSimpleAction(s => s.tested = !s.tested));
   }
   togglePrerequisites() {
-    this.store.dispatch(
-        new ToggleSimpleAction(s => s.prerequisites = !s.prerequisites));
+    //   this.store.dispatch(
+    //      new ToggleSimpleAction(s => s.prerequisites = !s.prerequisites));
   }
   toggleCore() {
-    this.store.dispatch(new ToggleSimpleAction(s => s.core = !s.core));
+    //  this.store.dispatch(new ToggleSimpleAction(s => s.core = !s.core));
   }
   /*
   private _indexesCache;
@@ -109,6 +112,7 @@ export class SectionFiltersComponent {
 export class RemovePipe implements PipeTransform {
   transform(values: Observable<string[]>, remove: Set<string>):
       Observable<string[]> {
+    debugger;
     return values.map(v => v.filter(x => !remove.has(x)));
   }
 }
@@ -116,6 +120,7 @@ export class RemovePipe implements PipeTransform {
 @Pipe({name: 'search'})
 export class SearchPipe implements PipeTransform {
   transform(values: Observable<string[]>, query: string): Observable<string[]> {
+    debugger;
     return values.map(
         v => v.filter(x => x.toLowerCase().indexOf(query.toLowerCase()) > -1));
   }

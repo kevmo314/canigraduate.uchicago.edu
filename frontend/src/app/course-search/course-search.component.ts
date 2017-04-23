@@ -12,7 +12,7 @@ import {Subscription} from 'rxjs/Subscription';
 import {Memoize} from 'typescript-memoize';
 
 import {CourseSearchModule} from './course-search.module';
-import {CourseSearchState, ToggleShownAction} from './course-search.store';
+import {ACTIONS, CourseSearchState, ToggleShownAction} from './course-search.store';
 import {FiltersModule} from './filters/filters.module';
 import {FiltersState} from './filters/filters.store';
 
@@ -24,15 +24,16 @@ import {FiltersState} from './filters/filters.store';
 export class CourseSearchComponent {
   page = 0;
   queryTime = 0;
+  store: any;
 
   results: Observable<string[]>;
 
-  constructor(private databaseService: DatabaseService, private store: Store) {
+  constructor(private databaseService: DatabaseService) {
+    this.store = new Store({}).addActions(ACTIONS);
     this.results =
         Observable
             .combineLatest(
-                this.store.select<FiltersState>(FiltersModule),
-                this.databaseService.indexes())
+                this.store.select(x => x), this.databaseService.indexes())
             .debounceTime(150)
             .map(([filters, indexes]: [FiltersState, any]) => {
               let matches = new Set<string>(indexes['all']);
@@ -55,8 +56,9 @@ export class CourseSearchComponent {
 
   @Memoize()
   getShown(course: string): Observable<boolean> {
-    return this.store.select<CourseSearchState>(() => CourseSearchModule)
-        .map((s: CourseSearchState) => s.shown.has(course));
+    return Observable.of(false);
+    // return this.store.select<CourseSearchState>(() => CourseSearchModule)
+    //    .map((s: CourseSearchState) => s.shown.has(course));
   }
 
   toggleShown(course: string) {
@@ -71,8 +73,7 @@ export class CourseSearchComponent {
   getSections(course: string): Observable<Section[]> {
     return Observable
         .combineLatest(
-            this.store.select<FiltersState>(FiltersModule),
-            this.databaseService.schedules(course))
+            this.store.select(x => x), this.databaseService.schedules(course))
         .debounceTime(150)
         .map(([filters, schedules]) => {
           const results = [];

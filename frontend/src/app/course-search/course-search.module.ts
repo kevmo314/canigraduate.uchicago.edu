@@ -9,7 +9,6 @@ import {environment} from 'environments/environment';
 import {FilnuxModule} from 'filnux';
 
 import {CountPipe, CourseSearchComponent} from './course-search.component';
-import {ACTIONS, INITIAL_STATE} from './course-search.store';
 import {FiltersModule} from './filters/filters.module';
 import {PaginationComponent} from './pagination.component';
 import {SearchResultComponent} from './search-result.component';
@@ -22,12 +21,7 @@ import {SearchResultComponent} from './search-result.component';
   ],
   imports: [
     BrowserModule, MaterialModule, FormsModule, ReactiveFormsModule,
-    CourseInfoModule, FlexLayoutModule, FiltersModule, FilnuxModule.forChild({
-      module: CourseSearchModule,
-      children: [FiltersModule],
-      actions: ACTIONS,
-      initialState: INITIAL_STATE
-    })
+    CourseInfoModule, FlexLayoutModule, FiltersModule
   ],
   exports: [CourseSearchComponent],
   providers: [],

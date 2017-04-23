@@ -65,7 +65,7 @@ export class StickyOutletReuseStrategy implements RouteReuseStrategy {
     BrowserModule, FormsModule, HttpModule, SidebarModule, CatalogModule,
     WatchesModule, BrowserAnimationsModule, CourseSearchModule, MaterialModule,
     AngularFireModule.initializeApp(environment.firebaseConfig),
-    FilnuxModule.forRoot({module: AppModule, children: [CourseSearchModule]})
+    FilnuxModule.forRoot(AppModule)
   ],
   providers: [
     {provide: RouteReuseStrategy, useClass: StickyOutletReuseStrategy},

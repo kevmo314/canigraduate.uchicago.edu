@@ -10,11 +10,14 @@ export class CourseSearchState {
   }
 }
 
-export class ToggleShownAction implements Action {
-  constructor(private course: string) {}
+export class ToggleShownAction extends Action<CourseSearchState> {
+  constructor(private course: string) {
+    super();
+  }
   reduce(state: CourseSearchState): CourseSearchState {
     state = new CourseSearchState(state);
-    state.shown.has(this.course) ? state.shown.delete(this.course) : state.shown.add(this.course);
+    state.shown.has(this.course) ? state.shown.delete(this.course) :
+                                   state.shown.add(this.course);
     return state;
   }
 }
@@ -23,6 +26,4 @@ export const INITIAL_STATE = {
   shown: new Set()
 };
 
-export const ACTIONS = [
-  ToggleShownAction
-];
+export const ACTIONS = [ToggleShownAction];
