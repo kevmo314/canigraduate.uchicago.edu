@@ -19,7 +19,4 @@ import {TermOfferIndicatorComponent} from './term-offer-indicator.component';
   providers: [],
 })
 export class CourseInfoModule {
-  constructor() {
-    console.log("Course info module constructed");
-  }
 }

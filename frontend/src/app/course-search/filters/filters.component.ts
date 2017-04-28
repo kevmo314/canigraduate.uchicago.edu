@@ -5,11 +5,10 @@ import {MdButtonToggleChange} from '@angular/material';
 import {DatabaseService} from 'app/database/database.service';
 import {Period} from 'app/period';
 import {environment} from 'environments/environment';
-import {Store} from 'filnux';
+import {AssignAction, SelectValue, Store} from 'filnux';
 import {Observable} from 'rxjs/Observable';
 import {Subscription} from 'rxjs/Subscription';
 
-import {FiltersModule} from './filters.module';
 import {ACTIONS, DayOfWeek, FiltersState, SetQueryAction} from './filters.store';
 
 @Component({
@@ -19,31 +18,34 @@ import {ACTIONS, DayOfWeek, FiltersState, SetQueryAction} from './filters.store'
   //  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FiltersComponent {
+  store = new Store<FiltersState>({
+            initialState: new FiltersState()
+          }).addActions(ACTIONS);
   days: Observable<DayOfWeek>;
   periods: Observable<Period[]>;
   instructors: Observable<Set<string>>;
   departments: Observable<Set<string>>;
-  query: Observable<string>;
+  @SelectValue(this.store, s => s.query, query => ({query})) query: string;
   institution = environment.institution;
   DayOfWeek = DayOfWeek;
-  store: Store<FiltersState> = null;
 
   constructor(private databaseService: DatabaseService) {
-    this.store = new Store<FiltersState>({
-                   context: FiltersModule,
-                   initialState: new FiltersState()
-                 }).addActions(ACTIONS);
     this.days = this.store.select(s => s.days);
     this.periods = this.store.select(s => s.periods);
     this.instructors = this.store.select(s => s.instructors);
-    this.departments = this.store.select(s => s.departments).map(d => {
-      debugger;
-      return d;
-    });
+    this.departments = this.store.select(s => s.departments);
     this.query = this.store.select(s => s.query);
   }
 
-  setQuery(value: string) {
-    this.store.dispatch(new SetQueryAction(value));
+  setDays(days: DayOfWeek) {
+    this.store.dispatch(new AssignAction<FiltersState>({days}));
+  }
+
+  setPeriods(periods: Period[]) {
+    this.store.dispatch(new AssignAction<FiltersState>({periods}));
+  }
+
+  setQuery(query: string) {
+    this.store.dispatch(new AssignAction<FiltersState>({query}));
   }
 }

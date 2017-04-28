@@ -1,14 +1,13 @@
 <md-card class="filters">
   <md-card-content>
-    <cig-section-filters [days]="days | async"
-        [periods]="periods | async"
-        [instructors]="instructors | async"
-        [departments]="departments | async"></cig-section-filters>
+    <cig-section-filters [days]="days | async" (daysChange)="setDays($event)" [periods]="periods | async" (periodsChange)="setPeriods($event)"
+      [instructors]="instructors | async" (instructorsChange)="setInstructors($event)" [departments]="departments | async"
+      (departmentsChange)="setDepartments($event)"></cig-section-filters>
   </md-card-content>
 </md-card>
 <md-card class="query" (click)="queryInput.focus()">
   <md-card-content>
     <md-icon>search</md-icon>
-    <input type="text" placeholder="Math 161" [ngModel]="query | async" (ngModelChange)="setQuery(queryInput.value)" #queryInput>
+    <input type="text" placeholder="Math 161" [(ngModel)]="query" #queryInput>
   </md-card-content>
 </md-card>

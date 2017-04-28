@@ -4,15 +4,20 @@ import {environment} from 'environments/environment';
 import {Action} from 'filnux';
 
 export class CourseSearchState {
-  shown: Set<string>;
-  constructor(previous: CourseSearchState) {
-    this.shown = new Set<string>(previous.shown);
+  shown?: Set<string> = new Set<string>();
+  page?: number = 0;
+  constructor(previous?: CourseSearchState) {
+    if (previous) {
+      this.shown = new Set<string>(previous.shown);
+      this.page = previous.page;
+    }
   }
 }
 
-export class ToggleShownAction extends Action<CourseSearchState> {
+export class ToggleShownAction implements Action<CourseSearchState> {
+  type = 'Toggle shown action'
   constructor(private course: string) {
-    super();
+    this.type = 'Toggle ' + course;
   }
   reduce(state: CourseSearchState): CourseSearchState {
     state = new CourseSearchState(state);
@@ -21,9 +26,5 @@ export class ToggleShownAction extends Action<CourseSearchState> {
     return state;
   }
 }
-
-export const INITIAL_STATE = {
-  shown: new Set()
-};
 
 export const ACTIONS = [ToggleShownAction];

@@ -1,11 +1,10 @@
-import {AfterViewInit, ChangeDetectionStrategy, Component, OnChanges, OnInit} from '@angular/core';
+import {AfterViewInit, ChangeDetectionStrategy, Component, EventEmitter, Output} from '@angular/core';
 import {Input, Pipe, PipeTransform} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {MdButtonToggleChange} from '@angular/material';
 import {DatabaseService} from 'app/database/database.service';
 import {Period} from 'app/period';
 import {environment} from 'environments/environment';
-import {Store} from 'filnux';
 import {Observable} from 'rxjs/Observable';
 import {Subscription} from 'rxjs/Subscription';
 
@@ -18,43 +17,61 @@ import {DayOfWeek, FiltersState, ToggleDayOfWeekAction, ToggleDepartmentAction, 
   styleUrls: ['./section-filters.component.scss'],
   // changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SectionFiltersComponent implements OnChanges {
+export class SectionFiltersComponent {
   @Input() days: DayOfWeek;
   @Input() periods: Period[];
   @Input() instructors: Set<string>;
   @Input() departments: Set<string>;
+  @Output() daysChange = new EventEmitter<DayOfWeek>();
+  @Output() periodsChange = new EventEmitter<Period[]>();
+  @Output() instructorsChange = new EventEmitter<Set<string>>();
+  @Output() departmentsChange = new EventEmitter<Set<string>>();
+
   public institution = environment.institution;
   public DayOfWeek = DayOfWeek;
 
   constructor(private databaseService: DatabaseService) {}
 
-  ngOnChanges() {
-    debugger;
-  }
-
   getDayOfWeek(dayOfWeek: DayOfWeek) {
     return this.days & dayOfWeek;
   }
+
   toggleDayOfWeek(dayOfWeek: DayOfWeek) {
-    //  this.store.dispatch(new ToggleDayOfWeekAction(dayOfWeek));
+    this.daysChange.emit(this.days ^ dayOfWeek);
   }
+
   getPeriod(period: Period) {
     return Boolean(this.periods.find(y => y.name === period.name));
   }
+
   togglePeriod(period: Period) {
-    //  this.store.dispatch(new TogglePeriodAction(period));
+    const periods = [...this.periods];
+    const index = periods.findIndex(p => p.name === period.name);
+    if (index >= 0) {
+      periods.splice(index, 1);
+    } else {
+      periods.push(period);
+    }
+    this.periodsChange.emit(periods);
   }
+
   get allDepartments() {
     return this.databaseService.departments.map(x => x.sort());
   }
   toggleDepartment(department) {
-    //  this.store.dispatch(new ToggleDepartmentAction(department));
+    const departments = new Set<string>(this.departments);
+    department.has(department) ? departments.delete(department) :
+                                 departments.add(department);
+    this.departmentsChange.emit(departments);
   }
   get allInstructors() {
     return this.databaseService.instructors.map(x => x.sort());
   }
   toggleInstructor(instructor) {
-    //   this.store.dispatch(new ToggleInstructorAction(instructor));
+    const instructors = new Set<string>(this.instructors);
+    instructor.has(instructor) ? instructors.delete(instructor) :
+                                 instructors.add(instructor);
+    this.instructorsChange.emit(instructors);
   }
   toggleTaken() {
     //  this.store.dispatch(new ToggleSimpleAction(s => s.taken = !s.taken));
@@ -112,7 +129,6 @@ export class SectionFiltersComponent implements OnChanges {
 export class RemovePipe implements PipeTransform {
   transform(values: Observable<string[]>, remove: Set<string>):
       Observable<string[]> {
-    debugger;
     return values.map(v => v.filter(x => !remove.has(x)));
   }
 }
@@ -120,7 +136,6 @@ export class RemovePipe implements PipeTransform {
 @Pipe({name: 'search'})
 export class SearchPipe implements PipeTransform {
   transform(values: Observable<string[]>, query: string): Observable<string[]> {
-    debugger;
     return values.map(
         v => v.filter(x => x.toLowerCase().indexOf(query.toLowerCase()) > -1));
   }

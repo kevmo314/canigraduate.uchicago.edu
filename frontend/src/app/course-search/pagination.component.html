@@ -1,10 +1,10 @@
 <ng-container *ngIf="getLastPage() > 0">
     <div class="buffer" *ngIf="page == 0"></div>
-    <button md-button (click)="page = page - 1" *ngIf="page > 0">
+    <button md-button (click)="pageChange.emit(page - 1)" *ngIf="page > 0">
         <md-icon>chevron_left</md-icon>
     </button>
-    <button *ngFor="let p of pages" md-button (click)="page = p" [ngClass]="{'active': page == p}">{{p}}</button>
-    <button md-button (click)="page = page + 1" *ngIf="page < getLastPage()">
+    <button *ngFor="let p of pages" md-button (click)="pageChange.emit(p)" [ngClass]="{'active': page == p}">{{p}}</button>
+    <button md-button (click)="pageChange.emit(page + 1)" *ngIf="page < getLastPage()">
         <md-icon>chevron_right</md-icon>
     </button>
     <div class="buffer" *ngIf="page == getLastPage()"></div>

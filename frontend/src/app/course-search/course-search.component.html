@@ -1,13 +1,13 @@
 <div class="course-search">
   <cig-filters></cig-filters>
   <div class="results">
-    <md-card *ngFor="let result of results | async | slice:(10 * page):(10 * page + 10)" [ngClass]="{'expanded': getShown(result) | async}">
+    <md-card *ngFor="let result of results | async | slice:(10 * (page | async)):(10 * (page | async) + 10)" [ngClass]="{'expanded': getShown(result) | async}">
       <cig-search-result course="{{result}}" (click)="toggleShown(result)"></cig-search-result>
       <md-card-content *ngIf="getShown(result) | async">
         <cig-course-detail course="{{result}}" [sections]="getSections(result) | async"></cig-course-detail>
       </md-card-content>
     </md-card>
-    <cig-pagination [items]="results | count | async" [pageSize]="10" [(page)]="page"></cig-pagination>
+    <cig-pagination [items]="results | count | async" [pageSize]="10" [page]="page | async" (pageChange)="setPage($event)"></cig-pagination>
     <div class="metadata" *ngIf="queryTime > 0">
       {{results | count | async}} results fetched in {{queryTime}}ms
     </div>

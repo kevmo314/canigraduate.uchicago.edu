@@ -14,17 +14,17 @@ export enum DayOfWeek {
 }
 
 export class FiltersState {
-  days: DayOfWeek = DayOfWeek.MONDAY | DayOfWeek.TUESDAY | DayOfWeek.WEDNESDAY |
-      DayOfWeek.THURSDAY | DayOfWeek.FRIDAY;
-  periods: Period[] = [...environment.institution.periods];
-  instructors: Set<string> = new Set();
-  departments: Set<string> = new Set();
-  core: boolean = false;
-  prerequisites: boolean = false;
-  taken: boolean = false;
-  tested: boolean = false;
-  query: string = '';
-  constructor(previous: FiltersState = null) {
+  days?: DayOfWeek = DayOfWeek.MONDAY | DayOfWeek.TUESDAY |
+      DayOfWeek.WEDNESDAY | DayOfWeek.THURSDAY | DayOfWeek.FRIDAY;
+  periods?: Period[] = [...environment.institution.periods];
+  instructors?: Set<string> = new Set();
+  departments?: Set<string> = new Set();
+  core?: boolean = false;
+  prerequisites?: boolean = false;
+  taken?: boolean = false;
+  tested?: boolean = false;
+  query?: string = '';
+  constructor(previous?: FiltersState) {
     if (previous) {
       this.days = previous.days;
       this.periods = [...previous.periods];
@@ -60,13 +60,6 @@ export class TogglePeriodAction extends Action<FiltersState> {
   }
   reduce(state: FiltersState): FiltersState {
     state = new FiltersState(state);
-    const index =
-        state.periods.findIndex(period => period.name === this.period.name);
-    if (index >= 0) {
-      state.periods.splice(index, 1);
-    } else {
-      state.periods.push(this.period);
-    }
     return state;
   }
 }
