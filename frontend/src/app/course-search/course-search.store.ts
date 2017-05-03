@@ -5,7 +5,7 @@ import {Action} from 'filnux';
 
 export class CourseSearchState {
   shown?: Set<string> = new Set<string>();
-  page?: number = 0;
+  page? = 0;
   constructor(previous?: CourseSearchState) {
     if (previous) {
       this.shown = new Set<string>(previous.shown);

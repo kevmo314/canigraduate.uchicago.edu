@@ -8,6 +8,6 @@
 <md-card class="query" (click)="queryInput.focus()">
   <md-card-content>
     <md-icon>search</md-icon>
-    <input type="text" placeholder="Math 161" [(ngModel)]="query" #queryInput>
+    <input type="text" placeholder="Math 161" [ngModel]="query | async" (ngModelChange)="setQuery($event)" #queryInput>
   </md-card-content>
 </md-card>

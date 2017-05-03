@@ -69,11 +69,12 @@ export class DatabaseService {
     return this.object('schedules/' + id);
   }
 
-  indexes(): Observable<any> {
+  indexes(query: string): Observable<any> {
+    const key = 'indexes/' + query;
     const subject = new ReplaySubject(1);
-    const indexes = this.angularFire.database.object('indexes');
-    Observable.fromPromise(localforage.getItem('indexes')).filter(Boolean).takeUntil(indexes).concat(indexes).subscribe(subject);
-    indexes.subscribe(value =>  localforage.setItem('indexes', value));
+    const indexes = this.angularFire.database.object(key);
+    Observable.fromPromise(localforage.getItem(key)).filter(Boolean).takeUntil(indexes).concat(indexes).subscribe(subject);
+    indexes.subscribe(value =>  localforage.setItem(key, value));
     return subject;
   }
 

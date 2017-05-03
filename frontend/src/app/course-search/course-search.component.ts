@@ -40,27 +40,29 @@ export class CourseSearchComponent implements AfterViewInit {
   ngAfterViewInit() {
     this.page = this.store.select(s => s.page);
     this.results =
-        Observable
-            .combineLatest(
-                this.filters.store.select(x => x),
-                this.databaseService.indexes())
+                this.filters.store.select(x => x)
             .debounceTime(150)
-            .map(([filters, indexes]: [FiltersState, any]) => {
-              let matches = new Set<string>(indexes['all']);
+            .flatMap((filters: FiltersState) => {
+              const subsets = [];
               // Attempt broad course-based matching.
               if (filters.departments.size > 0) {
                 // Remove any matches that do not appear in the requested
                 // departments.
-                const departmentMatches = new Set<string>();
-                filters.departments.forEach(department => {
-                  for (const course of indexes['departments'][department]) {
-                    departmentMatches.add(course);
-                  }
-                });
-                matches = this.intersect(matches, departmentMatches);
+                subsets.push(...Array.from(filters.departments).map(department => {
+                  return this.databaseService.indexes('departments/' + department).first();
+                }));
               }
-              // Convert matches to corresponding course objects.
-              return Array.from(matches);
+              if (filters.instructors.size > 0) {
+                subsets.push(...Array.from(filters.instructors).map(instructor => {
+                  return this.databaseService.indexes('instructors/' + instructor).first();
+                }));
+              }
+              if (filters.query) {
+                subsets.push(...filters.query.split(' ').map(query => {
+                  return this.databaseService.indexes('fulltext/' + filters.query).first();
+                }));
+              }
+              return Observable.forkJoin(subsets);
             });
   }
 

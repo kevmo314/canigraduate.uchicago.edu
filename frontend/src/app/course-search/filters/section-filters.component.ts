@@ -60,7 +60,7 @@ export class SectionFiltersComponent {
   }
   toggleDepartment(department) {
     const departments = new Set<string>(this.departments);
-    department.has(department) ? departments.delete(department) :
+    departments.has(department) ? departments.delete(department) :
                                  departments.add(department);
     this.departmentsChange.emit(departments);
   }
@@ -69,7 +69,7 @@ export class SectionFiltersComponent {
   }
   toggleInstructor(instructor) {
     const instructors = new Set<string>(this.instructors);
-    instructor.has(instructor) ? instructors.delete(instructor) :
+    instructors.has(instructor) ? instructors.delete(instructor) :
                                  instructors.add(instructor);
     this.instructorsChange.emit(instructors);
   }

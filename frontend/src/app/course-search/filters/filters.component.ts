@@ -21,21 +21,15 @@ export class FiltersComponent {
   store = new Store<FiltersState>({
             initialState: new FiltersState()
           }).addActions(ACTIONS);
-  days: Observable<DayOfWeek>;
-  periods: Observable<Period[]>;
-  instructors: Observable<Set<string>>;
-  departments: Observable<Set<string>>;
-  @SelectValue(this.store, s => s.query, query => ({query})) query: string;
+  days = this.store.select(s => s.days);
+  periods = this.store.select(s => s.periods);
+  instructors = this.store.select(s => s.instructors);
+  departments = this.store.select(s => s.departments);
+  query = this.store.select(s => s.query);
   institution = environment.institution;
   DayOfWeek = DayOfWeek;
 
-  constructor(private databaseService: DatabaseService) {
-    this.days = this.store.select(s => s.days);
-    this.periods = this.store.select(s => s.periods);
-    this.instructors = this.store.select(s => s.instructors);
-    this.departments = this.store.select(s => s.departments);
-    this.query = this.store.select(s => s.query);
-  }
+  constructor(private databaseService: DatabaseService) { }
 
   setDays(days: DayOfWeek) {
     this.store.dispatch(new AssignAction<FiltersState>({days}));
@@ -47,5 +41,13 @@ export class FiltersComponent {
 
   setQuery(query: string) {
     this.store.dispatch(new AssignAction<FiltersState>({query}));
+  }
+
+  setDepartments(departments: Set<string>) {
+    this.store.dispatch(new AssignAction<FiltersState>({ departments }));
+  }
+
+  setInstructors(instructors: Set<string>) {
+    this.store.dispatch(new AssignAction<FiltersState>({ instructors }));
   }
 }
