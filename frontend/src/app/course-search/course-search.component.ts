@@ -40,30 +40,44 @@ export class CourseSearchComponent implements AfterViewInit {
   ngAfterViewInit() {
     this.page = this.store.select(s => s.page);
     this.results =
-                this.filters.store.select(x => x)
+        this.filters.store.select(x => x)
             .debounceTime(150)
+            .do(() => this.queryTime = Date.now())
             .flatMap((filters: FiltersState) => {
-              const subsets = [];
+              const subsets = [this.databaseService.indexes('all').first()];
               // Attempt broad course-based matching.
               if (filters.departments.size > 0) {
-                // Remove any matches that do not appear in the requested
-                // departments.
-                subsets.push(...Array.from(filters.departments).map(department => {
-                  return this.databaseService.indexes('departments/' + department).first();
-                }));
+                filters.departments.forEach(department => {
+                  subsets.push(
+                      this.databaseService.indexes('departments/' + department)
+                          .first());
+                });
               }
               if (filters.instructors.size > 0) {
-                subsets.push(...Array.from(filters.instructors).map(instructor => {
-                  return this.databaseService.indexes('instructors/' + instructor).first();
-                }));
+                filters.instructors.forEach(instructor => {
+                  subsets.push(
+                      this.databaseService.indexes('instructors/' + instructor)
+                          .first());
+                });
               }
               if (filters.query) {
-                subsets.push(...filters.query.split(' ').map(query => {
-                  return this.databaseService.indexes('fulltext/' + filters.query).first();
-                }));
+                filters.query.toLocaleLowerCase().split(' ').forEach(query => {
+                  subsets.push(this.databaseService.indexes('fulltext/' + query)
+                                   .first());
+                });
               }
               return Observable.forkJoin(subsets);
-            });
+            })
+            // Calculate intersections.
+            .map((subsets: Set<string>[]) => {
+              return subsets.reduce((state, subset) => {
+                return new Set<string>(
+                    Array.from(state.values()).filter(x => subset.has(x)));
+              }, subsets.shift());
+            })
+            // Convert to array and sort.
+            .map((results: Set<string>) => Array.from(results).sort())
+            .do(() => this.queryTime = Date.now() - this.queryTime);
   }
 
   @Memoize()
@@ -77,10 +91,6 @@ export class CourseSearchComponent implements AfterViewInit {
 
   setPage(page: number) {
     this.store.dispatch(new AssignAction<CourseSearchState>({page}));
-  }
-
-  private intersect<T>(a: Set<T>, b: Set<T>): Set<T> {
-    return new Set<T>(Array.from(a.values()).filter(x => b.has(x)));
   }
 
   @Memoize()

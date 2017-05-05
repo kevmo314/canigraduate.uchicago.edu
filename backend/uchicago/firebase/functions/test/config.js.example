@@ -1,0 +1,4 @@
+exports.credentials = {
+  username: 'kdwang',
+  password: '<uchicago password>',
+};

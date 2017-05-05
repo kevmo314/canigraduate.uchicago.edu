@@ -1,5 +1,9 @@
+import 'localforage';
+
 import {Injectable} from '@angular/core';
+import {Http} from '@angular/http';
 import {AngularFire} from 'angularfire2';
+import {Evaluation} from 'app/evaluation';
 import {Node, Program} from 'app/program';
 import {Section} from 'app/section';
 import {Term} from 'app/term';
@@ -7,14 +11,13 @@ import {environment} from 'environments/environment';
 import localforage from 'localforage';
 import {Observable} from 'rxjs/Observable';
 import {ReplaySubject} from 'rxjs/ReplaySubject';
-import { Subject } from 'rxjs/Subject';
-import { Memoize } from 'typescript-memoize';
-import 'localforage';
+import {Subject} from 'rxjs/Subject';
+import {Memoize} from 'typescript-memoize';
 
 /** Course catalog information service. */
 @Injectable()
 export class DatabaseService {
-  constructor(private angularFire: AngularFire) {}
+  constructor(private angularFire: AngularFire, private http: Http) {}
 
   @Memoize()
   get instructors(): Observable<string[]> {
@@ -55,6 +58,16 @@ export class DatabaseService {
     return this.object(`course-info/${id}/description`);
   }
 
+  evaluations(id: string): Observable<Evaluation[]> {
+    return this.http
+        .post(
+            'https://us-central1-canigraduate-43286.cloudfunctions.net/evaluations?id=' +
+            id)
+        .subscribe(response => {
+          response.json();
+        });
+  }
+
   /** Returns an unmemoized program Node. */
   sequence(uri: string): Observable<Node> {
     // Create a copy of the output object, it's faster than retransmitting over
@@ -69,12 +82,19 @@ export class DatabaseService {
     return this.object('schedules/' + id);
   }
 
-  indexes(query: string): Observable<any> {
+  indexes(query: string): Observable<Set<string>> {
     const key = 'indexes/' + query;
     const subject = new ReplaySubject(1);
     const indexes = this.angularFire.database.object(key);
-    Observable.fromPromise(localforage.getItem(key)).filter(Boolean).takeUntil(indexes).concat(indexes).subscribe(subject);
-    indexes.subscribe(value =>  localforage.setItem(key, value));
+    Observable.fromPromise(localforage.getItem(key))
+        .filter(Boolean)
+        .takeUntil(indexes)
+        .concat(indexes)
+        .map((values: string[]) => {
+          return new Set<string>(values);
+        })
+        .subscribe(subject);
+    indexes.subscribe(value => localforage.setItem(key, value));
     return subject;
   }
 

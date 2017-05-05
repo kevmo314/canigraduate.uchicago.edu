@@ -1,26 +1,27 @@
-import { Injectable } from '@angular/core';
-import { Http, Response } from '@angular/http';
-import { CookieService } from 'angular2-cookie/core';
-import { Subject } from 'rxjs/Subject';
-
-import { environment } from 'environments/environment';
+import {Injectable} from '@angular/core';
+import {Http, Response} from '@angular/http';
+import {CookieService} from 'angular2-cookie/core';
+import {environment} from 'environments/environment';
+import {ReplaySubject} from 'rxjs/ReplaySubject';
+import {Subject} from 'rxjs/Subject';
 
 /**
  * An authentication service.
  */
 @Injectable()
-export class AuthenticationService extends Subject<{username: string, password: string}> {
+export class AuthenticationService {
+  readonly credentials = new ReplaySubject<
+      {username: string, password: string, confirmed: boolean}>(1);
   private _data: {username: string, password: string};
   private _valid = true;
   private _authenticated = false;
   private _error: string;
-  constructor(
-    private http: Http,
-    private cookieService: CookieService) {
-    super();
-    const cookie = <{username: string, password: string}> this.cookieService.getObject(environment.cookieName);
+  constructor(private http: Http, private cookieService: CookieService) {
+    const cookie =
+        <{username: string, password: string}>this.cookieService.getObject(
+            environment.cookieName);
     if (cookie) {
-      setTimeout(() => this.next(cookie), 0);
+      setTimeout(() => this.propose(cookie), 0);
     }
   }
 
@@ -45,7 +46,7 @@ export class AuthenticationService extends Subject<{username: string, password: 
     return this.locked && password === this._data['password'];
   }
 
-  next(data: {username: string, password: string}): void {
+  propose(data: {username: string, password: string}): void {
     if (!this.locked) {
       this._data = data;
       this._valid = true;

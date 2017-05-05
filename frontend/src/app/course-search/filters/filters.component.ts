@@ -29,7 +29,7 @@ export class FiltersComponent {
   institution = environment.institution;
   DayOfWeek = DayOfWeek;
 
-  constructor(private databaseService: DatabaseService) { }
+  constructor(private databaseService: DatabaseService) {}
 
   setDays(days: DayOfWeek) {
     this.store.dispatch(new AssignAction<FiltersState>({days}));
@@ -44,10 +44,10 @@ export class FiltersComponent {
   }
 
   setDepartments(departments: Set<string>) {
-    this.store.dispatch(new AssignAction<FiltersState>({ departments }));
+    this.store.dispatch(new AssignAction<FiltersState>({departments}));
   }
 
   setInstructors(instructors: Set<string>) {
-    this.store.dispatch(new AssignAction<FiltersState>({ instructors }));
+    this.store.dispatch(new AssignAction<FiltersState>({instructors}));
   }
 }
