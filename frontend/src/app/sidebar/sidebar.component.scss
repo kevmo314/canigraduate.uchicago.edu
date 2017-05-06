@@ -37,6 +37,10 @@ md-progress-bar.visible {
   opacity: 1;
 }
 
+.sidebar /deep/ .mat-input-subscript-wrapper {
+  overflow: visible;
+}
+
 .sidebar .error {
   color: red;
   white-space: nowrap;

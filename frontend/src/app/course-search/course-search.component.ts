@@ -5,6 +5,7 @@ import {DatabaseService} from 'app/database/database.service';
 import {Period} from 'app/period';
 import {Section} from 'app/section';
 import {Term} from 'app/term';
+import {TranscriptService} from 'app/transcript/transcript.service';
 import {environment} from 'environments/environment';
 import {AssignAction, Store} from 'filnux';
 import {Observable} from 'rxjs/Observable';
@@ -31,7 +32,9 @@ export class CourseSearchComponent implements AfterViewInit {
 
   results: Observable<string[]>;
 
-  constructor(private databaseService: DatabaseService) {
+  constructor(
+      private databaseService: DatabaseService,
+      private transcriptService: TranscriptService) {
     this.store = new Store<CourseSearchState>({
                    initialState: new CourseSearchState()
                  }).addActions(ACTIONS);
@@ -44,8 +47,21 @@ export class CourseSearchComponent implements AfterViewInit {
             .debounceTime(150)
             .do(() => this.queryTime = Date.now())
             .flatMap((filters: FiltersState) => {
-              const subsets = [this.databaseService.indexes('all').first()];
+              const subsets:
+                  Observable<Set<string>|((_: Set<string>) => Set<String>)>[] =
+                      [this.databaseService.indexes('all').first()];
               // Attempt broad course-based matching.
+              if (filters.taken) {
+                subsets.push(
+                    this.transcriptService.transcript.first().map(value => {
+                      const taken =
+                          new Set<string>(value.records.map(x => x.id));
+                      return (state: Set<string>) => {
+                        return new Set<string>(Array.from(state.values())
+                                                   .filter(x => !taken.has(x)));
+                      };
+                    }));
+              }
               if (filters.departments.size > 0) {
                 filters.departments.forEach(department => {
                   subsets.push(
@@ -69,11 +85,17 @@ export class CourseSearchComponent implements AfterViewInit {
               return Observable.forkJoin(subsets);
             })
             // Calculate intersections.
-            .map((subsets: Set<string>[]) => {
-              return subsets.reduce((state, subset) => {
-                return new Set<string>(
-                    Array.from(state.values()).filter(x => subset.has(x)));
-              }, subsets.shift());
+            .map((ss: (Set<string>|((_: Set<string>) => Set<string>))[]) => {
+              let state = ss.shift() as Set<string>;
+              for (const subset of ss) {
+                if (subset instanceof Set) {
+                  state = new Set<string>(
+                      Array.from(state.values()).filter(x => subset.has(x)));
+                } else {
+                  state = subset(state);
+                }
+              }
+              return state;
             })
             // Convert to array and sort.
             .map((results: Set<string>) => Array.from(results).sort())

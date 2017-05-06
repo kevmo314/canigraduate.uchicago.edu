@@ -23,7 +23,7 @@ export class TranscriptService {
   }
 
   private bind(data: AuthenticationState) {
-    this.http.post(environment.backend + '/transcript', data)
+    this.http.post(environment.backend + '/api/transcript', data)
         .subscribe(
             response => {
               this.transcript.next(

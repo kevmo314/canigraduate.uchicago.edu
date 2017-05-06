@@ -19,6 +19,7 @@ import {AuthenticationService} from './../authentication/authentication.service'
 /** Course catalog information service. */
 @Injectable()
 export class DatabaseService {
+  private _evaluationsCache = {};
   constructor(
       private angularFire: AngularFireDatabase, private http: Http,
       private authenticationService: AuthenticationService) {}
@@ -63,17 +64,20 @@ export class DatabaseService {
   }
 
   evaluations(id: string): Observable<Evaluation[]> {
-    return this.authenticationService.credentials.filter(x => x.validated)
+    if (this._evaluationsCache[id]) {
+      return this._evaluationsCache[id];
+    }
+    const subject = new ReplaySubject(1);
+    this.authenticationService.credentials.filter(x => x.validated)
         .first()
         .flatMap(credentials => {
           return this.http
-              .post(
-                  'https://us-central1-canigraduate-43286.cloudfunctions.net/evaluations?id=' +
-                      id,
-                  credentials)
+              .post(environment.backend + '/api/evaluations/' + id, credentials)
               .first();
         })
-        .map(response => response.json());
+        .map(response => response.json()['evaluations'])
+        .subscribe(subject);
+    return this._evaluationsCache[id] = subject;
   }
 
   /** Returns an unmemoized program Node. */
@@ -99,7 +103,8 @@ export class DatabaseService {
         .takeUntil(indexes)
         .concat(indexes)
         .map((values: string[]) => {
-          return new Set<string>(values);
+          // What the fuck, firebase...
+          return new Set<string>(Array.isArray(values) ? values : []);
         })
         .subscribe(subject);
     indexes.subscribe(value => localforage.setItem(key, value));

@@ -116,11 +116,10 @@ app.post('/evaluations/:id', (req, res) => {
             .map((index, element) => {
               const cells = $(element).find('td');
               return {
-                'id': $(element).find('a').attr('href').substring(
-                    'evaluation.php?id='.length),
+                'href': host + $(element).find('a').attr('href'),
                 'section': cells.eq(0).text().substring(11),
                 'instructor': cells.eq(2).text(),
-                'quarter': cells.eq(3).text(),
+                'term': cells.eq(3).text(),
               };
             })
             .get();

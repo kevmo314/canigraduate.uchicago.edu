@@ -70,9 +70,9 @@
 <div class="form-group">
   Hide classes that
   <md-button-toggle-group multiple>
-    <md-button-toggle [checked]="taken" (change)="toggleTaken()">I've taken</md-button-toggle>
-    <md-button-toggle [checked]="tested" (change)="toggleTested()">I've tested out of</md-button-toggle>
-    <md-button-toggle [checked]="prerequisites" (change)="togglePrerequisites()">I don't have prereqs for</md-button-toggle>
-    <md-button-toggle [checked]="core" (change)="toggleCore()">are core reqs</md-button-toggle>
+    <md-button-toggle [disabled]="!(transcriptService.transcript | async)" [checked]="taken" (change)="takenChange.emit($event.source.checked)">I've taken</md-button-toggle>
+    <md-button-toggle [checked]="tested" (change)="testedChange.emit($event.source.checked)">I've tested out of</md-button-toggle>
+    <md-button-toggle [checked]="prerequisites" (change)="prerequisitesChange.emit($event.source.checked)">I don't have prereqs for</md-button-toggle>
+    <md-button-toggle [checked]="core" (change)="coreChange.emit($event.source.checked)">are core reqs</md-button-toggle>
   </md-button-toggle-group>
 </div>

@@ -1,4 +1,5 @@
 import {AfterViewInit, ChangeDetectionStrategy, Component, Input} from '@angular/core';
+import {Evaluation} from 'app/evaluation';
 import {Section} from 'app/section';
 import {Observable} from 'rxjs/Observable';
 
@@ -9,6 +10,7 @@ import {Observable} from 'rxjs/Observable';
   styleUrls: ['./section.component.scss']
 })
 export class SectionComponent implements AfterViewInit {
+  @Input() evaluation: Evaluation;
   @Input() section: Section;
 
   constructor() {}

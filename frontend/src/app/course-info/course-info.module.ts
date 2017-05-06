@@ -3,7 +3,7 @@ import {MaterialModule} from '@angular/material';
 import {BrowserModule} from '@angular/platform-browser';
 import {environment} from 'environments/environment';
 
-import {CourseDetailComponent} from './course-detail.component';
+import {CourseDetailComponent, MatchSectionPipe} from './course-detail.component';
 import {CourseNameComponent} from './course-name.component';
 import {SectionComponent} from './section.component';
 import {TermOfferIndicatorComponent} from './term-offer-indicator.component';
@@ -11,7 +11,7 @@ import {TermOfferIndicatorComponent} from './term-offer-indicator.component';
 @NgModule({
   declarations: [
     CourseNameComponent, CourseDetailComponent, TermOfferIndicatorComponent,
-    SectionComponent
+    SectionComponent, MatchSectionPipe
   ],
   imports: [BrowserModule, MaterialModule],
   exports:

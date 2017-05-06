@@ -1,5 +1,5 @@
 export type Evaluation = {
-  id: string,
+  href: string,
   term: string,
   section: string,
   // UChicago lists instructors independently on their evaluations page,

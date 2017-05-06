@@ -4,6 +4,7 @@ import {FormControl} from '@angular/forms';
 import {MdButtonToggleChange} from '@angular/material';
 import {DatabaseService} from 'app/database/database.service';
 import {Period} from 'app/period';
+import {TranscriptService} from 'app/transcript/transcript.service';
 import {environment} from 'environments/environment';
 import {Observable} from 'rxjs/Observable';
 import {Subscription} from 'rxjs/Subscription';
@@ -22,15 +23,25 @@ export class SectionFiltersComponent {
   @Input() periods: Period[];
   @Input() instructors: Set<string>;
   @Input() departments: Set<string>;
+  @Input() taken: boolean;
+  @Input() tested: boolean;
+  @Input() prerequisites: boolean;
+  @Input() core: boolean;
   @Output() daysChange = new EventEmitter<DayOfWeek>();
   @Output() periodsChange = new EventEmitter<Period[]>();
   @Output() instructorsChange = new EventEmitter<Set<string>>();
   @Output() departmentsChange = new EventEmitter<Set<string>>();
+  @Output() takenChange = new EventEmitter<boolean>();
+  @Output() testedChange = new EventEmitter<boolean>();
+  @Output() prerequisitesChange = new EventEmitter<boolean>();
+  @Output() coreChange = new EventEmitter<boolean>();
 
   public institution = environment.institution;
   public DayOfWeek = DayOfWeek;
 
-  constructor(private databaseService: DatabaseService) {}
+  constructor(
+      private databaseService: DatabaseService,
+      public transcriptService: TranscriptService) {}
 
   getDayOfWeek(dayOfWeek: DayOfWeek) {
     return this.days & dayOfWeek;
@@ -61,7 +72,7 @@ export class SectionFiltersComponent {
   toggleDepartment(department) {
     const departments = new Set<string>(this.departments);
     departments.has(department) ? departments.delete(department) :
-                                 departments.add(department);
+                                  departments.add(department);
     this.departmentsChange.emit(departments);
   }
   get allInstructors() {
@@ -70,22 +81,10 @@ export class SectionFiltersComponent {
   toggleInstructor(instructor) {
     const instructors = new Set<string>(this.instructors);
     instructors.has(instructor) ? instructors.delete(instructor) :
-                                 instructors.add(instructor);
+                                  instructors.add(instructor);
     this.instructorsChange.emit(instructors);
   }
-  toggleTaken() {
-    //  this.store.dispatch(new ToggleSimpleAction(s => s.taken = !s.taken));
-  }
-  toggleTested() {
-    //  this.store.dispatch(new ToggleSimpleAction(s => s.tested = !s.tested));
-  }
-  togglePrerequisites() {
-    //   this.store.dispatch(
-    //      new ToggleSimpleAction(s => s.prerequisites = !s.prerequisites));
-  }
-  toggleCore() {
-    //  this.store.dispatch(new ToggleSimpleAction(s => s.core = !s.core));
-  }
+
   /*
   private _indexesCache;
 

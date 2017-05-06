@@ -50,4 +50,20 @@ export class FiltersComponent {
   setInstructors(instructors: Set<string>) {
     this.store.dispatch(new AssignAction<FiltersState>({instructors}));
   }
+
+  setTaken(taken: boolean) {
+    this.store.dispatch(new AssignAction<FiltersState>({taken}));
+  }
+
+  setTested(tested: boolean) {
+    this.store.dispatch(new AssignAction<FiltersState>({tested}));
+  }
+
+  setPrerequisites(prerequisites: boolean) {
+    this.store.dispatch(new AssignAction<FiltersState>({prerequisites}));
+  }
+
+  setCore(core: boolean) {
+    this.store.dispatch(new AssignAction<FiltersState>({core}));
+  }
 }

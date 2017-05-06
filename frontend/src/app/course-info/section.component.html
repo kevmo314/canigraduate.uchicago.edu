@@ -13,5 +13,8 @@
   <div class="enrollment">
     {{section.enrollment.join('/')}}
   </div>
+  <div class="evaluations" *ngIf="evaluation">
+    <a href="{{evaluation.href}}">Course Evaluations</a>
+  </div>
 </div>
 <p *ngFor="let notes of section.notes" md-line>{{notes}}</p>
