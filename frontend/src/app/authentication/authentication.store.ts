@@ -1,12 +1,12 @@
 import {Action} from 'filnux';
 
 export class AuthenticationState {
-  username: string;
-  password: string;
+  username: string = null;
+  password: string = null;
   /** The error message returned from the server if authenticated == false. */
-  error?: string;
+  error: string = null;
   /** Whether or not the username/password combination is known to be valid. */
-  validated: boolean;
+  validated = false;
   constructor(previous?: AuthenticationState) {
     if (previous) {
       Object.assign(this, previous);
@@ -42,7 +42,18 @@ export class RejectCredentialsAction extends Action<AuthenticationState> {
   }
   reduce(state: AuthenticationState) {
     state = new AuthenticationState(state);
-    state.error = this.error;
+    state.error = this.error || 'Unknown error';
     return state;
   }
 }
+
+export class ClearCredentialsAction extends Action<AuthenticationState> {
+  reduce(state: AuthenticationState): AuthenticationState {
+    return new AuthenticationState();
+  }
+}
+
+export const ACTIONS = [
+  ProposeCredentialsAction, ValidateCredentialsAction, RejectCredentialsAction,
+  ClearCredentialsAction
+];

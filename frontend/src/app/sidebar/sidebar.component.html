@@ -1,25 +1,26 @@
-<md-card class="sidebar" *ngIf="!authenticationService.authenticated">
-  <md-progress-bar [ngClass]="{'visible': authenticationService.locked}" color="accent" mode="indeterminate"></md-progress-bar>
+<md-card class="sidebar" *ngIf="!authenticationService.validated">
+  <md-progress-bar [ngClass]="{'visible': authenticationService.pending}" color="accent" mode="indeterminate"></md-progress-bar>
   <form (ngSubmit)="signIn(credentials)" [formGroup]="credentials">
     <md-card-title>Sign In</md-card-title>
     <md-card-content>
-      <p><strong>Can I Graduate?</strong> works better if you're signed in. Enter your UChicago CNetID and password to import your data from AIS.</p>
-      <md-input-container [dividerColor]="authenticationService.valid ? null : 'warn'">
+      <p><strong>Can I Graduate?</strong> works better if you're signed in. Enter your UChicago CNetID and password to import
+        your data from AIS.</p>
+      <md-input-container [dividerColor]="authenticationService.error ? 'warn' : null">
         <input mdInput placeholder="CNetID" formControlName="username" required>
-        <md-hint class="error" *ngIf="!authenticationService.valid">{{authenticationService.message}}</md-hint>
+        <md-hint class="error" *ngIf="authenticationService.error">{{authenticationService.error}}</md-hint>
       </md-input-container>
-      <md-input-container [dividerColor]="authenticationService.valid ? null : 'warn'">
+      <md-input-container [dividerColor]="authenticationService.error ? 'warn' : null">
         <input mdInput placeholder="Password" required type="password" formControlName="password">
       </md-input-container>
     </md-card-content>
     <md-card-actions>
-      <button type="submit" md-raised-button color="primary" [attr.disabled]="authenticationService.locked ? true : null">
+      <button type="submit" md-raised-button color="primary" [attr.disabled]="authenticationService.pending ? true : null">
         Sign In
       </button> or don't.
     </md-card-actions>
   </form>
 </md-card>
-<md-card class="sidebar transcript" *ngIf="authenticationService.authenticated">
+<md-card class="sidebar transcript" *ngIf="authenticationService.validated">
   <md-card-title class="header">
     <div class="title">Transcript</div>
     <md-slide-toggle (change)="toggleGrades($event)" [checked]="showGrades" class="grades-toggle">

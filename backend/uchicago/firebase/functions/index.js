@@ -1,5 +1,10 @@
+'use strict';
+
 const admin = require('firebase-admin');
+const bodyParser = require('body-parser');
 const cheerio = require('cheerio');
+const cors = require('cors');
+const express = require('express');
 const functions = require('firebase-functions');
 const request = require('request-promise-native').defaults({
   followAllRedirects: true,
@@ -10,6 +15,8 @@ const request = require('request-promise-native').defaults({
         'Mozilla/5.0 (compatible; canigraduate/2.0; +http://canigraduate.uchicago.edu/)',
   }
 });
+
+admin.initializeApp(functions.config().firebase);
 
 const GPA_MAP = {
   'A+': 4.0,
@@ -42,11 +49,8 @@ class Grade {
   }
 }
 
-admin.initializeApp(functions.config().firebase);
-
 function performShibbolethHandshake(host, jar, req) {
-  const username = req.body.username;
-  const password = req.body.password;
+  const {username, password} = req.body;
   if (!username || !password) {
     throw new Error('"username" and/or "password" missing in request body.');
   }
@@ -77,19 +81,23 @@ function performShibbolethHandshake(host, jar, req) {
       });
 }
 
-exports.evaluations = functions.https.onRequest((req, res) => {
+const app = express();
+
+app.use(cors());
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+
+app.post('/evaluations/:id', (req, res) => {
   const jar = request.jar();
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Content-Type', 'application/json');
   const host = 'https://evaluations.uchicago.edu/';
   Promise.resolve()
       .then(() => {
-        if (!req.query.id) {
+        if (!req.params.id) {
           throw new Error('Parameter "id" not specified.');
         }
-        const match = req.query.id.match(/([A-Z]{4}) (\d{5})/);
+        const match = req.params.id.match(/([A-Z]{4}) (\d{5})/);
         if (!match || match.length < 3) {
-          throw Error('Invalid course id "' + req.query.id + '".');
+          throw Error('Invalid course id "' + req.params.id + '".');
         }
         const [department, courseNumber] = match.slice(1, 3);
         return request(
@@ -119,18 +127,16 @@ exports.evaluations = functions.https.onRequest((req, res) => {
       })
       .then(result => {
         res.status(200);
-        res.send(JSON.stringify({'evaluations': result}));
+        res.json({'evaluations': result});
       })
       .catch(err => {
         res.status(400);
-        res.send(JSON.stringify({'error': err.message || err}))
+        res.json({'error': err.message || err});
       });
 });
 
-exports.transcript = functions.https.onRequest((req, res) => {
+app.post('/transcript', (req, res) => {
   const jar = request.jar();
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Content-Type', 'application/json');
   const host = 'https://aisweb.uchicago.edu/';
   request(host + 'psp/ihprd/EMPLOYEE/EMPL/h/?tab=UC_STUDENT_TAB', {jar})
       .then(() => performShibbolethHandshake(host, jar, req))
@@ -170,10 +176,12 @@ exports.transcript = functions.https.onRequest((req, res) => {
       })
       .then(result => {
         res.status(200);
-        res.send(JSON.stringify({'transcript': result}));
+        res.json({'transcript': result});
       })
       .catch(err => {
         res.status(400);
-        res.send(JSON.stringify({'error': err.message || err}))
+        res.json({'error': err.message || err});
       });
 });
+
+exports.api = functions.https.onRequest(app);

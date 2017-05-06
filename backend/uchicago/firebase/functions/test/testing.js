@@ -1,11 +1,14 @@
+'use strict';
+
 const admin = require('firebase-admin');
 const functions = require('firebase-functions');
 const chai = require('chai');
-const sinon = require('sinon');
 const config = require('./config');
+const sinon = require('sinon');
+const request = require('supertest');
 
 let adminInitStub = null;
-let myFunctions = null;
+let index = null;
 let configStub = null;
 
 before(() => {
@@ -16,7 +19,7 @@ before(() => {
       storageBucket: 'not-a-project.appspot.com',
     }
   });
-  myFunctions = require('../index');
+  index = require('../index');
 });
 
 after(() => {
@@ -24,62 +27,49 @@ after(() => {
   adminInitStub.restore();
 });
 
+
 describe('UChicago Course Evaluations', () => {
   it('should fetch evaluations', done => {
-    myFunctions.evaluations(
-        {query: {id: 'ECON 19800'}, body: config.credentials}, {
-          header: (key, value) => {},
-          status: code => {
-            chai.assert.equal(code, 200);
-          },
-          send: response => {
-            console.log(response);
-            chai.assert.isAbove(JSON.parse(response)['evaluations'].length, 0);
-            done();
-          },
-        });
-  }).timeout(5000);
+    request(index.api)
+        .post('/evaluations/ECON 19800')
+        .send(config.credentials)
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .expect(
+            response =>
+                chai.assert.isAbove(response.body['evaluations'].length, 0))
+        .end(done);
+  });
   it('should fail for invalid id', done => {
-    myFunctions.evaluations({query: {id: 'ECON'}, body: config.credentials}, {
-      header: (key, value) => {},
-      status: code => {
-        chai.assert.equal(code, 400);
-      },
-      send: response => {
-        console.log(response);
-        chai.assert.isString(JSON.parse(response)['error']);
-        done();
-      },
-    });
+    request(index.api)
+        .post('/evaluations/ECON')
+        .send(config.credentials)
+        .expect('Content-Type', /json/)
+        .expect(400)
+        .expect(response => chai.assert.isString(response.body['error']))
+        .end(done);
   });
   it('should fail and echo server error message', done => {
-    myFunctions.evaluations(
-        {query: {id: 'ECON 99999'}, body: config.credentials}, {
-          header: (key, value) => {},
-          status: code => {
-            chai.assert.equal(code, 400);
-          },
-          send: response => {
-            console.log(response);
-            chai.assert.isString(JSON.parse(response)['error']);
-            done();
-          },
-        });
+    request(index.api)
+        .post('/evaluations/ECON 99999')
+        .send(config.credentials)
+        .expect('Content-Type', /json/)
+        .expect(400)
+        .expect(response => chai.assert.isString(response.body['error']))
+        .end(done);
   });
 });
 
 describe('UChicago Transcripts', () => {
   it('should fetch transcript', done => {
-    myFunctions.transcript({body: config.credentials}, {
-      header: (key, value) => {},
-      status: code => {
-        chai.assert.equal(code, 200);
-      },
-      send: response => {
-        console.log(response);
-        chai.assert.isAbove(JSON.parse(response)['transcript'].length, 0);
-        done();
-      },
-    });
+    request(index.api)
+        .post('/transcript')
+        .send(config.credentials)
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .expect(
+            response =>
+                chai.assert.isAbove(response.body['transcript'].length, 0))
+        .end(done);
   }).timeout(15000);
 });

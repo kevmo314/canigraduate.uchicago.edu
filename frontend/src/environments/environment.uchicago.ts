@@ -1,8 +1,8 @@
-import { UniversityOfChicago } from 'institutions/uchicago';
+import {UniversityOfChicago} from 'institutions/uchicago';
 
 export const environment = {
   production: true,
-  backend: 'http://canigraduate.uchicago.edu',
+  backend: 'https://us-central1-canigraduate-43286.cloudfunctions.net',
   hmr: false,
   firebaseConfig: {
     apiKey: 'AIzaSyCjBDyhwbXcp9kEIA2pMHLDGxmCM4Sn6Eg',

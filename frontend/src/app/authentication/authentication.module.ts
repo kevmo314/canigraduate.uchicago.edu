@@ -1,23 +1,17 @@
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { HttpModule } from '@angular/http';
-import { FormsModule } from '@angular/forms';
-import { MaterialModule } from '@angular/material';
+import {NgModule} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {HttpModule} from '@angular/http';
+import {MaterialModule} from '@angular/material';
+import {BrowserModule} from '@angular/platform-browser';
 
-import { CookieService } from 'angular2-cookie/services/cookies.service';
-
-import { AuthenticationService } from './authentication.service';
-import { ReauthenticationDialogComponent } from './reauthentication-dialog.component';
+import {AuthenticationService} from './authentication.service';
+import {ReauthenticationDialogComponent} from './reauthentication-dialog.component';
 
 @NgModule({
   declarations: [ReauthenticationDialogComponent],
-  imports: [
-    BrowserModule,
-    HttpModule,
-    FormsModule,
-    MaterialModule
-  ],
+  imports: [BrowserModule, HttpModule, FormsModule, MaterialModule],
   exports: [],
-  providers: [ CookieService ]
+  providers: []
 })
-export class AuthenticationModule { }
+export class AuthenticationModule {
+}

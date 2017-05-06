@@ -2,7 +2,7 @@ import 'localforage';
 
 import {Injectable} from '@angular/core';
 import {Http} from '@angular/http';
-import {AngularFire} from 'angularfire2';
+import {AngularFireDatabase} from 'angularfire2/database';
 import {Evaluation} from 'app/evaluation';
 import {Node, Program} from 'app/program';
 import {Section} from 'app/section';
@@ -14,10 +14,14 @@ import {ReplaySubject} from 'rxjs/ReplaySubject';
 import {Subject} from 'rxjs/Subject';
 import {Memoize} from 'typescript-memoize';
 
+import {AuthenticationService} from './../authentication/authentication.service';
+
 /** Course catalog information service. */
 @Injectable()
 export class DatabaseService {
-  constructor(private angularFire: AngularFire, private http: Http) {}
+  constructor(
+      private angularFire: AngularFireDatabase, private http: Http,
+      private authenticationService: AuthenticationService) {}
 
   @Memoize()
   get instructors(): Observable<string[]> {
@@ -59,13 +63,17 @@ export class DatabaseService {
   }
 
   evaluations(id: string): Observable<Evaluation[]> {
-    return this.http
-        .post(
-            'https://us-central1-canigraduate-43286.cloudfunctions.net/evaluations?id=' +
-            id)
-        .subscribe(response => {
-          response.json();
-        });
+    return this.authenticationService.credentials.filter(x => x.validated)
+        .first()
+        .flatMap(credentials => {
+          return this.http
+              .post(
+                  'https://us-central1-canigraduate-43286.cloudfunctions.net/evaluations?id=' +
+                      id,
+                  credentials)
+              .first();
+        })
+        .map(response => response.json());
   }
 
   /** Returns an unmemoized program Node. */
@@ -85,7 +93,7 @@ export class DatabaseService {
   indexes(query: string): Observable<Set<string>> {
     const key = 'indexes/' + query;
     const subject = new ReplaySubject(1);
-    const indexes = this.angularFire.database.object(key);
+    const indexes = this.angularFire.object(key);
     Observable.fromPromise(localforage.getItem(key))
         .filter(Boolean)
         .takeUntil(indexes)
@@ -101,7 +109,7 @@ export class DatabaseService {
   @Memoize()
   object(id: string) {
     const replaySubject = new ReplaySubject(1);
-    this.angularFire.database.object(id)
+    this.angularFire.object(id)
         .map(x => {
           if (!x.$exists()) {
             return null;

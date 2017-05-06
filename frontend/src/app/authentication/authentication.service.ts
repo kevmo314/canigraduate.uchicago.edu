@@ -1,80 +1,68 @@
 import {Injectable} from '@angular/core';
-import {Http, Response} from '@angular/http';
-import {CookieService} from 'angular2-cookie/core';
 import {environment} from 'environments/environment';
+import {Store} from 'filnux';
+import localforage from 'localforage';
+import {Observable} from 'rxjs/Observable';
 import {ReplaySubject} from 'rxjs/ReplaySubject';
 import {Subject} from 'rxjs/Subject';
+
+import {ACTIONS, AuthenticationState, ClearCredentialsAction, ProposeCredentialsAction, RejectCredentialsAction, ValidateCredentialsAction} from './authentication.store';
 
 /**
  * An authentication service.
  */
 @Injectable()
 export class AuthenticationService {
-  readonly credentials = new ReplaySubject<
-      {username: string, password: string, confirmed: boolean}>(1);
-  private _data: {username: string, password: string};
-  private _valid = true;
-  private _authenticated = false;
-  private _error: string;
-  constructor(private http: Http, private cookieService: CookieService) {
-    const cookie =
-        <{username: string, password: string}>this.cookieService.getObject(
-            environment.cookieName);
-    if (cookie) {
-      setTimeout(() => this.propose(cookie), 0);
-    }
+  readonly store = new Store<AuthenticationState>({
+                     initialState: new AuthenticationState()
+                   }).addActions(ACTIONS);
+  public credentials: Observable<AuthenticationState> =
+      this.store.select(x => x);
+  constructor() {
+    localforage
+        .getItem<{username: string, password: string}>(environment.cookieName)
+        .then(value => {
+          if (value) {
+            setTimeout(() => this.propose(value.username, value.password), 0);
+          }
+        });
   }
 
-  get locked(): boolean {
-    return this._data != null;
+  /** True if credentials have been issued but no response has yet been
+   * received. */
+  get pending(): boolean {
+    return !this.error && this.store.state.password !== null && !this.validated;
   }
 
-  get valid(): boolean {
-    return this._valid;
+  get error() {
+    return this.store.state.error;
   }
 
-  get message() {
-    // Unfortunately we have no way to notify failures.
-    return this._error;
-  }
-
-  get authenticated(): boolean {
-    return this._authenticated;
+  get validated(): boolean {
+    return this.store.state.validated;
   }
 
   reauthenticate(password: string): boolean {
-    return this.locked && password === this._data['password'];
+    return this.validated && password === this.store.state.password;
   }
 
-  propose(data: {username: string, password: string}): void {
-    if (!this.locked) {
-      this._data = data;
-      this._valid = true;
-      super.next(data);
-    }
+  propose(username: string, password: string) {
+    this.store.dispatch(new ProposeCredentialsAction(username, password));
   }
 
-  error(err: string): void {
-    this._data = null;
-    // Intercept error as we don't want to terminate the stream.
-    // Instead, flag the state as invalid.
-    this._valid = false;
-    this._error = err;
+  validate() {
+    this.store.dispatch(new ValidateCredentialsAction());
+    localforage.setItem(environment.cookieName, {
+      username: this.store.state.username,
+      password: this.store.state.password
+    });
   }
 
-  complete(): void {
-    this._authenticated = true;
-    // Save the credentials to a cookie, clear the password if prod.
-    if (environment.production) {
-      this._data.password = null;
-    }
-    this.cookieService.putObject(environment.cookieName, this._data);
+  reject(error: string) {
+    this.store.dispatch(new RejectCredentialsAction(error));
   }
 
-  reset(): void {
-    this._data = null;
-    this._valid = true;
-    this._authenticated = false;
-    this.cookieService.remove(environment.cookieName);
+  clear() {
+    this.store.dispatch(new ClearCredentialsAction());
   }
 }

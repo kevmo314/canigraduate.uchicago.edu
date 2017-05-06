@@ -3,7 +3,8 @@ import {FormControl, FormGroup} from '@angular/forms';
 import {MdDialog, MdSlideToggleChange} from '@angular/material';
 import {AuthenticationService} from 'app/authentication/authentication.service';
 import {ReauthenticationDialogComponent} from 'app/authentication/reauthentication-dialog.component';
-import {TranscriptService} from 'app/transcript/transcript.service';
+
+import {TranscriptService} from './../transcript/transcript.service';
 
 @Component({
   selector: 'cig-sidebar',
@@ -15,6 +16,8 @@ export class SidebarComponent implements OnInit {
   showGrades = true;
 
   constructor(
+      // This is imported to initialize the service, otherwise nothing
+      // will listen to the authentication bind.
       private transcriptService: TranscriptService,
       public authenticationService: AuthenticationService,
       private mdDialog: MdDialog) {}
@@ -22,16 +25,15 @@ export class SidebarComponent implements OnInit {
   ngOnInit(): void {
     this.credentials = new FormGroup(
         {username: new FormControl(), password: new FormControl()});
-    this.authenticationService.subscribe(data => {
+    this.authenticationService.credentials.subscribe(data => {
       this.credentials.controls['username'].setValue(data.username);
       this.credentials.controls['password'].setValue(data.password);
     });
   }
 
   signIn({value, valid}:
-             {value: {username: string, password: string}, valid: boolean}):
-      void {
-    this.authenticationService.next(value);
+             {value: {username: string, password: string}, valid: boolean}) {
+    this.authenticationService.propose(value.username, value.password);
   }
 
   toggleGrades(event: MdSlideToggleChange): void {
