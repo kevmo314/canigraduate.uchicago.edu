@@ -10,17 +10,19 @@ const sinon = require('sinon');
 const request = require('supertest');
 const {authenticate} = require('../authentication');
 
-let adminInitStub = null;
+const stubs = sinon.sandbox.create();
 let index = null;
-let configStub = null;
 let transportMock = sinon.mock({sendMail: () => {}});
-let nodemailerStub = null;
 
 before(() => {
   mockery.enable({warnOnUnregistered: false});
   mockery.registerMock('nodemailer', nodemailerMock);
-  adminInitStub = sinon.stub(admin, 'initializeApp');
-  configStub = sinon.stub(functions, 'config').returns({
+  stubs.stub(admin, 'initializeApp');
+  stubs.stub(admin, 'auth').returns({
+    createUser: stubs.stub().returns(Promise.resolve()),
+    createCustomToken: stubs.stub().returns(Promise.resolve('token')),
+  });
+  stubs.stub(functions, 'config').returns({
     firebase: {
       databaseURL: 'https://not-a-project.firebaseio.com',
       storageBucket: 'not-a-project.appspot.com',
@@ -38,8 +40,7 @@ afterEach(() => {
 });
 
 after(() => {
-  configStub.restore();
-  adminInitStub.restore();
+  stubs.restore();
   mockery.deregisterAll();
   mockery.disable();
 });
@@ -62,8 +63,10 @@ describe('UChicago Course Evaluations', () => {
         .expect('Content-Type', /json/)
         .expect(200)
         .expect(
-            response =>
-                chai.assert.isAbove(response.body['evaluations'].length, 0))
+            response => {
+                chai.assert.isAbove(response.body['evaluations'].length, 0);
+                chai.assert.equal(response.body['token'], 'token');
+            })
         .end(done);
   }).timeout(4000);
   it('should fail for invalid id', done => {
@@ -94,8 +97,10 @@ describe('UChicago Transcripts', () => {
         .expect('Content-Type', /json/)
         .expect(200)
         .expect(
-            response =>
-                chai.assert.isAbove(response.body['transcript'].length, 0))
+            response => {
+                chai.assert.isAbove(response.body['transcript'].length, 0);
+                chai.assert.equal(response.body['token'], 'token');
+            })
         .end(done);
   }).timeout(15000);
 });

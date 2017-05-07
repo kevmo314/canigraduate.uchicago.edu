@@ -5,8 +5,11 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const express = require('express');
 const functions = require('firebase-functions');
+const serviceAccount = require('./service-account.json');
 
-admin.initializeApp(functions.config().firebase);
+admin.initializeApp(Object.assign(
+    {}, functions.config().firebase,
+    {credential: admin.credential.cert(serviceAccount)}));
 
 const app = express();
 

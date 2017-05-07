@@ -1,14 +1,15 @@
 'use strict';
 
-const {request} = require('./config');
+const admin = require('firebase-admin');
 const cheerio = require('cheerio');
 const ldap = require('ldapjs');
+const {request} = require('./config');
 
 /**
  * Authenticates against UChicago LDAP.
  * @param {string} username
  * @param {string} password
- * @returns {!Promise<!Object<string>>} The LDAP result with keys chicagoID and ucCurriculum.
+ * @returns {!Promise<string>} The customToken to authenticate against Firebase.
  */
 module.exports.authenticate = (username, password) => {
   return new Promise((resolve, reject) => {
@@ -31,10 +32,22 @@ module.exports.authenticate = (username, password) => {
                 let resolved = false;
                 res.on('searchEntry', entry => {
                   resolved = true;
-                  resolve({
-                    chicagoID: entry.object['chicagoID'],
-                    ucCurriculum: entry.object['ucCurriculum'],
-                  });
+                  const uid = entry.object['chicagoID'];
+                  admin.auth()
+                      .createUser({
+                        uid,
+                        email: `${username}@uchicago.edu`,
+                        emailVerified: true,
+                      })
+                      .catch(err => {
+                        if (err.message !=
+                            'The user with the provided uid already exists.') {
+                          throw err;
+                        }
+                      })
+                      .then(() => admin.auth().createCustomToken(uid))
+                      .then(resolve)
+                      .catch(reject);
                 });
                 res.on('error', reject);
                 res.on('end', result => {
@@ -51,14 +64,11 @@ module.exports.authenticate = (username, password) => {
  * Performs a shibboleth handshake for a given cookie jar.
  * @param {string} host The base url to authenticate against, eg https://evaluations.uchicago.edu/
  * @param {!request.CookieJar} jar The cookie jar to store authentication tokens into.
- * @param {!Request} req The request object to extract the username/password from.
- * @returns {!Promise<!Array<!Object>>} A promise for an array of [ldapResult, html].
+ * @param {string} username
+ * @param {string} password
+ * @returns {!Promise<!Array<string>>} A promise for an array of [token, html].
  */
-module.exports.performShibbolethHandshake = (host, jar, req) => {
-  const {username, password} = req.body;
-  if (!username || !password) {
-    throw new Error('"username" and/or "password" missing in request body.');
-  }
+module.exports.performShibbolethHandshake = (host, jar, username, password) => {
   return Promise.all([
     module.exports.authenticate(username, password),
     request
