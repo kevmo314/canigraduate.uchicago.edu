@@ -9,6 +9,7 @@ import {ReauthenticationDialogComponent} from './reauthentication-dialog.compone
 
 @NgModule({
   declarations: [ReauthenticationDialogComponent],
+  entryComponents: [ReauthenticationDialogComponent],
   imports: [BrowserModule, HttpModule, FormsModule, MaterialModule],
   exports: [],
   providers: []

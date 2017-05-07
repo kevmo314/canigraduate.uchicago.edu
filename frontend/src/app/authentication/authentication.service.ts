@@ -50,8 +50,12 @@ export class AuthenticationService {
     this.store.dispatch(new ProposeCredentialsAction(username, password));
   }
 
-  validate() {
-    this.store.dispatch(new ValidateCredentialsAction());
+  /**
+   * Mark the last credential proposition as valid.
+   * @param {string} token The firebase authentication token provided.
+   */
+  validate(token: string = null) {
+    this.store.dispatch(new ValidateCredentialsAction(token));
     localforage.setItem(environment.cookieName, {
       username: this.store.state.username,
       password: this.store.state.password

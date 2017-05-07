@@ -2,6 +2,7 @@ import 'localforage';
 
 import {Injectable} from '@angular/core';
 import {Http} from '@angular/http';
+import {AngularFireAuth} from 'angularfire2/auth';
 import {AngularFireDatabase} from 'angularfire2/database';
 import {Evaluation} from 'app/evaluation';
 import {Node, Program} from 'app/program';
@@ -21,8 +22,19 @@ import {AuthenticationService} from './../authentication/authentication.service'
 export class DatabaseService {
   private _evaluationsCache = {};
   constructor(
-      private angularFire: AngularFireDatabase, private http: Http,
-      private authenticationService: AuthenticationService) {}
+      private angularFire: AngularFireDatabase,
+      private angularFireAuth: AngularFireAuth, private http: Http,
+      private authenticationService: AuthenticationService) {
+    authenticationService.credentials.map(c => c.token)
+        .distinctUntilChanged()
+        .subscribe(token => {
+          if (token) {
+            angularFireAuth.auth.signInWithCustomToken(token);
+          } else {
+            angularFireAuth.auth.signOut();
+          }
+        });
+  }
 
   @Memoize()
   get instructors(): Observable<string[]> {

@@ -26,10 +26,11 @@ export class TranscriptService {
     this.http.post(environment.backend + '/api/transcript', data)
         .subscribe(
             response => {
+              response = response.json();
               this.transcript.next(
-                  Transcript.deserialize(response.json()['transcript']));
+                  Transcript.deserialize(response['transcript']));
               // Notify the authentication service that login was successful.
-              this.authenticationService.validate();
+              this.authenticationService.validate(response['token']);
             },
             err => this.authenticationService.reject(err.json()['error']),
             () => {});

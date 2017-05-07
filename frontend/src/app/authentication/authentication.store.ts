@@ -7,6 +7,8 @@ export class AuthenticationState {
   error: string = null;
   /** Whether or not the username/password combination is known to be valid. */
   validated = false;
+  /** The firebase authentication token. */
+  token: string = null;
   constructor(previous?: AuthenticationState) {
     if (previous) {
       Object.assign(this, previous);
@@ -24,14 +26,19 @@ export class ProposeCredentialsAction extends Action<AuthenticationState> {
       password: this.password,
       error: null,
       validated: false,
+      token: null,
     });
   }
 }
 
 export class ValidateCredentialsAction extends Action<AuthenticationState> {
+  constructor(private token: string) {
+    super();
+  }
   reduce(state: AuthenticationState): AuthenticationState {
     state = new AuthenticationState(state);
     state.validated = true;
+    state.token = this.token;
     return state;
   }
 }
