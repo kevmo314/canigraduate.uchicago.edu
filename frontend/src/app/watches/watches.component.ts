@@ -1,4 +1,6 @@
 import {Component, Input} from '@angular/core';
+import {AuthenticationService} from 'app/authentication/authentication.service';
+import {DatabaseService} from 'app/database/database.service';
 
 @Component({
   selector: 'cig-watches',
@@ -6,5 +8,7 @@ import {Component, Input} from '@angular/core';
   styleUrls: ['./watches.component.scss']
 })
 export class WatchesComponent {
-  constructor() {}
+  constructor(
+      authenticationService: AuthenticationService,
+      private databaseService: DatabaseService) {}
 }

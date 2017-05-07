@@ -1,8 +1,14 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
 .body {
 	display: flex;
 }
 
-.content {
+.body, .content {
 	flex-grow: 1;
 }
 
@@ -12,4 +18,29 @@ md-tab-group {
 
 cig-sidebar {
   width: 540px;
+}
+
+footer {
+  background-color: #444;
+  color: #bbb;
+  padding: 16px;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+footer h3 {
+  color: #080808;
+  font-size: 24px;
+  margin: 0;
+  float: right;
+  text-shadow: 0 1px 1px #555;
+}
+
+footer p {
+  margin: 0;
+}
+
+footer a {
+  text-decoration: none;
+  color: white;
 }

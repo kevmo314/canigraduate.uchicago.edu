@@ -1,6 +1,6 @@
-<div class="theme {{institutionTheme}}">
+<div class="root theme {{institutionTheme}}">
   <md-toolbar color="primary">
-    Can I Graduate? - {{institutionName}}
+    {{institutionName}}
   </md-toolbar>
   <div class="body">
     <md-tab-group [selectedIndex]="selectedIndex" class="content" (selectChange)="changeTab($event)">
@@ -16,4 +16,12 @@
     </md-tab-group>
     <cig-sidebar></cig-sidebar>
   </div>
+  <footer>
+    <h3>Can I Graduate?</h3>
+    <p>DISCLAIMER: The data presented is not guaranteed to be correct. Periodically verify your requirements with your academic
+      advisor prior to graduation.</p>
+    <p>Looking for APIs or statistical data? Questions or comments? <a href="mailto:kdwang@uchicago.edu">Email me!</a></p>
+    <p>This site is not affiliated with {{institutionName}}.</p>
+    <p>&copy; 2017 Kevin Wang - <a href="https://github.com/kevmo314/canigraduate.uchicago.edu">GitHub</a></p>
+  </footer>
 </div>

@@ -68,7 +68,7 @@
   </md-autocomplete>
 </div>
 <div class="form-group">
-  Hide classes that
+  Hide courses that
   <md-button-toggle-group multiple>
     <md-button-toggle [disabled]="!(transcriptService.transcript | async)" [checked]="taken" (change)="takenChange.emit($event.source.checked)">I've taken</md-button-toggle>
     <md-button-toggle [checked]="tested" (change)="testedChange.emit($event.source.checked)">I've tested out of</md-button-toggle>

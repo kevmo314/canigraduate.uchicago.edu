@@ -1,0 +1,9 @@
+<div *ngIf="!authenticationService?.validated">
+  <h2>Your watches</h2>
+  <p>You must be signed in to view your use course watches.</p>
+</div>
+<div *ngIf="authenticationService?.validated">
+  <h2>Your watches</h2>
+
+  <h2>Add a new watch</h2>
+</div>
