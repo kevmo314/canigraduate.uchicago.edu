@@ -1,7 +1,7 @@
 'use strict';
 
 const cheerio = require('cheerio');
-const {performShibbolethHandshake} = require('./shibboleth');
+const {performShibbolethHandshake} = require('./authentication');
 const {request} = require('./config');
 
 module.exports = (req, res) => {
@@ -23,7 +23,7 @@ module.exports = (req, res) => {
             {jar});
       })
       .then(() => performShibbolethHandshake(host, jar, req))
-      .then(html => {
+      .then(([ldapResult, html]) => {
         const $ = cheerio.load(html);
         const error = $('.messages.error');
         if (error.length) {

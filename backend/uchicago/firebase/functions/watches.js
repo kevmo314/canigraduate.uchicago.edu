@@ -75,7 +75,9 @@ module.exports =
                   text:
                       `Hi there! One of your watches on Can I Graduate? was triggered. Exciting!
 
-Term: ${period} ${year} Course: ${course} Section: ${section}
+Term:\t${period} ${year}
+Course:\t${course}
+Section:\t${section}
 
 ${diff}
 

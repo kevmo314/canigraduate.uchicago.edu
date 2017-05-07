@@ -2,7 +2,7 @@
 
 const Grade = require('./grade');
 const cheerio = require('cheerio');
-const {performShibbolethHandshake} = require('./shibboleth');
+const {performShibbolethHandshake} = require('./authentication');
 const {request} = require('./config');
 
 module.exports = (req, res) => {
@@ -10,7 +10,7 @@ module.exports = (req, res) => {
   const host = 'https://aisweb.uchicago.edu/';
   request(host + 'psp/ihprd/EMPLOYEE/EMPL/h/?tab=UC_STUDENT_TAB', {jar})
       .then(() => performShibbolethHandshake(host, jar, req))
-      .then(html => {
+      .then(([ldapResult, html]) => {
         const $ = cheerio.load(html);
         const gyears =
             new Map($('select#gyear_id')

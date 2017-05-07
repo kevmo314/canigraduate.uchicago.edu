@@ -8,6 +8,7 @@ const nodemailerMock = require('nodemailer-mock');
 const mockery = require('mockery');
 const sinon = require('sinon');
 const request = require('supertest');
+const {authenticate} = require('../authentication');
 
 let adminInitStub = null;
 let index = null;
@@ -41,6 +42,16 @@ after(() => {
   adminInitStub.restore();
   mockery.deregisterAll();
   mockery.disable();
+});
+
+describe('UChicago LDAP authentication', () => {
+  it('should authenticate config credentials', () => {
+    return authenticate(
+        config.credentials.username, config.credentials.password);
+  });
+  it('should not authenticate wrong credentials', done => {
+    authenticate('not valid', 'lol').catch(err => done());
+  });
 });
 
 describe('UChicago Course Evaluations', () => {
