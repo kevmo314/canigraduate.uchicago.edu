@@ -1,15 +1,23 @@
-:host {
-  white-space: nowrap;
-  width: 100%;
+@import '~@angular/material/theming';
+
+md-card {
+  padding: 8px;
+  margin: 0;
+  transition: $swift-ease-in-out;
+}
+
+md-card.expanded {
+  margin: 16px -16px;
 }
 
 md-card-header, md-card-header /deep/ .mat-card-header-text {
   width: 100%;
+  margin: 0;
 }
 
 md-card-header {
   margin: 0;
-  padding: 8px 0;
+  padding: 0;
   cursor: pointer;
 }
 
@@ -46,7 +54,9 @@ md-card-subtitle {
   color: rgba(0, 0, 0, 0.54);
   font-size: 12px;
   padding-top: 6px;
+  margin-bottom: 0;
   height: 14px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }

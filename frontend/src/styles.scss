@@ -13,6 +13,11 @@ body {
   overflow-y: scroll;
 }
 
+p {
+    font-size: $mat-body-font-size-base;
+    line-height: 20px;
+}
+
 /** Override some styles. */
 body md-button-toggle.mat-button-toggle-checked.custom .mat-button-toggle-label-content {
   background-color: inherit;

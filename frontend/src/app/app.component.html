@@ -5,13 +5,19 @@
   <div class="body">
     <md-tab-group [selectedIndex]="selectedIndex" class="content" (selectChange)="changeTab($event)">
       <md-tab label="Catalog">
-        <router-outlet name="catalog"></router-outlet>
+        <div class="frame">
+          <router-outlet name="catalog"></router-outlet>
+        </div>
       </md-tab>
       <md-tab label="Course Search">
-        <router-outlet name="search"></router-outlet>
+        <div class="frame">
+          <router-outlet name="search"></router-outlet>
+        </div>
       </md-tab>
       <md-tab label="Watches">
-        <router-outlet name="watches"></router-outlet>
+        <div class="frame">
+          <router-outlet name="watches"></router-outlet>
+        </div>
       </md-tab>
     </md-tab-group>
     <cig-sidebar></cig-sidebar>

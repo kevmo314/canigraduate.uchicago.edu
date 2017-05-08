@@ -9,12 +9,12 @@
       | number : '1.2-2' }}
     </h3>
   </div>
-  <div class="records" *ngIf="cigTranscriptTerm.expanded">
-    <div cigTranscriptRecord #cigTranscriptRecord="cigTranscriptRecord" *ngFor="let record of cigTranscriptTerm.transcript.records"
-      [record]="record" class="record">
-      <div class="id">{{ record.id }}</div>
+  <div class="records" *ngIf="cigTranscriptTerm.expanded" [@toggle]="cigTranscriptTerm.expanded">
+    <div cigTranscriptRecord #cigTranscriptRecord="cigTranscriptRecord" *ngFor="let record of cigTranscriptTerm.transcript.records "
+      [record]="record " class="record ">
+      <div class="id ">{{ record.id }}</div>
       <cig-course-name [course]="record.id" class="name"></cig-course-name>
-      <div class="gpa" *ngIf="showGrades">{{ record.gpa | number : '1.1-1' }}</div>
+      <div class="gpa " *ngIf="showGrades ">{{ record.gpa | number : '1.1-1' }}</div>
     </div>
   </div>
 </md-list>

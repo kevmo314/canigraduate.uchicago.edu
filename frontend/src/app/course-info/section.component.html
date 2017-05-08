@@ -5,7 +5,7 @@
   <div class="primaries">
     <div *ngFor="let primary of section.primaries" class="primary">
       <div class="type">{{primary.type}}</div>
-      <div class="instructors">{{primary.instructors.join(', ')}}</div>
+      <div class="instructors">{{primary.instructors?.join(', ')}}</div>
       <div class="location">{{primary.location}}</div>
       <div class="schedule">{{primary.schedule}}</div>
     </div>

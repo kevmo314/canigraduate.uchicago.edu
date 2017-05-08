@@ -1,10 +1,15 @@
-<md-card-header>
-  <md-card-title>
-    <div class="id">{{course}}</div>
-    <cig-course-name course="{{course}}" class="name"></cig-course-name>
-    <cig-term-offer-indicator *ngFor="let period of periods" course="{{course}}" period="{{period.name}}" color="{{period.color}}">
-      {{period.shorthand}}
-    </cig-term-offer-indicator>
-  </md-card-title>
-  <md-card-subtitle>{{getCrosslists(course) | async}}</md-card-subtitle>
-</md-card-header>
+<md-card [ngClass]="{'expanded': expanded}">
+  <md-card-header (click)="expandedChange.emit()">
+    <md-card-title>
+      <div class="id">{{course}}</div>
+      <cig-course-name course="{{course}}" class="name"></cig-course-name>
+      <cig-term-offer-indicator *ngFor="let period of periods" course="{{course}}" period="{{period.name}}" color="{{period.color}}">
+        {{period.shorthand}}
+      </cig-term-offer-indicator>
+    </md-card-title>
+    <md-card-subtitle>{{crosslists}}</md-card-subtitle>
+  </md-card-header>
+  <md-card-content *ngIf="expanded" [@toggle]="expanded">
+    <cig-course-detail course="{{course}}" [sections]="sections | async"></cig-course-detail>
+  </md-card-content>
+</md-card>

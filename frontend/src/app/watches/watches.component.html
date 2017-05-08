@@ -1,9 +1,60 @@
-<div *ngIf="!authenticationService?.validated">
-  <h2>Your watches</h2>
-  <p>You must be signed in to view your use course watches.</p>
+<div *ngIf="addWatchForm.disabled" [@alert]="!addWatchForm.disabled" class="alert info-alert">
+  <md-icon>info</md-icon>
+  Sign in to create an enrollment watch.
 </div>
-<div *ngIf="authenticationService?.validated">
-  <h2>Your watches</h2>
 
-  <h2>Add a new watch</h2>
-</div>
+<md-card *ngIf="!addWatchForm.disabled">
+  <md-card-content>
+    <table *ngIf="(watches | async)?.length > 0">
+      <tr *ngFor="let watch of (watches | async)">
+        <td></td>
+      </tr>
+    </table>
+    <div *ngIf="(watches | async)?.length == 0" class="empty-state">
+      You don't have any watches.
+    </div>
+  </md-card-content>
+</md-card>
+
+<form class="new-watch" [formGroup]="addWatchForm" (ngSubmit)="addWatch(addWatchForm.value)">
+  <md-card [ngClass]="{'disabled': !authenticationService.validated}">
+    <md-card-title>New watch</md-card-title>
+    <md-card-subtitle>You'll get an email when the course's enrollment changes. All fields are wildcards if omitted.</md-card-subtitle>
+    <md-card-content>
+      <md-input-container>
+        <input mdInput placeholder="Course" [mdAutocomplete]="courseAutocomplete" #courseInput formControlName="course">
+      </md-input-container>
+      <md-autocomplete #courseAutocomplete="mdAutocomplete">
+        <md-option *ngFor="let option of courses | prefix:courseInput.value | async | slice:0:10" [value]="option">{{ option }}</md-option>
+      </md-autocomplete>
+      <md-input-container>
+        <input mdInput placeholder="Term" [mdAutocomplete]="termAutocomplete" #termInput formControlName="term">
+      </md-input-container>
+      <md-autocomplete #termAutocomplete="mdAutocomplete">
+        <md-option *ngFor="let option of terms | prefix:termInput.value | async | slice:0:10" [value]="option">{{ option }}</md-option>
+      </md-autocomplete>
+      <md-input-container>
+        <input mdInput placeholder="Section" formControlName="section">
+      </md-input-container>
+      <ng-container *ngIf="{course: addWatchForm.controls.course.errors?.missing, term: addWatchForm.controls.term.errors?.missing} as missing">
+        <div [@alert]="missing.course || missing.term" *ngIf="missing.course || missing.term" class="alert warning-alert">
+          <md-icon>warning</md-icon>
+          Waa!
+          <ng-container *ngIf="missing.course && missing.term">
+            "{{addWatchForm.controls.course.value}}" and "{{addWatchForm.controls.term.value}}" don't exist.
+          </ng-container>
+          <ng-container *ngIf="!missing.course && missing.term">
+            "{{addWatchForm.controls.term.value}}" doesn't exist.
+          </ng-container>
+          <ng-container *ngIf="missing.course && !missing.term">
+            "{{addWatchForm.controls.course.value}}" doesn't exist.
+          </ng-container>
+          We can make a watch for you, but it might not be what you want.
+        </div>
+      </ng-container>
+    </md-card-content>
+    <md-card-actions>
+      <button md-raised-button [disabled]="!authenticationService.validated">Add</button>
+    </md-card-actions>
+  </md-card>
+</form>

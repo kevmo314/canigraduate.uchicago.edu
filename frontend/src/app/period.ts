@@ -1,5 +1,5 @@
 export type Period = {
-    name: string,
-    shorthand: string,
-    color: string
+  name: string,
+  shorthand: string,
+  color: string,
 };

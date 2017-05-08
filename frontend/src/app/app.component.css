@@ -13,11 +13,16 @@
 }
 
 md-tab-group {
-  width: calc(100vw - 540px);
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.frame {
+  padding: 16px 32px;
 }
 
 cig-sidebar {
-  width: 540px;
+  flex: 0 0 540px;
 }
 
 footer {
@@ -25,7 +30,6 @@ footer {
   color: #bbb;
   padding: 16px;
   font-size: 12px;
-  line-height: 20px;
 }
 
 footer h3 {

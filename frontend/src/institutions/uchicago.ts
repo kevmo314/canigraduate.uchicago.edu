@@ -26,6 +26,21 @@ export const UniversityOfChicago: Base = {
   isValid(id: string): boolean {
     return id.length <= 10 && /^[A-Z]{4} \d*/.test(id);
   },
+  splitTerm(term: string): [Period, number] {
+    return [
+      UniversityOfChicago.getPeriod(term), UniversityOfChicago.getYear(term)
+    ];
+  },
+  joinTerm(period: Period, year: number): string {
+    return `${period.name} ${year}`;
+  },
+  getPeriod(term: string): Period {
+    return UniversityOfChicago.periods.find(
+        period => period.name === term.substring(0, 6));
+  },
+  getYear(term: string): number {
+    return parseInt(term.substring(7, 11), 10);
+  },
   termToOrdinal(term: string): number {
     return UniversityOfChicago.periods.findIndex(x => term.startsWith(x.name)) +
         parseInt(term.substring(term.length - 4), 10) * 4;

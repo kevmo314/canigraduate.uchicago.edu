@@ -50,16 +50,17 @@ module.exports =
           admin.database().ref(`/watches`).once('value').then(watches => {
             for (const to in (watches || {})) {
               for (const watch of watches[to]) {
-                if (watch.course && watch.course != course) {
+                if (watch.course &&
+                    watch.course.toUpperCase() != course.toUpperCase()) {
                   continue;
                 }
-                if (watch.section && watch.section != section) {
+                if (watch.section &&
+                    watch.section.toUpperCase() != section.toUpperCase()) {
                   continue;
                 }
-                if (watch.year && watch.year != year) {
-                  continue;
-                }
-                if (watch.period && watch.period != period) {
+                const term = `${period} ${year}`;
+                if (watch.term &&
+                    watch.term.toUpperCase() != term.toUpperCase()) {
                   continue;
                 }
                 const [changed, diff] = generateDiff(previous, current);
@@ -68,7 +69,7 @@ module.exports =
                 }
                 const mailOptions = {
                   from: '"Magister Mugit" <Magister.Mugit@uchicago.edu>',
-                  to,
+                  to: `${to}@uchicago.edu`,
                   bcc: 'kdwang@uchicago.edu',
                   subject:
                       `${period} ${year} ${course} Enrollment Notification`,

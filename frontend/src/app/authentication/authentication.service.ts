@@ -1,4 +1,5 @@
 import {Injectable} from '@angular/core';
+import {AngularFireAuth} from 'angularfire2/auth';
 import {environment} from 'environments/environment';
 import {Store} from 'filnux';
 import localforage from 'localforage';
@@ -18,7 +19,7 @@ export class AuthenticationService {
                    }).addActions(ACTIONS);
   public credentials: Observable<AuthenticationState> =
       this.store.select(x => x);
-  constructor() {
+  constructor(private angularFireAuth: AngularFireAuth) {
     localforage
         .getItem<{username: string, password: string}>(environment.cookieName)
         .then(value => {
@@ -55,11 +56,20 @@ export class AuthenticationService {
    * @param {string} token The firebase authentication token provided.
    */
   validate(token: string = null) {
-    this.store.dispatch(new ValidateCredentialsAction(token));
-    localforage.setItem(environment.cookieName, {
-      username: this.store.state.username,
-      password: this.store.state.password
-    });
+    (token ? this.angularFireAuth.auth.signInWithCustomToken(token) :
+             Promise.resolve())
+        .then(() => {
+          this.store.dispatch(new ValidateCredentialsAction(token));
+          localforage.setItem(environment.cookieName, {
+            username: this.store.state.username,
+            password: this.store.state.password
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          this.store.dispatch(
+              new RejectCredentialsAction('Internal error: ' + err.message));
+        });
   }
 
   reject(error: string) {
@@ -67,6 +77,7 @@ export class AuthenticationService {
   }
 
   clear() {
+    this.angularFireAuth.auth.signOut();
     this.store.dispatch(new ClearCredentialsAction());
   }
 }

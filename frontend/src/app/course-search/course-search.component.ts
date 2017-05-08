@@ -28,8 +28,9 @@ export class CourseSearchComponent implements AfterViewInit {
   queryTime = 0;
   store: any;
 
-  @ViewChild(FiltersComponent) filters: FiltersComponent;
+  @ViewChild(FiltersComponent) filtersComponent: FiltersComponent;
 
+  filters: Observable<FiltersState>;
   results: Observable<string[]>;
 
   constructor(
@@ -42,9 +43,9 @@ export class CourseSearchComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.page = this.store.select(s => s.page);
+    this.filters = this.filtersComponent.store.select(x => x);
     this.results =
-        this.filters.store.select(x => x)
-            .debounceTime(150)
+        this.filters.debounceTime(150)
             .do(() => this.queryTime = Date.now())
             .flatMap((filters: FiltersState) => {
               const subsets:
@@ -115,34 +116,9 @@ export class CourseSearchComponent implements AfterViewInit {
     this.store.dispatch(new AssignAction<CourseSearchState>({page}));
   }
 
-  @Memoize()
-  getSections(course: string): Observable<Section[]> {
-    return Observable
-        .combineLatest(
-            this.store.select(x => x), this.databaseService.schedules(course))
-        .debounceTime(150)
-        .map(([filters, schedules]) => {
-          const results = [];
-          for (const year of Object.keys(schedules)) {
-            for (const period of (
-                     schedules[year] ? Object.keys(schedules[year]) : [])) {
-              for (const sectionId of (
-                       schedules[year][period] ?
-                           Object.keys(schedules[year][period]) :
-                           [])) {
-                if (schedules[year][period][sectionId]) {
-                  results.push(
-                      Object.assign(
-                          {id: sectionId},
-                          schedules[year][period][sectionId]) as Section);
-                }
-              }
-            }
-          }
-          return results.sort(
-              (a, b) => -Term.compare(a.term, b.term) || -(a.id < b.id) ||
-                  +(a.id !== b.id));
-        });
+  getCrosslists(id: string) {
+    return this.databaseService.crosslists(id).map(
+        info => (info || []).join(', '));
   }
 }
 

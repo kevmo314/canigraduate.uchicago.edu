@@ -8,6 +8,7 @@ import {Evaluation} from 'app/evaluation';
 import {Node, Program} from 'app/program';
 import {Section} from 'app/section';
 import {Term} from 'app/term';
+import {Watch} from 'app/watch';
 import {environment} from 'environments/environment';
 import localforage from 'localforage';
 import {Observable} from 'rxjs/Observable';
@@ -21,34 +22,24 @@ import {AuthenticationService} from './../authentication/authentication.service'
 @Injectable()
 export class DatabaseService {
   private _evaluationsCache = {};
+  instructors: Observable<string[]>;
+  departments: Observable<string[]>;
+  watches: Observable<Watch[]>;
+  programs: Observable<Program[]>;
   constructor(
       private angularFire: AngularFireDatabase,
       private angularFireAuth: AngularFireAuth, private http: Http,
       private authenticationService: AuthenticationService) {
-    authenticationService.credentials.map(c => c.token)
-        .distinctUntilChanged()
-        .subscribe(token => {
-          if (token) {
-            angularFireAuth.auth.signInWithCustomToken(token);
-          } else {
-            angularFireAuth.auth.signOut();
-          }
-        });
-  }
-
-  @Memoize()
-  get instructors(): Observable<string[]> {
-    return this.object('indexes/instructors').map(data => Object.keys(data));
-  }
-
-  @Memoize()
-  get departments(): Observable<string[]> {
-    return this.object('indexes/departments').map(data => Object.keys(data));
-  }
-
-  @Memoize()
-  get programs(): Observable<Program[]> {
-    return this.object('programs').map(data => {
+    this.instructors =
+        this.object('indexes/instructors').map(data => Object.keys(data));
+    this.departments =
+        this.object('indexes/departments').map(data => Object.keys(data));
+    this.watches = this.authenticationService.credentials
+                       .filter(c => c.username && c.validated)
+                       .flatMap(
+                           credentials => this.angularFire.list(
+                               'watches/' + credentials.username));
+    this.programs = this.object('programs').map(data => {
       // Turn it into a Program.
       return Object.keys(data)
           .filter(key => data[key]['requirements'])
@@ -60,6 +51,15 @@ export class DatabaseService {
             return program.finalize();
           });
     });
+  }
+
+  addWatch(watch: Watch) {
+    this.authenticationService.credentials
+        .filter(c => c.username && c.validated)
+        .first()
+        .subscribe(credentials => {
+          this.angularFire.list('watches/' + credentials.username).push(watch);
+        });
   }
 
   // TODO: This can probably be refactored.
@@ -85,7 +85,11 @@ export class DatabaseService {
         .flatMap(credentials => {
           return this.http
               .post(environment.backend + '/api/evaluations/' + id, credentials)
-              .first();
+              .first()
+              .catch(err => {
+                console.error(err);
+                return [];
+              });
         })
         .map(response => response.json()['evaluations'])
         .subscribe(subject);
@@ -104,6 +108,18 @@ export class DatabaseService {
 
   schedules(id: string): Observable<any> {
     return this.object('schedules/' + id);
+  }
+
+  get terms(): Observable<string[]> {
+    // We'll pull this one via REST to avoid unnecessary data pulls.
+    const subject = new ReplaySubject(1);
+    this.http
+        .get(
+            environment.firebaseConfig.databaseURL +
+            '/indexes/terms.json?shallow=true')
+        .map(result => Object.keys(result.json()).sort())
+        .subscribe(subject);
+    return subject;
   }
 
   indexes(query: string): Observable<Set<string>> {

@@ -6,13 +6,14 @@
 
 .record .id {
   width: 90px;
-  padding: 0 8px;
+  margin-right: 8px;
   flex-shrink: 0;
   text-align: right;
 }
 
 .record .name {
   flex-grow: 1;
+  margin-right: 8px;
 }
 
 .record {
@@ -24,6 +25,10 @@
   align-items: center;
   box-sizing: border-box;
   padding: 0 16px;
+}
+
+md-list {
+  overflow: hidden;
 }
 
 .subheader {
@@ -55,14 +60,4 @@
   color: black;
   font-weight: bold;
   flex-grow: 1;
-}
-
-.records {
-  transition: $swift-ease-in-out;
-  max-height: 1000px;
-  overflow: hidden;
-}
-
-.records.hidden {
-  max-height: 0;
 }

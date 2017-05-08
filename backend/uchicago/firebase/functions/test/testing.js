@@ -62,11 +62,10 @@ describe('UChicago Course Evaluations', () => {
         .send(config.credentials)
         .expect('Content-Type', /json/)
         .expect(200)
-        .expect(
-            response => {
-                chai.assert.isAbove(response.body['evaluations'].length, 0);
-                chai.assert.equal(response.body['token'], 'token');
-            })
+        .expect(response => {
+          chai.assert.isAbove(response.body['evaluations'].length, 0);
+          chai.assert.equal(response.body['token'], 'token');
+        })
         .end(done);
   }).timeout(4000);
   it('should fail for invalid id', done => {
@@ -96,11 +95,10 @@ describe('UChicago Transcripts', () => {
         .send(config.credentials)
         .expect('Content-Type', /json/)
         .expect(200)
-        .expect(
-            response => {
-                chai.assert.isAbove(response.body['transcript'].length, 0);
-                chai.assert.equal(response.body['token'], 'token');
-            })
+        .expect(response => {
+          chai.assert.isAbove(response.body['transcript'].length, 0);
+          chai.assert.equal(response.body['token'], 'token');
+        })
         .end(done);
   }).timeout(15000);
 });
@@ -120,7 +118,7 @@ describe('UChicago Watches', () => {
 
   it('should notify on matching', done => {
     valueStub.withArgs('value').returns(Promise.resolve({
-      'mugit@uchicago.edu': [{
+      'mugit': [{
         'course': 'MATH 16100',
       }]
     }));
@@ -147,9 +145,37 @@ describe('UChicago Watches', () => {
         })
         .catch(done);
   });
+
+  it('should notify on matching case insensitive', done => {
+    valueStub.withArgs('value').returns(
+        Promise.resolve({'mugit': [{'course': 'math 16100'}]}));
+
+    index
+        .watches({
+          data: new functions.database.DeltaSnapshot(
+              null, null, {'enrollment': ['4', '10']},
+              {'enrollment': ['5', '10']}),
+          params: {
+            course: 'MATH 16100',
+            year: '2010',
+            period: 'Winter',
+            section: '01',
+          },
+        })
+        .then(() => {
+          const sentMail = nodemailerMock.mock.sentMail();
+          chai.assert.lengthOf(sentMail, 1);
+          chai.assert.equal(sentMail[0].to, 'mugit@uchicago.edu');
+          chai.assert.equal(sentMail[0].bcc, 'kdwang@uchicago.edu');
+          chai.assert.include(sentMail[0].text, '4/10 -> 5/10');
+          done();
+        })
+        .catch(done);
+  });
+
   it('should not notify on non matching', done => {
     valueStub.withArgs('value').returns(Promise.resolve({
-      'mugit@uchicago.edu': [{
+      'mugit': [{
         'course': 'MATH 15100',
       }]
     }));
@@ -176,21 +202,15 @@ describe('UChicago Watches', () => {
 
   it('should notify on matching exactly', done => {
     valueStub.withArgs('value').returns(Promise.resolve({
-      'mugit@uchicago.edu': [
+      'mugit': [
         {
           'course': 'MATH 16100',
-          'year': '2010',
-          'period': 'Winter',
+          'term': 'Winter 2010',
           'section': '01',
         },
         {
           'course': 'MATH 16100',
-          'year': '2010',
-          'period': 'Winter',
-        },
-        {
-          'course': 'MATH 16100',
-          'year': '2010',
+          'term': 'Winter 2010',
         },
         {'course': 'MATH 16100'}
       ]
@@ -210,7 +230,7 @@ describe('UChicago Watches', () => {
         })
         .then(() => {
           const sentMail = nodemailerMock.mock.sentMail();
-          chai.assert.lengthOf(sentMail, 4);
+          chai.assert.lengthOf(sentMail, 3);
           chai.assert.equal(sentMail[0].to, 'mugit@uchicago.edu');
           chai.assert.equal(sentMail[0].bcc, 'kdwang@uchicago.edu');
           chai.assert.include(sentMail[0].text, '4/10 -> 5/10');
@@ -221,29 +241,20 @@ describe('UChicago Watches', () => {
 
   it('should not notify on not matching exactly', done => {
     valueStub.withArgs('value').returns(Promise.resolve({
-      'mugit@uchicago.edu': [
+      'mugit': [
         {
           'course': 'MATH 16100',
-          'year': '2010',
-          'period': 'Winter',
+          'term': 'Winter 2010',
           'section': '02',
         },
         {
           'course': 'MATH 16100',
-          'year': '2010',
-          'period': 'Autumn',
-          'section': '01',
-        },
-        {
-          'course': 'MATH 16100',
-          'year': '2011',
-          'period': 'Winter',
+          'term': 'Autumn 2010',
           'section': '01',
         },
         {
           'course': 'MATH 15100',
-          'year': '2010',
-          'period': 'Winter',
+          'term': 'Winter 2010',
           'section': '01',
         }
       ]
@@ -271,9 +282,9 @@ describe('UChicago Watches', () => {
 
   it('should notify everyone', done => {
     valueStub.withArgs('value').returns(Promise.resolve({
-      'mugit1@uchicago.edu': [{'course': 'MATH 16100'}],
-      'mugit2@uchicago.edu': [{'course': 'MATH 16100'}],
-      'mugit3@uchicago.edu': [{'course': 'MATH 16100'}],
+      'mugit1': [{'course': 'MATH 16100'}],
+      'mugit2': [{'course': 'MATH 16100'}],
+      'mugit3': [{'course': 'MATH 16100'}],
     }));
 
     index
@@ -301,7 +312,7 @@ describe('UChicago Watches', () => {
 
   it('should not notify on no change', done => {
     valueStub.withArgs('value').returns(
-        Promise.resolve({'mugit1@uchicago.edu': [{'course': 'MATH 16100'}]}));
+        Promise.resolve({'mugit1': [{'course': 'MATH 16100'}]}));
 
     const enrollment = ['4', '10'];
 
@@ -327,7 +338,7 @@ describe('UChicago Watches', () => {
 
   it('should include secondaries change', done => {
     valueStub.withArgs('value').returns(
-        Promise.resolve({'mugit1@uchicago.edu': [{'course': 'MATH 16100'}]}));
+        Promise.resolve({'mugit1': [{'course': 'MATH 16100'}]}));
 
     index
         .watches({
@@ -357,7 +368,7 @@ describe('UChicago Watches', () => {
 
   it('should not notify on secondaries no change', done => {
     valueStub.withArgs('value').returns(
-        Promise.resolve({'mugit1@uchicago.edu': [{'course': 'MATH 16100'}]}));
+        Promise.resolve({'mugit1': [{'course': 'MATH 16100'}]}));
 
     index
         .watches({

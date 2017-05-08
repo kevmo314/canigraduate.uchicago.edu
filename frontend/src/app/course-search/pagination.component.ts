@@ -1,9 +1,11 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output} from '@angular/core';
 
+const NUM_ELEMENTS = 9;
+
 @Component({
   selector: 'cig-pagination',
   templateUrl: './pagination.component.html',
-  styleUrls: ['./pagination.component.css'],
+  styleUrls: ['./pagination.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PaginationComponent {
@@ -13,10 +15,21 @@ export class PaginationComponent {
   @Output() pageChange = new EventEmitter();
 
   get pages() {
+    const lastPage = this.getLastPage();
     const range = (start, stop) =>
         Array.from(new Array((stop - start) + 1), (_, i) => i + start);
-    const left = Math.max(0, this.page - 5);
-    return range(left, Math.min(this.getLastPage(), left + 10));
+    const left =
+        Math.max(0, this.page - 4 + Math.min(0, lastPage - 4 - this.page));
+    const bounds = range(left, Math.min(lastPage, left + NUM_ELEMENTS - 1));
+    if (bounds[0] > 0) {
+      bounds[0] = 0;
+      bounds[1] = -1;
+    }
+    if (bounds[NUM_ELEMENTS - 1] < lastPage) {
+      bounds[NUM_ELEMENTS - 1] = lastPage;
+      bounds[NUM_ELEMENTS - 2] = -1;
+    }
+    return bounds;
   }
 
   getLastPage() {
