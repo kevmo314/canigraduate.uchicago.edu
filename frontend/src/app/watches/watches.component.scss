@@ -20,6 +20,19 @@
   }
 }
 
+table {
+  width: 100%;
+  text-align: center;
+  border-collapse: collapse;
+  & tr:hover {
+    background-color: #eee;
+  }
+  & td {
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+  }
+}
+
+
 .new-watch {
   transition: opacity 0.2s $swift-ease-in-out;
 }

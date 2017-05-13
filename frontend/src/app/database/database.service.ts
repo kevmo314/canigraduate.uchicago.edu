@@ -10,6 +10,7 @@ import {Section} from 'app/section';
 import {Term} from 'app/term';
 import {Watch} from 'app/watch';
 import {environment} from 'environments/environment';
+import * as firebase from 'firebase';
 import localforage from 'localforage';
 import {Observable} from 'rxjs/Observable';
 import {ReplaySubject} from 'rxjs/ReplaySubject';
@@ -58,7 +59,9 @@ export class DatabaseService {
         .filter(c => c.username && c.validated)
         .first()
         .subscribe(credentials => {
-          this.angularFire.list('watches/' + credentials.username).push(watch);
+          this.angularFire.list('watches/' + credentials.username)
+              .push(Object.assign(
+                  {'created': firebase.database.ServerValue.TIMESTAMP}, watch));
         });
   }
 
@@ -122,6 +125,7 @@ export class DatabaseService {
     return subject;
   }
 
+  @Memoize()
   indexes(query: string): Observable<Set<string>> {
     const key = 'indexes/' + query;
     const subject = new ReplaySubject(1);

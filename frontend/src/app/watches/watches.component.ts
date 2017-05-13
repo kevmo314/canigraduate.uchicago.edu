@@ -11,7 +11,6 @@ import {CountPipe} from './../course-search/course-search.component';
 @Component({
   selector: 'cig-watches',
   templateUrl: './watches.component.html',
-
   animations: [trigger(
       'alert',
       [

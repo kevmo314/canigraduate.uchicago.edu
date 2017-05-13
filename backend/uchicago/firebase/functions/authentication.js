@@ -5,6 +5,17 @@ const cheerio = require('cheerio');
 const ldap = require('ldapjs');
 const {request} = require('./config');
 
+const CHICAGO_ID_MAP = {};
+
+/**
+ * Returns the ChicagoID for a given user.
+ * @param {string} username
+ * @returns {string}
+ */
+module.exports.getChicagoId = (username) => {
+  return CHICAGO_ID_MAP[username];
+};
+
 /**
  * Authenticates against UChicago LDAP.
  * @param {string} username
@@ -32,7 +43,8 @@ module.exports.authenticate = (username, password) => {
                 let resolved = false;
                 res.on('searchEntry', entry => {
                   resolved = true;
-                  const uid = entry.object['chicagoID'];
+                  const uid = CHICAGO_ID_MAP[username] =
+                      entry.object['chicagoID'];
                   admin.auth()
                       .createUser({
                         uid,

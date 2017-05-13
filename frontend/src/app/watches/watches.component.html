@@ -2,12 +2,25 @@
   <md-icon>info</md-icon>
   Sign in to create an enrollment watch.
 </div>
-
 <md-card *ngIf="!addWatchForm.disabled">
+  <md-card-title>Your watches</md-card-title>
   <md-card-content>
-    <table *ngIf="(watches | async)?.length > 0">
+    <table class="watches" *ngIf="(watches | async)?.length > 0">
+      <tr>
+        <th>Term</th>
+        <th>Course</th>
+        <th>Section</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
       <tr *ngFor="let watch of (watches | async)">
-        <td></td>
+        <td>{{watch.term || '*'}}</td>
+        <td>{{watch.course || '*'}}</td>
+        <td>{{watch.section || '*'}}</td>
+        <td>{{watch.created | date:'shortDate'}}</td>
+        <td>
+          <md-icon>delete</md-icon>
+        </td>
       </tr>
     </table>
     <div *ngIf="(watches | async)?.length == 0" class="empty-state">
@@ -22,16 +35,16 @@
     <md-card-subtitle>You'll get an email when the course's enrollment changes. All fields are wildcards if omitted.</md-card-subtitle>
     <md-card-content>
       <md-input-container>
-        <input mdInput placeholder="Course" [mdAutocomplete]="courseAutocomplete" #courseInput formControlName="course">
-      </md-input-container>
-      <md-autocomplete #courseAutocomplete="mdAutocomplete">
-        <md-option *ngFor="let option of courses | prefix:courseInput.value | async | slice:0:10" [value]="option">{{ option }}</md-option>
-      </md-autocomplete>
-      <md-input-container>
         <input mdInput placeholder="Term" [mdAutocomplete]="termAutocomplete" #termInput formControlName="term">
       </md-input-container>
       <md-autocomplete #termAutocomplete="mdAutocomplete">
         <md-option *ngFor="let option of terms | prefix:termInput.value | async | slice:0:10" [value]="option">{{ option }}</md-option>
+      </md-autocomplete>
+      <md-input-container>
+        <input mdInput placeholder="Course" [mdAutocomplete]="courseAutocomplete" #courseInput formControlName="course">
+      </md-input-container>
+      <md-autocomplete #courseAutocomplete="mdAutocomplete">
+        <md-option *ngFor="let option of courses | prefix:courseInput.value | async | slice:0:10" [value]="option">{{ option }}</md-option>
       </md-autocomplete>
       <md-input-container>
         <input mdInput placeholder="Section" formControlName="section">

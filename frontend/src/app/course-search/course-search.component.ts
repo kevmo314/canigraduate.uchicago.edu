@@ -45,18 +45,31 @@ export class CourseSearchComponent implements AfterViewInit {
     this.page = this.store.select(s => s.page);
     this.filters = this.filtersComponent.store.select(x => x);
     this.results =
-        this.filters.debounceTime(150)
+        this.filters.debounceTime(50)
             .do(() => this.queryTime = Date.now())
             .flatMap((filters: FiltersState) => {
               const subsets:
                   Observable<Set<string>|((_: Set<string>) => Set<String>)>[] =
-                      [this.databaseService.indexes('all').first()];
+                      [Observable
+                           .forkJoin(filters.periods.map(period => {
+                             return this.databaseService
+                                 .indexes('periods/' + period.name)
+                                 .first();
+                           }))
+                           .map(results => {
+                             return results.reduce(
+                                 (x, y) => new Set<string>([
+                                   ...Array.from(x.values()),
+                                   ...Array.from(y.values())
+                                 ]),
+                                 new Set<string>());
+                           })];
               // Attempt broad course-based matching.
               if (filters.taken) {
                 subsets.push(
                     this.transcriptService.transcript.first().map(value => {
                       const taken =
-                          new Set<string>(value.records.map(x => x.id));
+                          new Set<string>(value.records.map(x => x.course));
                       return (state: Set<string>) => {
                         return new Set<string>(Array.from(state.values())
                                                    .filter(x => !taken.has(x)));
@@ -78,10 +91,15 @@ export class CourseSearchComponent implements AfterViewInit {
                 });
               }
               if (filters.query) {
-                filters.query.toLocaleLowerCase().split(' ').forEach(query => {
-                  subsets.push(this.databaseService.indexes('fulltext/' + query)
-                                   .first());
-                });
+                filters.query.toLocaleLowerCase()
+                    .split(' ')
+                    .map(q => q.trim())
+                    .filter(q => q.length > 0)
+                    .forEach(query => {
+                      subsets.push(
+                          this.databaseService.indexes('fulltext/' + query)
+                              .first());
+                    });
               }
               return Observable.forkJoin(subsets);
             })

@@ -2,6 +2,7 @@
   "name": "functions",
   "description": "Cloud Functions for Firebase",
   "dependencies": {
+    "base64url": "^2.0.0",
     "body-parser": "^1.17.1",
     "cheerio": "^0.22.0",
     "cors": "^2.8.3",
