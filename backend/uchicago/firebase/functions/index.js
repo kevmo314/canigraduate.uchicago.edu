@@ -17,8 +17,11 @@ app.use(cors());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
+app.disable('x-powered-by');
+
 app.post('/evaluations/:id', require('./evaluations'));
 app.post('/transcript', require('./transcript'));
 
 exports.api = functions.https.onRequest(app);
 exports.watches = require('./watches');
+exports.grades = require('./aggregate-grades.js');

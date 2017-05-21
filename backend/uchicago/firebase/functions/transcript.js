@@ -2,34 +2,12 @@
 
 const admin = require('firebase-admin');
 const Grade = require('./grade');
+const PubSub = require('@google-cloud/pubsub');
 const base64url = require('base64url');
 const cheerio = require('cheerio');
 const crypto = require('crypto');
 const {performShibbolethHandshake, getChicagoId} = require('./authentication');
 const {request} = require('./config');
-
-function saveTranscript(chicagoId, transcript) {
-  for (const record of transcript.filter(record => record['complete'])) {
-    new Promise((resolve, reject) => {
-      crypto.pbkdf2(
-          [record['term'], record['course'], record['section']].join(),
-          chicagoId, 2000000, 20, 'sha512', (err, key) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(base64url(key));
-            }
-          });
-    }).then(key => {
-      admin.database().ref(`/grades/raw/${key}/`).set({
-        'course': record['course'],
-        'section': record['section'],
-        'term': record['term'],
-        'gpa': record['gpa'],
-      });
-    });
-  }
-}
 
 module.exports = (req, res) => {
   const jar = request.jar();
@@ -45,6 +23,10 @@ module.exports = (req, res) => {
       })
       .then(([token, html]) => {
         const $ = cheerio.load(html);
+        if ($('#UCMPtab_UC_STU_GRADES').length === 0) {
+          throw new Error(
+              'AIS didn\'t return a valid response. Maybe my.uchicago.edu is down?');
+        }
         const gyears =
             new Map($('select#gyear_id')
                         .find('option')
@@ -72,6 +54,7 @@ module.exports = (req, res) => {
                           'credit': complete ? grade.credit : null,
                           'grade': complete ? grade.grade : null,
                           'gpa': complete ? grade.gpa : null,
+                          'tenure': i,
                         };
                       })
                       .get();
@@ -82,9 +65,19 @@ module.exports = (req, res) => {
         }
       })
       .then(result => {
-        res.status(200);
-        res.json(result);
-        saveTranscript(getChicagoId(username), result['transcript']);
+        const chicagoId = getChicagoId(username);
+        return PubSub({projectId: 'canigraduate-43286'})
+            .topic('grades')
+            .publish(result['transcript']
+                         .filter(record => record['quality'])
+                         .map(record => ({
+                                chicagoId,
+                                record,
+                              })))
+            .then(() => {
+              res.status(200);
+              res.json(result);
+            });
       })
       .catch(err => {
         console.error(err);
