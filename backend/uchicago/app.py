@@ -1,48 +1,26 @@
-import bs4
 import flask
 import flask_cors
-import json
-import pyrebase
 import requests
-import traceback
-from src import TranscriptParser
+import urllib
 
 app = flask.Flask(__name__)
-firebase = pyrebase.initialize_app({
-    'apiKey': 'AIzaSyCjBDyhwbXcp9kEIA2pMHLDGxmCM4Sn6Eg',
-    'authDomain': 'canigraduate-43286.firebaseapp.com',
-    'databaseURL': 'https://canigraduate-43286.firebaseio.com',
-    'storageBucket': 'canigraduate-43286.appspot.com',
-    'serviceAccount': 'service_account_key.json'
-})
 
-@app.route('/api/transcript', methods=['POST'])
+@app.route('/api/<path:method>', methods=['POST', 'GET'])
 @flask_cors.cross_origin()
-def transcript():
-    try:
-        parser = TranscriptParser(
-                    username=flask.request.form.get('username', flask.request.json['username']),
-                    password=flask.request.form.get('password', flask.request.json['password']))
-        transcript = [record.serialize() for record in parser.execute()]
-        return flask.jsonify(**{'transcript': transcript})
-    except ValueError as e:
-        return flask.jsonify(**{'error': str(e)}), 403
-    except Exception as e:
-        return flask.jsonify(**{'error': 'Unknown authentication error occurred.'}), 500
+def _proxy(*args, **kwargs):
+    resp = requests.request(
+        method=flask.request.method,
+        url='https://us-central1-canigraduate-43286.cloudfunctions.net' + urllib.parse.urlparse(flask.request.url).path,
+        headers={key: value for (key, value) in flask.request.headers if key != 'Host'},
+        data=flask.request.get_data(),
+        cookies=flask.request.cookies,
+        allow_redirects=False)
 
-@app.route('/programs', methods=['POST', 'GET'])
-def programs():
-    db = firebase.database()
-    if flask.request.method == 'POST':
-        db.child('programs').set(json.loads(flask.request.form.get('data')))
-    return flask.render_template('programs.html', result=json.dumps(db.child('programs').get().val(), indent=2))
+    excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
+    headers = [(name, value) for (name, value) in resp.raw.headers.items()
+               if name.lower() not in excluded_headers]
 
-@app.route('/sequences', methods=['POST', 'GET'])
-def sequences():
-    db = firebase.database()
-    if flask.request.method == 'POST':
-        db.child('sequences').set(json.loads(flask.request.form.get('data')))
-    return flask.render_template('sequences.html', result=json.dumps(db.child('sequences').get().val(), indent=2))
+    return flask.Response(resp.content, resp.status_code, headers)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
