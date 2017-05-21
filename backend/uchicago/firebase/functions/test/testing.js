@@ -17,6 +17,17 @@ let transportMock = sinon.mock({sendMail: () => {}});
 before(() => {
   mockery.enable({warnOnUnregistered: false});
   mockery.registerMock('nodemailer', nodemailerMock);
+  mockery.registerMock('@google-cloud/pubsub', () => {
+    return {
+      topic: () => {
+        return {
+          publish: () => {
+            return Promise.resolve();
+          },
+        };
+      },
+    };
+  });
   stubs.stub(admin, 'initializeApp');
   stubs.stub(admin, 'auth').returns({
     createUser: stubs.stub().returns(Promise.resolve()),
@@ -56,10 +67,39 @@ describe('UChicago LDAP authentication', () => {
 });
 
 describe('UChicago Course Evaluations', () => {
+  it('should 401 missing credentials', done => {
+    request(index.api)
+        .post('/evaluations/ECON 19800')
+        .expect('Content-Type', /json/)
+        .expect(401)
+        .expect(response => chai.assert.isString(response.body['error']))
+        .end(done);
+  }).timeout(4000);
+  it('should 401 invalid credentials', done => {
+    request(index.api)
+        .post('/evaluations/ECON 19800')
+        .send({'username': 'incorrect', 'password': 'cows'})
+        .expect('Content-Type', /json/)
+        .expect(401)
+        .expect(response => chai.assert.isString(response.body['error']))
+        .end(done);
+  }).timeout(4000);
   it('should fetch evaluations', done => {
     request(index.api)
         .post('/evaluations/ECON 19800')
         .send(config.credentials)
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .expect(response => {
+          chai.assert.isAbove(response.body['evaluations'].length, 0);
+          chai.assert.equal(response.body['token'], 'token');
+        })
+        .end(done);
+  }).timeout(4000);
+  it('should allow basic auth header evaluations', done => {
+    request(index.api)
+        .post('/evaluations/ECON 19800')
+        .set('Authorization', 'Basic ' + (new Buffer(config.credentials.username + ':' + config.credentials.password, 'utf8').toString('base64')))
         .expect('Content-Type', /json/)
         .expect(200)
         .expect(response => {

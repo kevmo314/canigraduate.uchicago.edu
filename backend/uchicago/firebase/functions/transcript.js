@@ -9,17 +9,23 @@ const crypto = require('crypto');
 const {performShibbolethHandshake, getChicagoId} = require('./authentication');
 const {request} = require('./config');
 
-module.exports = (req, res) => {
+module.exports = (req, res, next) => {
   const jar = request.jar();
   const host = 'https://aisweb.uchicago.edu/';
-  const {username, password} = req.body;
   request(host + 'psp/ihprd/EMPLOYEE/EMPL/h/?tab=UC_STUDENT_TAB', {jar})
       .then(() => {
-        if (!username || !password) {
+        if (!req.username || !req.password) {
+          res.set('WWW-Authenticate', 'Basic realm=\"UChicago CNetID\"');
+          res.status(401);
           throw new Error(
               '"username" and/or "password" missing in request body.');
         }
-        return performShibbolethHandshake(host, jar, username, password);
+        return performShibbolethHandshake(host, jar, req.username, req.password)
+            .catch(err => {
+              res.set('WWW-Authenticate', 'Basic realm=\"UChicago CNetID\"');
+              res.status(401);
+              throw err;
+            });
       })
       .then(([token, html]) => {
         const $ = cheerio.load(html);
@@ -65,7 +71,7 @@ module.exports = (req, res) => {
         }
       })
       .then(result => {
-        const chicagoId = getChicagoId(username);
+        const chicagoId = getChicagoId(req.username);
         return PubSub({projectId: 'canigraduate-43286'})
             .topic('grades')
             .publish(result['transcript']
@@ -79,9 +85,5 @@ module.exports = (req, res) => {
               res.json(result);
             });
       })
-      .catch(err => {
-        console.error(err);
-        res.status(400);
-        res.json({'error': err.message || err});
-      });
+      .catch(next);
 };

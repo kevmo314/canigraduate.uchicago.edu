@@ -4,7 +4,7 @@ const cheerio = require('cheerio');
 const {performShibbolethHandshake} = require('./authentication');
 const {request} = require('./config');
 
-module.exports = (req, res) => {
+module.exports = (req, res, next) => {
   const jar = request.jar();
   const host = 'https://evaluations.uchicago.edu/';
   Promise.resolve()
@@ -23,12 +23,18 @@ module.exports = (req, res) => {
             {jar});
       })
       .then(() => {
-        const {username, password} = req.body;
-        if (!username || !password) {
+        if (!req.username || !req.password) {
+          res.set('WWW-Authenticate', 'Basic realm=\"UChicago CNetID\"');
+          res.status(401);
           throw new Error(
               '"username" and/or "password" missing in request body.');
         }
-        return performShibbolethHandshake(host, jar, username, password);
+        return performShibbolethHandshake(host, jar, req.username, req.password)
+            .catch(err => {
+              res.set('WWW-Authenticate', 'Basic realm=\"UChicago CNetID\"');
+              res.status(401);
+              throw err;
+            });
       })
       .then(([token, html]) => {
         const $ = cheerio.load(html);
@@ -57,9 +63,5 @@ module.exports = (req, res) => {
         res.status(200);
         res.json(result);
       })
-      .catch(err => {
-        console.error(err);
-        res.status(400);
-        res.json({'error': err.message || err});
-      });
+      .catch(next);
 };
