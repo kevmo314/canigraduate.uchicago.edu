@@ -14,6 +14,10 @@ const stubs = sinon.sandbox.create();
 let index = null;
 let transportMock = sinon.mock({sendMail: () => {}});
 
+function generateAuthorizationHeader(credentials) {
+return new Buffer(credentials.username + ':' + credentials.password, 'utf8').toString('base64');
+}
+
 before(() => {
   mockery.enable({warnOnUnregistered: false});
   mockery.registerMock('nodemailer', nodemailerMock);
@@ -78,7 +82,7 @@ describe('UChicago Course Evaluations', () => {
   it('should 401 invalid credentials', done => {
     request(index.api)
         .post('/evaluations/ECON 19800')
-        .send({'username': 'incorrect', 'password': 'cows'})
+        .set('Authorization', 'Basic ' + generateAuthorizationHeader({'username': 'incorrect', 'password': 'cows'}))
         .expect('Content-Type', /json/)
         .expect(401)
         .expect(response => chai.assert.isString(response.body['error']))
@@ -87,7 +91,7 @@ describe('UChicago Course Evaluations', () => {
   it('should fetch evaluations', done => {
     request(index.api)
         .post('/evaluations/ECON 19800')
-        .send(config.credentials)
+        .set('Authorization', 'Basic ' + generateAuthorizationHeader(config.credentials))
         .expect('Content-Type', /json/)
         .expect(200)
         .expect(response => {
@@ -99,7 +103,7 @@ describe('UChicago Course Evaluations', () => {
   it('should allow basic auth header evaluations', done => {
     request(index.api)
         .post('/evaluations/ECON 19800')
-        .set('Authorization', 'Basic ' + (new Buffer(config.credentials.username + ':' + config.credentials.password, 'utf8').toString('base64')))
+        .set('Authorization', 'Basic ' + generateAuthorizationHeader(config.credentials))
         .expect('Content-Type', /json/)
         .expect(200)
         .expect(response => {
@@ -111,7 +115,7 @@ describe('UChicago Course Evaluations', () => {
   it('should fail for invalid id', done => {
     request(index.api)
         .post('/evaluations/ECON')
-        .send(config.credentials)
+        .set('Authorization', 'Basic ' + generateAuthorizationHeader(config.credentials))
         .expect('Content-Type', /json/)
         .expect(400)
         .expect(response => chai.assert.isString(response.body['error']))
@@ -120,7 +124,7 @@ describe('UChicago Course Evaluations', () => {
   it('should fail and echo server error message', done => {
     request(index.api)
         .post('/evaluations/ECON 99999')
-        .send(config.credentials)
+        .set('Authorization', 'Basic ' + generateAuthorizationHeader(config.credentials))
         .expect('Content-Type', /json/)
         .expect(400)
         .expect(response => chai.assert.isString(response.body['error']))
@@ -132,7 +136,7 @@ describe('UChicago Transcripts', () => {
   it('should fetch transcript', done => {
     request(index.api)
         .post('/transcript')
-        .send(config.credentials)
+        .set('Authorization', 'Basic ' + generateAuthorizationHeader(config.credentials))
         .expect('Content-Type', /json/)
         .expect(200)
         .expect(response => {
