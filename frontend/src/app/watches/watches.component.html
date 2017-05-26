@@ -19,7 +19,9 @@
         <td>{{watch.section || '*'}}</td>
         <td>{{watch.created | date:'shortDate'}}</td>
         <td>
-          <md-icon>delete</md-icon>
+          <button md-icon-button class="action" (click)="deleteWatch(watch.$key)">
+            <md-icon>delete</md-icon>
+          </button>
         </td>
       </tr>
     </table>

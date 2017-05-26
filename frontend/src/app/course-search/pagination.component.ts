@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, Input, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
 
 const NUM_ELEMENTS = 9;
 
@@ -8,11 +8,22 @@ const NUM_ELEMENTS = 9;
   styleUrls: ['./pagination.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PaginationComponent {
+export class PaginationComponent implements OnChanges {
   @Input() items: number;
   @Input() pageSize: number;
   @Input() page: number;
   @Output() pageChange = new EventEmitter();
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.items || changes.pageSize) {
+      const lastPage = this.getLastPage();
+      if (this.page > lastPage) {
+        setTimeout(() => {
+          this.pageChange.emit(lastPage);
+        }, 100);
+      }
+    }
+  }
 
   get pages() {
     const lastPage = this.getLastPage();

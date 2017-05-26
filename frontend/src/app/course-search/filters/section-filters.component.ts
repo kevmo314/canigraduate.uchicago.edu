@@ -3,6 +3,7 @@ import {Input, Pipe, PipeTransform} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {MdButtonToggleChange} from '@angular/material';
 import {DatabaseService} from 'app/database/database.service';
+import {DayOfWeek} from 'app/day-of-week';
 import {Period} from 'app/period';
 import {TranscriptService} from 'app/transcript/transcript.service';
 import {environment} from 'environments/environment';
@@ -10,7 +11,7 @@ import {Observable} from 'rxjs/Observable';
 import {Subscription} from 'rxjs/Subscription';
 
 import {FiltersModule} from './filters.module';
-import {DayOfWeek, FiltersState, ToggleDayOfWeekAction, ToggleDepartmentAction, ToggleInstructorAction, TogglePeriodAction, ToggleSimpleAction} from './filters.store';
+import {FiltersState, ToggleDayOfWeekAction, ToggleDepartmentAction, ToggleInstructorAction, TogglePeriodAction, ToggleSimpleAction} from './filters.store';
 
 @Component({
   selector: 'cig-section-filters',

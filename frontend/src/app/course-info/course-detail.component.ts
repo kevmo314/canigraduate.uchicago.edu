@@ -10,7 +10,7 @@ import {Memoize} from 'typescript-memoize';
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'cig-course-detail',
   templateUrl: 'course-detail.component.html',
-  styleUrls: ['./course-detail.component.scss']
+  styleUrls: ['./course-detail.component.scss'],
 })
 export class CourseDetailComponent implements OnChanges {
   @Input() course: string;
@@ -21,6 +21,7 @@ export class CourseDetailComponent implements OnChanges {
   terms: string[] = [];
   evaluations: Observable<Evaluation[]>;
   authenticationValidated: Observable<boolean>;
+  grades: Observable<{grade: string, count: number}[]>;
   @Input() sections: Section[] = [];
 
   constructor(
@@ -40,6 +41,7 @@ export class CourseDetailComponent implements OnChanges {
     }
     if (changes.course && this.course) {
       this.evaluations = this.databaseService.evaluations(this.course);
+      this.grades = this.databaseService.grades(this.course);
     }
   }
 

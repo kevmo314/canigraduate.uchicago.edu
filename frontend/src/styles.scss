@@ -11,11 +11,32 @@ body {
 body {
   margin: 0;
   overflow-y: scroll;
+font-size: $mat-body-font-size-base;
+line-height: 20px;
 }
 
-p {
-    font-size: $mat-body-font-size-base;
-    line-height: 20px;
+.alert {
+  border-top: 4px solid rgba(0, 0, 0, 0.2);
+  padding: 16px;
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  & md-icon {
+    color: rgba(0, 0, 0, 0.3);
+    margin-right: 16px;
+  }
+  &.info-alert {
+    background-color: #2196f3;
+    color: #fff;
+  }
+  &.warning-alert {
+    background-color: #ffc107;
+    color: rgba(0, 0, 0, 0.87);
+  }
+  &.error-alert {
+    background-color: #ff5252;
+    color: #fff;
+  }
 }
 
 /** Override some styles. */

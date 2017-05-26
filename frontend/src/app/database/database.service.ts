@@ -65,6 +65,15 @@ export class DatabaseService {
         });
   }
 
+  deleteWatch(key: string) {
+    this.authenticationService.credentials
+        .filter(c => c.username && c.validated)
+        .first()
+        .subscribe(credentials => {
+          this.angularFire.list('watches/' + credentials.username).remove(key);
+        });
+  }
+
   // TODO: This can probably be refactored.
   name(id: string): Observable<string> {
     return this.object(`course-info/${id}/name`);
@@ -140,6 +149,41 @@ export class DatabaseService {
         })
         .subscribe(subject);
     indexes.subscribe(value => localforage.setItem(key, value));
+    return subject;
+  }
+
+  @Memoize()
+  grades(id: string) {
+    const subject = new ReplaySubject(1);
+    this.angularFire
+        .list('grades/raw', {
+          query: {
+            orderByChild: 'course',
+            startAt: id,
+            endAt: id,
+          },
+        })
+        .map(grades => {
+          const distributionMap = new Map<number, number>();
+          for (const grade of grades) {
+            distributionMap.set(
+                grade['gpa'], (distributionMap.get(grade['gpa']) || 0) + 1);
+          }
+          return [
+            {grade: 'A', count: distributionMap.get(4) || 0},
+            {grade: 'A-', count: distributionMap.get(3.7) || 0},
+            {grade: 'B+', count: distributionMap.get(3.3) || 0},
+            {grade: 'B', count: distributionMap.get(3) || 0},
+            {grade: 'B-', count: distributionMap.get(2.7) || 0},
+            {grade: 'C+', count: distributionMap.get(2.3) || 0},
+            {grade: 'C', count: distributionMap.get(2) || 0},
+            {grade: 'C-', count: distributionMap.get(1.7) || 0},
+            {grade: 'D+', count: distributionMap.get(1.3) || 0},
+            {grade: 'D', count: distributionMap.get(1) || 0},
+            {grade: 'F', count: distributionMap.get(0) || 0}
+          ]
+        })
+        .subscribe(subject);
     return subject;
   }
 

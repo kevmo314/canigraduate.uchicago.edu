@@ -3,7 +3,6 @@ import {MdTabChangeEvent} from '@angular/material';
 import {NavigationEnd, Router} from '@angular/router';
 import {environment} from 'environments/environment';
 
-const TAB_LINKS = ['/catalog', '/search', '/watches'];
 
 @Component({
   selector: 'cig-app',
@@ -11,15 +10,20 @@ const TAB_LINKS = ['/catalog', '/search', '/watches'];
   styleUrls: ['./app.component.css']
 })
 export class ContentComponent implements AfterViewInit {
-  selectedIndex: number = 0;
+  selectedIndex = 0;
+  links = [
+    {link: '/catalog', label: 'Catalog'},
+    {link: '/search', label: 'Course Search'},
+    {link: '/watches', label: 'Watches'}
+  ];
   constructor(private router: Router) {}
   ngAfterViewInit() {
-    this.router.events.subscribe(e => {
-      if (e instanceof NavigationEnd) {
-        this.selectedIndex =
-            TAB_LINKS.findIndex(link => e.url.startsWith(link));
-      }
-    });
+    /*  this.router.events.subscribe(e => {
+        if (e instanceof NavigationEnd) {
+          this.selectedIndex =
+              this.links.findIndex(link => e.url.startsWith(link.link));
+        }
+      });*/
   }
 
   get institutionName(): string {
@@ -27,10 +31,6 @@ export class ContentComponent implements AfterViewInit {
   }
   get institutionTheme(): string {
     return environment.institution.theme;
-  }
-
-  changeTab(e: MdTabChangeEvent) {
-    this.router.navigateByUrl(TAB_LINKS[e.index]);
   }
 }
 

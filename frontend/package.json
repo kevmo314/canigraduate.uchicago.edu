@@ -4,7 +4,7 @@
   "license": "MIT",
   "angular-cli": {},
   "scripts": {
-    "start": "ng serve",
+    "start": "ng serve --no-live-reload",
     "lint": "tslint \"src/**/*.ts\"",
     "test": "ng test",
     "pree2e": "node webdriver-manager update",
@@ -31,7 +31,7 @@
     "angularfire2": "^4.0.0-rc.0",
     "core-js": "^2.4.1",
     "filnux": "git://github.com/kevmo314/filnux.git",
-    "firebase": "^3.6.10",
+    "firebase": "^4.0.0",
     "hammerjs": "^2.0.8",
     "jsan": "^3.1.7",
     "localforage": "^1.5.0",

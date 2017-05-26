@@ -1,26 +1,19 @@
 <div class="root theme {{institutionTheme}}">
   <md-toolbar color="primary">
     {{institutionName}}
+    <nav md-tab-nav-bar>
+      <a md-tab-link *ngFor="let link of links" [routerLink]="link.link" routerLinkActive #rla="routerLinkActive" [active]="rla.isActive">
+        {{link.label}}
+      </a>
+    </nav>
   </md-toolbar>
   <div class="body">
-    <md-tab-group [selectedIndex]="selectedIndex" class="content" (selectChange)="changeTab($event)">
-      <md-tab label="Catalog">
-        <div class="frame">
-          <router-outlet name="catalog"></router-outlet>
-        </div>
-      </md-tab>
-      <md-tab label="Course Search">
-        <div class="frame">
-          <router-outlet name="search"></router-outlet>
-        </div>
-      </md-tab>
-      <md-tab label="Watches">
-        <div class="frame">
-          <router-outlet name="watches"></router-outlet>
-        </div>
-      </md-tab>
-    </md-tab-group>
-    <cig-sidebar></cig-sidebar>
+    <div class="content">
+      <router-outlet name="content"></router-outlet>
+    </div>
+    <div class="sidebar">
+      <router-outlet name="sidebar"></router-outlet>
+    </div>
   </div>
   <footer>
     <h3>Can I Graduate?</h3>

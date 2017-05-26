@@ -1,25 +1,5 @@
 @import '~@angular/material/theming';
 
-.alert {
-  border-top: 4px solid rgba(0, 0, 0, 0.2);
-  padding: 16px;
-  margin: 8px 0;
-  display: flex;
-  align-items: center;
-  & md-icon {
-    color: rgba(0, 0, 0, 0.3);
-    margin-right: 16px;
-  }
-  &.info-alert {
-    background-color: #2196f3;
-    color: #fff;
-  }
-  &.warning-alert {
-    background-color: #ffc107;
-    color: rgba(0, 0, 0, 0.87);
-  }
-}
-
 table {
   width: 100%;
   text-align: center;
@@ -32,11 +12,14 @@ table {
   }
 }
 
-
 .new-watch {
   transition: opacity 0.2s $swift-ease-in-out;
 }
 
 .disabled {
   opacity: 0.54;
+}
+
+.action {
+  cursor: pointer;
 }

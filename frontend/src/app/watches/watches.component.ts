@@ -7,6 +7,7 @@ import {environment} from 'environments/environment';
 import {Observable} from 'rxjs/Observable';
 
 import {CountPipe} from './../course-search/course-search.component';
+import {Term} from './../term';
 
 @Component({
   selector: 'cig-watches',
@@ -42,7 +43,9 @@ export class WatchesComponent implements OnInit {
     this.watches = this.databaseService.watches;
     this.courses =
         this.databaseService.indexes('all').map(x => Array.from(x).sort());
-    this.terms = this.databaseService.terms;
+    this.terms = this.databaseService.terms.map(terms => {
+      return terms.sort((a, b) => Term.compare(b, a));
+    });
   }
 
   ngOnInit() {
@@ -81,6 +84,10 @@ export class WatchesComponent implements OnInit {
 
   addWatch(params) {
     this.databaseService.addWatch(params as Watch);
+  }
+
+  deleteWatch(key: string) {
+    this.databaseService.deleteWatch(key);
   }
 }
 

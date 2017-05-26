@@ -1,3 +1,22 @@
-.section-header, .primary {
+.section-header {
+  display: flex;
+  width: 100%;
+}
+
+.identifier {
+  flex: 0 0 120px;
+}
+
+.enrollment {
+  flex: 0 0 100px;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.primaries {
+  flex-grow: 1;
+}
+
+.primary {
   display: flex;
 }

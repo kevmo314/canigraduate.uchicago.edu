@@ -16,27 +16,31 @@ import {environment} from 'environments/environment';
 import {FilnuxModule} from 'filnux';
 
 import {AppComponent, ContentComponent} from './app.component';
+import {SidebarComponent} from './sidebar/sidebar.component';
 import {WatchesComponent} from './watches/watches.component';
 import {WatchesModule} from './watches/watches.module';
 
-export class StickyOutletReuseStrategy implements RouteReuseStrategy {
+export class StickyReuseStrategy implements RouteReuseStrategy {
   handlers: Map<string, DetachedRouteHandle> =
       new Map<string, DetachedRouteHandle>();
   shouldDetach(route: ActivatedRouteSnapshot) {
     return true;
   }
   store(route: ActivatedRouteSnapshot, handle: DetachedRouteHandle) {
-    this.handlers.set(route.outlet, handle);
+    this.handlers.set(route.routeConfig.path, handle);
   }
   shouldAttach(route: ActivatedRouteSnapshot) {
-    return this.handlers.has(route.outlet);
+    return !!route.routeConfig && !!this.handlers.get(route.routeConfig.path);
   }
   retrieve(route: ActivatedRouteSnapshot): DetachedRouteHandle {
-    return this.handlers.get(route.outlet);
+    if (!route.routeConfig) {
+      return null;
+    }
+    return this.handlers.get(route.routeConfig.path);
   }
   shouldReuseRoute(
-      future: ActivatedRouteSnapshot, current: ActivatedRouteSnapshot) {
-    return future.outlet === current.outlet;
+      future: ActivatedRouteSnapshot, curr: ActivatedRouteSnapshot) {
+    return future.routeConfig === curr.routeConfig;
   }
 }
 
@@ -47,18 +51,26 @@ export class StickyOutletReuseStrategy implements RouteReuseStrategy {
       {
         path: 'catalog',
         component: ContentComponent,
-        children: [{path: '', component: CatalogComponent, outlet: 'catalog'}]
+        children: [
+          {path: '', component: CatalogComponent, outlet: 'content'},
+          {path: '', component: SidebarComponent, outlet: 'sidebar'}
+        ]
       },
       {
         path: 'search',
         component: ContentComponent,
-        children:
-            [{path: '', component: CourseSearchComponent, outlet: 'search'}]
+        children: [
+          {path: '', component: CourseSearchComponent, outlet: 'content'},
+          {path: '', component: SidebarComponent, outlet: 'sidebar'}
+        ]
       },
       {
         path: 'watches',
         component: ContentComponent,
-        children: [{path: '', component: WatchesComponent, outlet: 'watches'}]
+        children: [
+          {path: '', component: WatchesComponent, outlet: 'content'},
+          {path: '', component: SidebarComponent, outlet: 'sidebar'}
+        ]
       },
       {path: '', pathMatch: 'full', redirectTo: '/catalog'}
     ]),
@@ -68,7 +80,7 @@ export class StickyOutletReuseStrategy implements RouteReuseStrategy {
     FilnuxModule.forRoot(AppModule)
   ],
   providers: [
-    {provide: RouteReuseStrategy, useClass: StickyOutletReuseStrategy},
+    {provide: RouteReuseStrategy, useClass: StickyReuseStrategy},
     TranscriptService
   ],
   bootstrap: [AppComponent]

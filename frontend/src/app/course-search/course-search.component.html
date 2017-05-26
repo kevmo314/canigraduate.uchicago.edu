@@ -1,11 +1,15 @@
 <div class="course-search">
   <cig-filters></cig-filters>
   <div class="results">
-    <cig-search-result *ngFor="let result of results | async | slice:(10 * (page | async)):(10 * (page | async) + 10)" course="{{result}}"
-      [filters]="filters | async" (expandedChange)="toggleShown(result)" [expanded]="getShown(result) | async" [crosslists]="getCrosslists(result) | async"></cig-search-result>
-    <cig-pagination [items]="results | count | async" [pageSize]="10" [page]="page | async" (pageChange)="setPage($event)"></cig-pagination>
+    <cig-search-result *ngFor="let result of results | async | slice:((resultsPerPage | async) * (page | async)):((resultsPerPage | async) * ((page | async) + 1))"
+      course="{{result}}" [filters]="filters | async" (expandedChange)="toggleShown(result)" [expanded]="getShown(result) | async"
+      [crosslists]="getCrosslists(result) | async"></cig-search-result>
+    <cig-pagination [items]="results | count | async" [pageSize]="resultsPerPage | async" [page]="page | async" (pageChange)="setPage($event)"></cig-pagination>
     <div class="metadata" *ngIf="queryTime > 0">
-      {{results | count | async}} results fetched in {{queryTime}}ms
+      {{results | count | async}}
+      <ng-container *ngIf="(results | count | async) == 1">result</ng-container>
+      <ng-container *ngIf="(results | count | async) != 1">results</ng-container>
+      fetched in {{queryTime}}ms
     </div>
   </div>
 </div>

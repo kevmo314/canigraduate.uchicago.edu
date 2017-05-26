@@ -25,6 +25,7 @@ import {FiltersState} from './filters/filters.store';
 })
 export class CourseSearchComponent implements AfterViewInit {
   page: Observable<number>;
+  resultsPerPage: Observable<number>;
   queryTime = 0;
   store: any;
 
@@ -43,6 +44,7 @@ export class CourseSearchComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.page = this.store.select(s => s.page);
+    this.resultsPerPage = this.store.select(s => s.resultsPerPage);
     this.filters = this.filtersComponent.store.select(x => x);
     this.results =
         this.filters.debounceTime(50)
@@ -123,7 +125,12 @@ export class CourseSearchComponent implements AfterViewInit {
 
   @Memoize()
   getShown(course: string): Observable<boolean> {
-    return this.store.select(s => s.shown.has(course));
+    return Observable
+        .combineLatest(
+            this.store.select(s => s.shown.has(course)), this.results)
+        .map(([shown, results]) => {
+          return shown || results.length === 1;
+        });
   }
 
   toggleShown(course: string) {

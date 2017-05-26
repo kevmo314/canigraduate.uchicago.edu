@@ -163,10 +163,11 @@ export class Program extends Node {
 
   evaluate(transcript: Transcript): Promise<Set<TranscriptRecord>> {
     // TODO: Remove records that are in the same crosslist equivalence class.
-    const coursesTaken = new Set(transcript.records.map(r => r.id));
+    const coursesTaken = new Set(transcript.records.map(r => r.course));
     return this.evaluateNode(this, coursesTaken).then(() => {
       // The courses used are those that no longer appear in coursesTaken.
-      return new Set(transcript.records.filter(r => !coursesTaken.has(r.id)));
+      return new Set(
+          transcript.records.filter(r => !coursesTaken.has(r.course)));
     });
   }
 

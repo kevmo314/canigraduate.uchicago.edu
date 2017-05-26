@@ -1,25 +1,18 @@
 @import '~@angular/material/theming';
 
-.sidebar {
-  margin: 0 12px;
-  margin-top: -22px;
-  padding-bottom: 0;
-  margin-bottom: 20px;
-}
-
-.sidebar.transcript md-card-content {
+.transcript md-card-content {
   margin: 0 -24px;
 }
 
-.sidebar .header {
+.header {
   display: flex;
 }
 
-.sidebar .header .title {
+.header .title {
   flex-grow: 1;
 }
 
-.sidebar .header .grades-toggle {
+.header .grades-toggle {
   margin: 0;
 }
 
@@ -37,11 +30,11 @@ md-progress-bar.visible {
   opacity: 1;
 }
 
-.sidebar /deep/ .mat-input-subscript-wrapper {
+:host /deep/ .mat-input-subscript-wrapper {
   overflow: visible;
 }
 
-.sidebar .error {
+.error {
   color: red;
   white-space: nowrap;
 }

@@ -1,14 +1,28 @@
 .description {
-  margin: 16px;
+  margin: 8px 16px;
+  line-height: 20px;
+  font-size: 13px;
 }
 
 button {
   width: 100%;
 }
 
-.sections {
-  padding: 16px;
+.row {
+  display: flex;
+}
+
+.sections, .grades {
+  padding: 0 16px;
   font-size: 12px;
+}
+
+.sections {
+  flex: 2 0 1px;
+}
+
+.grades {
+  flex: 1 0 1px;
 }
 
 .centered-icon {

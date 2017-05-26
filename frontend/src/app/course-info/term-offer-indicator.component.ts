@@ -5,8 +5,8 @@ import {Memoize} from 'typescript-memoize';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'cig-term-offer-indicator',
-  template:
-      `<span mdTooltip="{{tooltip | async}}" [ngStyle]="{'background-color': ((year | async) ? color : null)}">` +
+  template: `<span mdTooltip="{{tooltip | async}}" ` +
+      `[ngStyle]="{'background-color': (year | async) ? color : null, 'color': (year | async) ? 'white' : null}">` +
       `<ng-content></ng-content>` +
       `</span>`,
   styleUrls: ['./term-offer-indicator.component.scss']

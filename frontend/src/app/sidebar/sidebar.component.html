@@ -1,4 +1,4 @@
-<md-card class="sidebar" *ngIf="!authenticationService.validated">
+<md-card *ngIf="!authenticationService.validated">
   <md-progress-bar [ngClass]="{'visible': authenticationService.pending}" color="accent" mode="indeterminate"></md-progress-bar>
   <form (ngSubmit)="signIn(credentials)" [formGroup]="credentials">
     <md-card-title>Sign In</md-card-title>
@@ -12,6 +12,11 @@
       <md-input-container [dividerColor]="authenticationService.error ? 'warn' : null">
         <input mdInput placeholder="Password" required type="password" formControlName="password">
       </md-input-container>
+      <div class="alert error-alert">
+        <md-icon>error</md-icon>
+        <span>By signing in, you agree to let <strong>Can I Graduate?</strong> pull your transcript from <a href="https://portal.uchicago.edu/ais/"
+            target="_blank">AIS</a> and store your anonymized grades.</span>
+      </div>
     </md-card-content>
     <md-card-actions>
       <button type="submit" md-raised-button color="primary" [attr.disabled]="authenticationService.pending ? true : null">
@@ -20,7 +25,7 @@
     </md-card-actions>
   </form>
 </md-card>
-<md-card class="sidebar transcript" *ngIf="authenticationService.validated">
+<md-card class="transcript" *ngIf="authenticationService.validated">
   <md-card-title class="header">
     <div class="title">Transcript</div>
     <md-slide-toggle (change)="toggleGrades($event)" [checked]="showGrades" class="grades-toggle">

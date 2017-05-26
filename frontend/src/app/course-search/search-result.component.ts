@@ -16,10 +16,18 @@ import {FiltersState} from './filters/filters.store';
   animations: [trigger(
       'toggle',
       [
-        state('false', style({height: '0'})),
-        state('true', style({height: '*'})),
-        transition('false => true', animate('300ms ease-in')),
-        transition('true => false', animate('300ms ease-out'))
+        transition(
+            ':enter',
+            [
+              style({height: 0, opacity: 0}),
+              animate('300ms ease-in', style({height: '*', opacity: 1}))
+            ]),
+        transition(
+            ':leave',
+            [
+              style({height: '*', opacity: 1}),
+              animate('300ms ease-out', style({height: 0, opacity: 0}))
+            ])
       ])],
 })
 export class SearchResultComponent implements AfterViewInit {

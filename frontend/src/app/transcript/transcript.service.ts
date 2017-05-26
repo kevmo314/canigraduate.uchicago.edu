@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {Http} from '@angular/http';
+import {Headers, Http} from '@angular/http';
 import {AuthenticationService} from 'app/authentication/authentication.service';
 import {Transcript} from 'app/transcript';
 import {environment} from 'environments/environment';
@@ -23,7 +23,13 @@ export class TranscriptService {
   }
 
   private bind(data: AuthenticationState) {
-    this.http.post(environment.backend + '/api/transcript', data)
+    this.http
+        .get(environment.backend + '/api/transcript', {
+          headers: new Headers({
+            'Authorization':
+                'Bearer ' + btoa(`${data.username}:${data.password}`),
+          })
+        })
         .subscribe(
             response => {
               response = response.json();

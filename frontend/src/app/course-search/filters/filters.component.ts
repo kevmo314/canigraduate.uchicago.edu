@@ -3,13 +3,14 @@ import {Pipe, PipeTransform} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {MdButtonToggleChange} from '@angular/material';
 import {DatabaseService} from 'app/database/database.service';
+import {DayOfWeek} from 'app/day-of-week';
 import {Period} from 'app/period';
 import {environment} from 'environments/environment';
 import {AssignAction, SelectValue, Store} from 'filnux';
 import {Observable} from 'rxjs/Observable';
 import {Subscription} from 'rxjs/Subscription';
 
-import {ACTIONS, DayOfWeek, FiltersState, SetQueryAction} from './filters.store';
+import {ACTIONS, FiltersState, SetQueryAction} from './filters.store';
 
 @Component({
   selector: 'cig-filters',

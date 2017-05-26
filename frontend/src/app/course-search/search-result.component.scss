@@ -30,7 +30,7 @@ md-card-header {
 md-card-title {
   overflow: hidden;
   display: flex;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 md-card-title .id {
@@ -59,4 +59,10 @@ md-card-subtitle {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: opacity 0.1s ease-in;
+  opacity: 1;
+}
+
+md-card-subtitle:empty {
+  opacity: 0;
 }

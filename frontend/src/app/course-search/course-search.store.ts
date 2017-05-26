@@ -6,10 +6,12 @@ import {Action} from 'filnux';
 export class CourseSearchState {
   shown?: Set<string> = new Set<string>();
   page? = 0;
+  resultsPerPage? = 10;
   constructor(previous?: CourseSearchState) {
     if (previous) {
       this.shown = new Set<string>(previous.shown);
       this.page = previous.page;
+      this.resultsPerPage = previous.resultsPerPage;
     }
   }
 }

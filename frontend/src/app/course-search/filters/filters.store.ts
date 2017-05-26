@@ -1,17 +1,8 @@
 import {Injectable} from '@angular/core';
+import {DayOfWeek} from 'app/day-of-week';
 import {Period} from 'app/period';
 import {environment} from 'environments/environment';
 import {Action} from 'filnux';
-
-export enum DayOfWeek {
-  SUNDAY = 1 << 0,
-  MONDAY = 1 << 1,
-  TUESDAY = 1 << 2,
-  WEDNESDAY = 1 << 3,
-  THURSDAY = 1 << 4,
-  FRIDAY = 1 << 5,
-  SATURDAY = 1 << 6
-}
 
 export class FiltersState {
   days?: DayOfWeek = DayOfWeek.MONDAY | DayOfWeek.TUESDAY |
@@ -19,11 +10,11 @@ export class FiltersState {
   periods?: Period[] = [...environment.institution.periods];
   instructors?: Set<string> = new Set();
   departments?: Set<string> = new Set();
-  core?: boolean = false;
-  prerequisites?: boolean = false;
-  taken?: boolean = false;
-  tested?: boolean = false;
-  query?: string = '';
+  core? = false;
+  prerequisites? = false;
+  taken? = false;
+  tested? = false;
+  query? = '';
   constructor(previous?: FiltersState) {
     if (previous) {
       this.days = previous.days;
