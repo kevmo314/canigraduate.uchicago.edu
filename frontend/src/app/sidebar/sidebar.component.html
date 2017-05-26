@@ -1,6 +1,6 @@
-<md-card *ngIf="!authenticationService.validated">
-  <md-progress-bar [ngClass]="{'visible': authenticationService.pending}" color="accent" mode="indeterminate"></md-progress-bar>
-  <form (ngSubmit)="signIn(credentials)" [formGroup]="credentials">
+<form (ngSubmit)="signIn(credentials)" [formGroup]="credentials">
+  <md-card *ngIf="!authenticationService.validated">
+    <md-progress-bar [ngClass]="{'visible': authenticationService.pending}" color="accent" mode="indeterminate"></md-progress-bar>
     <md-card-title>Sign In</md-card-title>
     <md-card-content>
       <p><strong>Can I Graduate?</strong> works better if you're signed in. Enter your UChicago CNetID and password to import
@@ -23,8 +23,8 @@
         Sign In
       </button> or don't.
     </md-card-actions>
-  </form>
-</md-card>
+  </md-card>
+</form>
 <md-card class="transcript" *ngIf="authenticationService.validated">
   <md-card-title class="header">
     <div class="title">Transcript</div>

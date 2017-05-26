@@ -11,8 +11,8 @@ body {
 body {
   margin: 0;
   overflow-y: scroll;
-font-size: $mat-body-font-size-base;
-line-height: 20px;
+  font-size: $mat-body-font-size-base;
+  line-height: 20px;
 }
 
 .alert {
@@ -149,16 +149,16 @@ body.uchicago {
   $app-theme:   mat-light-theme($app-primary, $app-accent, $app-warn);
   @include angular-material-theme($app-theme);
 
-  mat-tab-header {
-      background-color: mat-color($mat-maroon, 500);
-      color: mat-contrast($mat-maroon, 500);
-  }
+  .mat-tab-nav-bar {
+    border-bottom: none;
 
-  mat-tab-header .mat-tab-label-active {
+    & .mat-tab-label, & .mat-tab-link {
       color: white;
-  }
+      opacity: 1;
+    }
 
-  mat-tab-header mat-ink-bar {
+    & .mat-ink-bar {
       background-color: white;
+    }
   }
 }
