@@ -4,13 +4,19 @@
 }
 
 .identifier {
-  flex: 0 0 120px;
+  flex: 0 0 30px;
+  text-align: right;
+  margin-right: 8px;
 }
 
 .enrollment {
-  flex: 0 0 100px;
+  flex: 0 0 50px;
   white-space: nowrap;
   text-align: right;
+}
+
+.type {
+  flex: 0 0 75px;
 }
 
 .primaries {
@@ -19,4 +25,12 @@
 
 .primary {
   display: flex;
+}
+
+.location {
+  margin-right: 8px;
+}
+
+.instructors {
+  flex-grow: 1;
 }

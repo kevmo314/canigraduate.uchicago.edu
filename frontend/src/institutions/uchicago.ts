@@ -6,10 +6,10 @@ export const UniversityOfChicago: Base = {
   name: 'University of Chicago',
   theme: 'uchicago',
   periods: [
-    <Period>{name: 'Autumn', shorthand: 'F', color: '#FFA319'},
-    <Period>{name: 'Winter', shorthand: 'W', color: '#155F83'},
-    <Period>{name: 'Spring', shorthand: 'S', color: '#8A9045'},
-    <Period>{name: 'Summer', shorthand: 'S', color: '#8F3931'},
+    <Period>{name: 'Autumn', shorthand: 'F', color: '#ffc107'},
+    <Period>{name: 'Winter', shorthand: 'W', color: '#2196f3'},
+    <Period>{name: 'Spring', shorthand: 'S', color: '#4caf50'},
+    <Period>{name: 'Summer', shorthand: 'S', color: '#ff5252'},
   ],
   getDepartment(id: string): string {
     return id.substring(0, 4);

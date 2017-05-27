@@ -3,9 +3,12 @@
 <div class="row">
   <div class="sections">
     <h3>Sections</h3>
-    <ng-container *ngFor="let term of terms | slice:0:numTerms">
-      <cig-section *ngFor="let section of sectionsByTerm(term)" [section]="section" [evaluation]="evaluations | async | matchSection:term:section.id"></cig-section>
-    </ng-container>
+    <div *ngFor="let term of terms | slice:0:numTerms" class="term">
+      <div class="term-header">{{term}}</div>
+      <div *ngFor="let section of sectionsByTerm(term)" class="section">
+        <cig-section [section]="section" [evaluation]="evaluations | async | matchSection:term:section.id"></cig-section>
+      </div>
+    </div>
     <button *ngIf="numTerms < terms.length" (click)="showNextTerm()" md-button>
       <md-icon>history</md-icon>
       Show {{terms[numTerms]}}

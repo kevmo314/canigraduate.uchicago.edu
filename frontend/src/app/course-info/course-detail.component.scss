@@ -28,3 +28,22 @@ button {
 .centered-icon {
   vertical-align: middle;
 }
+
+.section:not(:last-child) {
+  & /deep/ .primaries, & /deep/ .enrollment {
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    margin-bottom: 4px;
+  }
+}
+
+.term:not(:last-child) {
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  margin-bottom: 4px;
+}
+
+.term-header {
+  font-weight: bold;
+  margin: 4px 0;
+}

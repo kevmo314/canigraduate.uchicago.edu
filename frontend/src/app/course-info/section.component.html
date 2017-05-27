@@ -1,18 +1,14 @@
 <div class="section-header">
-  <div class="identifier">
-    {{section.term}} - §{{section.id}}
-  </div>
+  <div class="identifier">§{{section.id}}</div>
   <div class="primaries">
     <div *ngFor="let primary of section.primaries" class="primary">
       <div class="type">{{primary.type}}</div>
       <div class="instructors">{{primary.instructors?.join(', ')}}</div>
       <div class="location">{{primary.location}}</div>
-      <div class="schedule">{{primary.schedule}}</div>
+      <cig-schedule-indicator [schedule]="primary.schedule" class="schedule"></cig-schedule-indicator>
     </div>
   </div>
-  <div class="enrollment">
-    {{section.enrollment.join('/')}}
-  </div>
+  <div class="enrollment">{{enrollment}}/{{enrollmentLimit}}</div>
   <div class="evaluations" *ngIf="evaluation">
     <a href="{{evaluation.href}}">Course Evaluations</a>
   </div>
