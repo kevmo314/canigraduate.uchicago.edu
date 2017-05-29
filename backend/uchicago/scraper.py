@@ -1,9 +1,11 @@
 import collections
-import pyrebase
 import re
+
+import pyrebase
 
 from src import Term
 
+ALPHANUMERIC = re.compile('[^a-z0-9 ]+')
 FIREBASE = pyrebase.initialize_app({
     'apiKey':
     'AIzaSyCjBDyhwbXcp9kEIA2pMHLDGxmCM4Sn6Eg',
@@ -17,13 +19,8 @@ FIREBASE = pyrebase.initialize_app({
     'service_account_key.json'
 })
 
-
 def transform(a):
     return dict([(i, j) for i, j in enumerate(a) if j is not None])
-
-
-ALPHANUMERIC = re.compile('[^a-z0-9 ]+')
-
 
 def get_words(text):
     return set(ALPHANUMERIC.sub('', text.lower()).split())
@@ -102,22 +99,18 @@ def scrape_data(db):
                 period = term.id[:6]
                 updates['schedules/%s/%s/%s/%s' %
                         (course.id, year, period, id)] = {
-                            'term':
-                            '%s %s' % (period, year),
-                            'department':
-                            course.id[:4],
-                            'notes':
-                            section.notes,
-                            'enrollment':
-                            section.enrollment,
+                            'term': '%s %s' % (period, year),
+                            'department': course.id[:4],
+                            'prerequisites': section.prerequisites,
+                            'notes': section.notes,
+                            'enrollment': section.enrollment,
                             'primaries': [{
                                 'instructors': primary.instructors,
                                 'schedule': primary.schedule,
                                 'type': primary.type,
                                 'location': primary.location
                             } for primary in section.primaries],
-                            'secondaries':
-                            dict([(secondary.id, {
+                            'secondaries': dict([(secondary.id, {
                                 'instructors': secondary.instructors,
                                 'schedule': secondary.schedule,
                                 'type': secondary.type,
@@ -137,6 +130,6 @@ def scrape_data(db):
 
 if __name__ == '__main__':
     db = FIREBASE.database()
-    # db.child('schedules').set({})
+    db.child('schedules').set({})
     scrape_data(db)
     # rebuild_indexes(db)
