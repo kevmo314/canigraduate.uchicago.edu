@@ -32,7 +32,7 @@ class FSM(object):
 
     def next_schedule(self):
         s = self.next_string()
-        if s.startswith('ARR') or s == '':
+        if 'ARR' in s or s == '':
             return []
         tokens = SCHEDULE_REGEX.match(s)
         if tokens is None:
@@ -171,10 +171,10 @@ class TimeSchedules(object):
             % self.id).text
         results = {}
         p = multiprocessing.Pool(1)
-        for page in p.imap_unordered(parse_page, [
+        for page in p.imap_unordered(
+                parse_page,
                 re.findall(r'view\.php\?dept=.+?&term=' + self.id,
-                           department_page)[0]
-        ]):
+                           department_page)):
             results.update(page)
         p.close()
         return results
