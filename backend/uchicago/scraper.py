@@ -1,26 +1,33 @@
 import collections
 import pyrebase
-import json
-import httplib2
 import re
 
 from src import Term
 
-firebase = pyrebase.initialize_app({
-    'apiKey': 'AIzaSyCjBDyhwbXcp9kEIA2pMHLDGxmCM4Sn6Eg',
-    'authDomain': 'canigraduate-43286.firebaseapp.com',
-    'databaseURL': 'https://canigraduate-43286.firebaseio.com',
-    'storageBucket': 'canigraduate-43286.appspot.com',
-    'serviceAccount': 'service_account_key.json'
+FIREBASE = pyrebase.initialize_app({
+    'apiKey':
+    'AIzaSyCjBDyhwbXcp9kEIA2pMHLDGxmCM4Sn6Eg',
+    'authDomain':
+    'canigraduate-43286.firebaseapp.com',
+    'databaseURL':
+    'https://canigraduate-43286.firebaseio.com',
+    'storageBucket':
+    'canigraduate-43286.appspot.com',
+    'serviceAccount':
+    'service_account_key.json'
 })
+
 
 def transform(a):
     return dict([(i, j) for i, j in enumerate(a) if j is not None])
 
-alphanumeric = re.compile('[^a-z0-9 ]+')
+
+ALPHANUMERIC = re.compile('[^a-z0-9 ]+')
+
 
 def get_words(text):
-    return set(alphanumeric.sub('', text.lower()).split())
+    return set(ALPHANUMERIC.sub('', text.lower()).split())
+
 
 def rebuild_indexes(db):
     schedules = db.child('schedules').get().val()
@@ -38,7 +45,8 @@ def rebuild_indexes(db):
                     # Deal with Firebase's array heuristic.
                     c = transform(c)
                 for id, section in c.items():
-                    for section in section['primaries'] + list(section.get('secondaries', {}).values()):
+                    for section in section['primaries'] + list(
+                            section.get('secondaries', {}).values()):
                         for instructor in section.get('instructors', []):
                             instructors[instructor].add(course_id)
                     departments[course_id[:4]].add(course_id)
@@ -49,13 +57,17 @@ def rebuild_indexes(db):
                     name = info.get('name', '')
                     description = info.get('description', '')
                     print(name)
-                    for word in get_words(course_id) | get_words(name) | get_words(description):
+                    for word in get_words(course_id) | get_words(
+                            name) | get_words(description):
                         inverted[word].add(course_id)
                     # Firebase doesn't store empty arrays.
                     for schedule in section.get('schedule', []):
-                        intervals['%d-%d' % (schedule[0], schedule[1])].add(course_id)
+                        intervals['%d-%d' % (schedule[0],
+                                             schedule[1])].add(course_id)
+
     def flatten_set(d):
         return dict([(a, list(b)) for a, b in d.items()])
+
     db.child('indexes').child('fulltext').set(flatten_set(inverted))
     db.child('indexes').child('instructors').set(flatten_set(instructors))
     db.child('indexes').child('departments').set(flatten_set(departments))
@@ -63,6 +75,7 @@ def rebuild_indexes(db):
     db.child('indexes').child('terms').set(flatten_set(terms))
     db.child('indexes').child('schedules').set(flatten_set(intervals))
     db.child('indexes').child('all').set(list(schedules.keys()))
+
 
 def scrape_data(db):
     terms = sorted(list(Term.all()))
@@ -79,30 +92,39 @@ def scrape_data(db):
                 if id == '_crosslists':
                     continue
                 if data.get('name', section.name) != section.name:
-                    print('[%s] Conflicting course name for %s: %s, %s' % (term, course.id, data, section.name))
+                    print('[%s] Conflicting course name for %s: %s, %s' %
+                          (term, course.id, data, section.name))
                 data['name'] = section.name
-                data['crosslists'] = list(set(data.get('crosslists', [])) | set(sections.get('_crosslists', set())))
+                data['crosslists'] = list(
+                    set(data.get('crosslists', [])) |
+                    set(sections.get('_crosslists', set())))
                 year = term.id[-4:]
                 period = term.id[:6]
-                updates['schedules/%s/%s/%s/%s' % (course.id, year, period, id)] = {
-                    'term': '%s %s' % (period, year),
-                    'department': course.id[:4],
-                    'notes': section.notes,
-                    'enrollment': section.enrollment,
-                    'primaries': [{
-                        'instructors': primary.instructors,
-                        'schedule': primary.schedule,
-                        'type': primary.type,
-                        'location': primary.location
-                    } for primary in section.primaries],
-                    'secondaries': dict([(secondary.id, {
-                        'instructors': secondary.instructors,
-                        'schedule': secondary.schedule,
-                        'type': secondary.type,
-                        'location': secondary.location,
-                        'enrollment': secondary.enrollment
-                    }) for secondary in section.secondaries])
-                }
+                updates['schedules/%s/%s/%s/%s' %
+                        (course.id, year, period, id)] = {
+                            'term':
+                            '%s %s' % (period, year),
+                            'department':
+                            course.id[:4],
+                            'notes':
+                            section.notes,
+                            'enrollment':
+                            section.enrollment,
+                            'primaries': [{
+                                'instructors': primary.instructors,
+                                'schedule': primary.schedule,
+                                'type': primary.type,
+                                'location': primary.location
+                            } for primary in section.primaries],
+                            'secondaries':
+                            dict([(secondary.id, {
+                                'instructors': secondary.instructors,
+                                'schedule': secondary.schedule,
+                                'type': secondary.type,
+                                'location': secondary.location,
+                                'enrollment': secondary.enrollment
+                            }) for secondary in section.secondaries])
+                        }
             known_course_info[course.id] = data
             updates['course-info/%s' % course.id] = data
         try:
@@ -112,8 +134,9 @@ def scrape_data(db):
             raise
         print(term, '%d updates' % len(updates))
 
+
 if __name__ == '__main__':
-    db = firebase.database()
+    db = FIREBASE.database()
     # db.child('schedules').set({})
-    # scrape_data(db)
-    rebuild_indexes(db)
+    scrape_data(db)
+    # rebuild_indexes(db)

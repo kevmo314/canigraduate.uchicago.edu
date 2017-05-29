@@ -2,7 +2,9 @@ import collections
 import re
 import requests
 
-COURSE_BLOCK_DESC = re.compile(r'courseblockdesc">(.+?)<', re.MULTILINE | re.DOTALL)
+COURSE_BLOCK_DESC = re.compile(r'courseblockdesc">(.+?)<',
+                               re.MULTILINE | re.DOTALL)
+
 
 class Course(object):
     def __init__(self, id):
@@ -15,7 +17,9 @@ class Course(object):
     def description(self):
         if self._description_queried:
             return self._description
-        text = requests.get('http://collegecatalog.uchicago.edu/ribbit/index.cgi?page=getcourse.rjs&code=' + self.id).text
+        text = requests.get(
+            'http://collegecatalog.uchicago.edu/ribbit/index.cgi?page=getcourse.rjs&code='
+            + self.id).text
         result = COURSE_BLOCK_DESC.search(text)
         self._description = result.group(1).strip() if result else None
         self._description_queried = True
