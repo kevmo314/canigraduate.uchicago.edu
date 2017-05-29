@@ -37,7 +37,7 @@ class FSM(object):
         tokens = SCHEDULE_REGEX.match(s)
         if tokens is None:
             raise Exception('Could not parse "%s"' % s)
-        days = tokens.group(1)
+        days = tokens.group(1).strip()
         from_time = int(
             (datetime.datetime.strptime(tokens.group(2), '%I:%M%p') - MIDNIGHT
              ).total_seconds() / 60)
@@ -71,7 +71,7 @@ class FSM(object):
 
     def next_section(self):
         text = self.next_string()
-        data = re.split('\s[/-]\s', text)
+        data = list(map(lambda s: s.strip(), re.split('\s[/-]\s', text)))
         if len(data) != 3 or len(data[0]) + len(data[1]) != 9:
             self.index -= 1
             raise ValueError()
@@ -89,14 +89,16 @@ class FSM(object):
         self.index += 1
         if name == 'CANCELLED':
             raise ValueError()
+        course = Course(id='%s %s' % (data[0], data[1]))
         section = Section(
+            course=course,
             id=data[2],
             name=name,
             enrollment=[enrollment, enrollment_limit],
             units=units)
         section.primaries.append(activity)
         section.crosslists.update(crosslists)
-        return Course(id='%s %s' % (data[0], data[1])), section
+        return course, section
 
     def next_activity(self):
         instructors = list(
@@ -130,7 +132,7 @@ class FSM(object):
                 self.section = section
                 self.course = course
                 self.results[course][section.id] = section
-            except ValueError:
+            except ValueError as e:
                 if self.section:
                     if self.cells[self.index].has_attr(
                             'colspan'
@@ -168,15 +170,11 @@ class TimeSchedules(object):
             'http://timeschedules.uchicago.edu/browse.php?term=%s&submit=Submit'
             % self.id).text
         results = {}
-        p = multiprocessing.Pool(25)
-        for page in p.map(parse_page,
-                          re.findall(r'view\.php\?dept=.+?&term=' + self.id,
-                                     department_page)):
+        p = multiprocessing.Pool(1)
+        for page in p.imap_unordered(parse_page, [
+                re.findall(r'view\.php\?dept=.+?&term=' + self.id,
+                           department_page)[0]
+        ]):
             results.update(page)
         p.close()
         return results
-
-
-if __name__ == '__main__':
-    # print(parse_page('view.php?dept=MATH&term=467'))
-    print(TimeSchedules('467').courses)
