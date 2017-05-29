@@ -1,4 +1,6 @@
 import collections
+import itertools
+import multiprocessing
 import re
 import warnings
 
@@ -28,6 +30,7 @@ class CourseSearch(object):
         }
         self.counter = 1
         self.data = {}
+        self.index_shard = -1
 
     def parse(self, response):
         page = bs4.BeautifulSoup(response.text, 'lxml')
@@ -48,38 +51,69 @@ class CourseSearch(object):
         return self.parse(
             self.session.post(COURSE_SEARCH_URL, data=data, **kwargs))
 
+    def __call__(self, params):
+        department, index = params
+        self.index_shard = index
+        self.parse(self.session.get('https://coursesearch.uchicago.edu/'))
+        # Select the term.
+        self.action('UC_CLSRCH_WRK2_STRM')
+        # Then run the department search.
+        return list(
+            self.parse_results_page(
+                self.action('UC_CLSRCH_WRK2_SEARCH_BTN', {
+                    'UC_CLSRCH_WRK2_SUBJECT': department
+                }), department))
+
     @property
     def courses(self):
         self.parse(self.session.get('https://coursesearch.uchicago.edu/'))
         # Get the departments
         page = self.action('UC_CLSRCH_WRK2_STRM')
         results = collections.defaultdict(dict)
-        for department in filter(
-                len,
-                map(lambda x: x['value'],
-                    page.select('#UC_CLSRCH_WRK2_SUBJECT option'))):
-            for section in self.parse_results_page(
-                    self.action('UC_CLSRCH_WRK2_SEARCH_BTN',
-                                {'UC_CLSRCH_WRK2_SUBJECT': department}),
-                    department):
+        pool = multiprocessing.Pool(24)
+        departments = map(lambda x: x['value'],
+                          page.select('#UC_CLSRCH_WRK2_SUBJECT option'))
+        departments = set(filter(len, departments))
+        count = len(departments) * 25
+        departments = pool.imap_unordered(
+            # Create a new object so we get a new session.
+            CourseSearch(self.term, self.coursesearch_id),
+            itertools.product(departments, range(25)))
+        for index, department in enumerate(departments, 1):
+            print('{0:%}'.format(index / count))
+            for section in department:
                 results[section.course.id][section.id] = section
         return results
 
     def parse_results_page(self, page, department):
         error = page.find('span', {'id':
                                    'DERIVED_CLSMSG_ERROR_TEXT'}).text.strip()
-        if error:
-            warnings.warn('[%s] %s' % (department, error))
-        for index, row in enumerate(page.select('tr[id^="DESCR100"]')):
+        if error and self.index_shard <= 0:
+            # Only the first index shard should report page-level errors.
+            warnings.warn('[%s %s] %s' % (self.term, department, error))
+        records = page.select('tr[id^="DESCR100"]')
+        for index, row in enumerate(records):
+            if self.index_shard != -1 and index != self.index_shard:
+                # Ignore this course if we're not delegated to this index shard.
+                continue
             chip = row.find('span', {'class': 'label'})
             if chip and chip.text.strip() == 'Cancelled':
                 # Ignore cancelled courses
                 continue
-            yield self.parse_section_page(
+            if not row.find('span', {
+                    'id':
+                    re.compile(r'^UC_CLSRCH_WRK_UC_CLASS_TITLE\$\d+')
+            }).text.strip():
+                # Sometimes you get an empty course...
+                continue
+            section = self.parse_section_page(
                 self.action('UC_RSLT_NAV_WRK_PTPG_NUI_DRILLOUT$%d' % index))
             self.action('UC_CLS_DTL_WRK_RETURN_PB$0')
+            if section:
+                yield section
         # Visit next page.
-        if page.find('a', {'id': 'UC_RSLT_NAV_WRK_SEARCH_CONDITION2$46$'}):
+        if len(records) == 25 and page.find(
+                'a', {'id': 'UC_RSLT_NAV_WRK_SEARCH_CONDITION2$46$'}):
             yield from self.parse_results_page(
                 self.action('UC_RSLT_NAV_WRK_SEARCH_CONDITION2$46$'),
                 department)
@@ -87,9 +121,13 @@ class CourseSearch(object):
     def parse_section_page(self, page):
         course_name = page.find(
             'span', {'id': 'UC_CLS_DTL_WRK_UC_CLASS_TITLE$0'}).text.strip()
-        match = DESCRIPTOR_REGEX.match(
-            page.find('div', {'id': 'win0divUC_CLS_DTL_WRK_HTMLAREA$0'})
-            .text.strip())
+        descriptor = page.find(
+            'div', {'id': 'win0divUC_CLS_DTL_WRK_HTMLAREA$0'}).text.strip()
+        match = DESCRIPTOR_REGEX.match(descriptor)
+        if not match:
+            warnings.warn('[%s %s] Could not match course descriptor: %s' %
+                          (self.term, course_name, descriptor))
+            return None
         course_id = match.group('id')
         section_id = match.group('section')
         description = page.find(
@@ -108,16 +146,29 @@ class CourseSearch(object):
             'span', {'id': 'UC_CLS_DTL_WRK_SSR_REQUISITE_LONG$0'})
         if prerequisites:
             prerequisites = prerequisites.text.strip()
-        components = set(
+        components = list(
             map(lambda x: x.strip(),
                 page.find('div', {
                     'id': 'win0divUC_CLS_DTL_WRK_SSR_COMPONENT_LONG$0'
                 }).text.split(',')))
-        secondary_components = set(
-            map(lambda x: x.text.strip(),
-                page.select(
-                    '[id^="win0divUC_CLS_REL_WRK_RELATE_CLASS_NBR_1"] h1')))
-        primary_components = components - secondary_components
+        tables = page.select(
+            '[id^="win0divUC_CLS_REL_WRK_RELATE_CLASS_NBR_1"]')
+        secondary_components = set()
+        secondaries = []
+        for table in tables:
+            if 'psc_hidden' in table.parent.get('class', []):
+                # AIS renders random shit sometimes.
+                continue
+            component = table.find('h1').text.strip()
+            secondary_components.add(component)
+            for row in table.select('tr'):
+                secondary = self.parse_secondary(row, component)
+                if secondary:
+                    secondaries.append(secondary)
+
+        primary_components = [
+            c for c in components if c not in secondary_components
+        ]
         if len(primary_components) != 1:
             warnings.warn(
                 '[%s] Could not resolve primary components uniquely. %s - %s' %
@@ -136,17 +187,8 @@ class CourseSearch(object):
             lambda row: self.parse_primary(
                 row, list(primary_components)[0] if primary_components else None),
             page.select('#win0divSSR_CLSRCH_MTG1$0 tr.ps_grid-row')))
-        tables = page.select(
-            '[id^="win0divUC_CLS_REL_WRK_RELATE_CLASS_NBR_1"]')
-        for table in tables:
-            if 'psc_hidden' in table.parent.get('class', []):
-                # AIS renders random shit sometimes.
-                continue
-            component = table.find('h1').text.strip()
-            for row in table.select('tr'):
-                secondary = self.parse_secondary(row, component)
-                if secondary:
-                    section.secondaries.append(secondary)
+        section.secondaries.extend(secondaries)
+        # print(section)
         return section
 
     def parse_secondary(self, row, type):
@@ -172,7 +214,7 @@ class CourseSearch(object):
         return SecondaryActivity(
             id=section_id,
             enrollment=enrollment,
-            instructors=instructors,
+            instructors=list(set(instructors)),
             schedule=schedule,
             location=location,
             type=type)
