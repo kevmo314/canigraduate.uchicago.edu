@@ -78,7 +78,7 @@ def scrape_data(db):
     terms = sorted(list(Term.all()))
     index = 0
     known_course_info = db.child('course-info').get().val()
-    while len(terms) > 0:
+    while terms:
         term = terms.pop(0)
         index += 1
         updates = {}
@@ -86,15 +86,13 @@ def scrape_data(db):
             data = known_course_info.get(course.id, {'crosslists': []})
             data['description'] = data.get('description', course.description)
             for id, section in sections.items():
-                if id == '_crosslists':
-                    continue
                 if data.get('name', section.name) != section.name:
                     print('[%s] Conflicting course name for %s: %s, %s' %
                           (term, course.id, data, section.name))
                 data['name'] = section.name
                 data['crosslists'] = list(
                     set(data.get('crosslists', [])) |
-                    set(sections.get('_crosslists', set())))
+                    set(section.crosslists))
                 year = term.id[-4:]
                 period = term.id[:6]
                 updates['schedules/%s/%s/%s/%s' %
@@ -125,6 +123,8 @@ def scrape_data(db):
         except:
             print(updates)
             raise
+        if not updates:
+            terms.insert(0, term)
         print(term, '%d updates' % len(updates))
 
 

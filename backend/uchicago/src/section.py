@@ -8,6 +8,7 @@ class Section(object):
         self.name = name
         self.units = units
         self.enrollment = enrollment
+        self.crosslists = set()
         self.primaries = []
         self.secondaries = []
 

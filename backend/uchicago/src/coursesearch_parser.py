@@ -83,6 +83,7 @@ class CourseSearch(object):
             print('{0:%}'.format(index / count))
             for section in department:
                 results[section.course.id][section.id] = section
+        pool.close()
         return results
 
     def parse_results_page(self, page, department):
@@ -146,6 +147,10 @@ class CourseSearch(object):
             'span', {'id': 'UC_CLS_DTL_WRK_SSR_REQUISITE_LONG$0'})
         if prerequisites:
             prerequisites = prerequisites.text.strip()
+        crosslists = filter(
+            len,
+            map(lambda x: x['value'].split('/')[0].strip(),
+                page.select('#UC_CLS_DTL_WRK_DESCR125$0 option')))
         components = list(
             map(lambda x: x.strip(),
                 page.find('div', {
@@ -165,7 +170,6 @@ class CourseSearch(object):
                 secondary = self.parse_secondary(row, component)
                 if secondary:
                     secondaries.append(secondary)
-
         primary_components = [
             c for c in components if c not in secondary_components
         ]
@@ -183,6 +187,7 @@ class CourseSearch(object):
             section.course.description = description
         section.prerequisites = prerequisites
         section.notes.append(notes)
+        section.crosslists.update(crosslists)
         section.primaries.extend(map(
             lambda row: self.parse_primary(
                 row, list(primary_components)[0] if primary_components else None),
