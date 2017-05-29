@@ -1,3 +1,4 @@
+import collections
 import re
 import warnings
 
@@ -52,18 +53,16 @@ class CourseSearch(object):
         self.parse(self.session.get('https://coursesearch.uchicago.edu/'))
         # Get the departments
         page = self.action('UC_CLSRCH_WRK2_STRM')
-        results = []
+        results = collections.defaultdict(dict)
         for department in filter(
                 len,
                 map(lambda x: x['value'],
                     page.select('#UC_CLSRCH_WRK2_SUBJECT option'))):
-            department = 'PHYS'
-            results.extend(
-                self.parse_results_page(
-                    self.action('UC_CLSRCH_WRK2_SEARCH_BTN', {
-                        'UC_CLSRCH_WRK2_SUBJECT': department
-                    }), department))
-            break
+            for section in self.parse_results_page(
+                    self.action('UC_CLSRCH_WRK2_SEARCH_BTN',
+                                {'UC_CLSRCH_WRK2_SUBJECT': department}),
+                    department):
+                results[section.course.id][section.id] = section
         return results
 
     def parse_results_page(self, page, department):
@@ -71,7 +70,11 @@ class CourseSearch(object):
                                    'DERIVED_CLSMSG_ERROR_TEXT'}).text.strip()
         if error:
             warnings.warn('[%s] %s' % (department, error))
-        for index, _ in enumerate(page.select('tr[id^="DESCR100"]')):
+        for index, row in enumerate(page.select('tr[id^="DESCR100"]')):
+            chip = row.find('span', {'class': 'label'})
+            if chip and chip.text.strip() == 'Cancelled':
+                # Ignore cancelled courses
+                continue
             yield self.parse_section_page(
                 self.action('UC_RSLT_NAV_WRK_PTPG_NUI_DRILLOUT$%d' % index))
             self.action('UC_CLS_DTL_WRK_RETURN_PB$0')
@@ -136,12 +139,14 @@ class CourseSearch(object):
         tables = page.select(
             '[id^="win0divUC_CLS_REL_WRK_RELATE_CLASS_NBR_1"]')
         for table in tables:
+            if 'psc_hidden' in table.parent.get('class', []):
+                # AIS renders random shit sometimes.
+                continue
             component = table.find('h1').text.strip()
             for row in table.select('tr'):
                 secondary = self.parse_secondary(row, component)
                 if secondary:
                     section.secondaries.append(secondary)
-        print(section)
         return section
 
     def parse_secondary(self, row, type):

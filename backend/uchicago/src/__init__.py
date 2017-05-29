@@ -1,4 +1,3 @@
-from . import timeschedules_parser
-from .transcript_parser import TranscriptParser
+from .timeschedules_parser import TimeSchedules
 from .coursesearch_parser import CourseSearch
 from .term import Term
