@@ -20,9 +20,7 @@ def transcript():
             key: value
             for (key, value) in flask.request.headers if key != 'Host'
         },
-        data=flask.request.get_data(),
-        cookies=flask.request.cookies,
-        allow_redirects=False)
+        cookies=flask.request.cookies)
 
     excluded_headers = [
         'content-encoding', 'content-length', 'transfer-encoding', 'connection'
