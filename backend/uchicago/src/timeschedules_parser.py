@@ -47,8 +47,8 @@ class FSM(object):
         intervals = []
         if days == 'M-F':
             days = 'MTWThF'
-        search_space = [['sun'], ['mon'], ['tue'], ['wed'], ['h', 'r', 'thu'],
-                        ['fri'], ['sat']]
+        search_space = [['sun'], ['mon'], ['u', 'tue'], ['wed'],
+                        ['h', 'r', 'thu'], ['fri'], ['sat']]
 
         def dfs(offset, index):
             if offset == len(search_space):
@@ -170,7 +170,7 @@ class TimeSchedules(object):
             'http://timeschedules.uchicago.edu/browse.php?term=%s&submit=Submit'
             % self.id).text
         results = {}
-        p = multiprocessing.Pool(1)
+        p = multiprocessing.Pool(25)
         for page in p.imap_unordered(
                 parse_page,
                 re.findall(r'view\.php\?dept=.+?&term=' + self.id,
