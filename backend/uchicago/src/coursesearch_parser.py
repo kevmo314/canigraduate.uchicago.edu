@@ -82,7 +82,7 @@ class CourseSearch(object):
         for index, department in enumerate(departments, 1):
             print('{0:%}'.format(index / count))
             for section in department:
-                results[section.course.id][section.id] = section
+                results[section.course][section.id] = section
         pool.close()
         return results
 
