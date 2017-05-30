@@ -35,25 +35,26 @@ def rebuild_indexes(db):
     terms = collections.defaultdict(set)
     intervals = collections.defaultdict(set)
     inverted = collections.defaultdict(set)
+    years = collections.defaultdict(set)
     for course_id, a in schedules.items():
         for year, b in a.items():
             for period, c in b.items():
                 if isinstance(c, list):
                     # Deal with Firebase's array heuristic.
                     c = transform(c)
+                periods[period].add(course_id)
+                years[year].add(course_id)
+                departments[course_id[:4]].add(course_id)
+                terms['%s %s' % (period, year)].add(course_id)
                 for id, section in c.items():
                     for section in section['primaries'] + list(
                             section.get('secondaries', {}).values()):
                         for instructor in section.get('instructors', []):
                             instructors[instructor].add(course_id)
-                    departments[course_id[:4]].add(course_id)
-                    periods[period].add(course_id)
-                    terms['%s %s' % (period, year)].add(course_id)
                     # Construct the inverted index based on the course description and name.
                     info = course_info.get(course_id, {})
                     name = info.get('name', '')
                     description = info.get('description', '')
-                    print(name)
                     for word in get_words(course_id) | get_words(
                             name) | get_words(description):
                         inverted[word].add(course_id)
@@ -70,6 +71,7 @@ def rebuild_indexes(db):
     db.child('indexes').child('departments').set(flatten_set(departments))
     db.child('indexes').child('periods').set(flatten_set(periods))
     db.child('indexes').child('terms').set(flatten_set(terms))
+    db.child('indexes').child('years').set(flatten_set(years))
     db.child('indexes').child('schedules').set(flatten_set(intervals))
     db.child('indexes').child('all').set(list(schedules.keys()))
 
