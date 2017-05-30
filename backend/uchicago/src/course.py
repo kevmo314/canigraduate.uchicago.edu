@@ -17,12 +17,12 @@ class Course(object):
     def description(self):
         if self._description_queried:
             return self._description
-        text = requests.get(
-            'http://collegecatalog.uchicago.edu/ribbit/index.cgi?page=getcourse.rjs&code='
-            + self.id).text
-        result = COURSE_BLOCK_DESC.search(text)
-        self._description = result.group(1).strip() if result else None
-        self._description_queried = True
+        #text = requests.get(
+        #    'http://collegecatalog.uchicago.edu/ribbit/index.cgi?page=getcourse.rjs&code='
+        #    + self.id).text
+        #result = COURSE_BLOCK_DESC.search(text)
+        #self._description = result.group(1).strip() if result else None
+        #self._description_queried = True
         return self._description
 
     @description.setter

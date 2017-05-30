@@ -130,6 +130,6 @@ def scrape_data(db):
 
 if __name__ == '__main__':
     db = FIREBASE.database()
-    db.child('schedules').set({})
+    # db.child('schedules').set({})
     scrape_data(db)
     # rebuild_indexes(db)
