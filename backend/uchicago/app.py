@@ -15,13 +15,10 @@ FIREBASE = 'https://canigraduate-43286.firebaseio.com'
 @flask_cors.cross_origin()
 def transcript():
     resp = requests.get(
-        url=CLOUD_FUNCTIONS + '/api/transcript',
+        CLOUD_FUNCTIONS + '/api/transcript',
         headers={
-            key: value
-            for (key, value) in flask.request.headers if key != 'Host'
-        },
-        cookies=flask.request.cookies)
-
+            'Authorization': flask.request.headers.get('Authorization')
+        })
     excluded_headers = [
         'content-encoding', 'content-length', 'transfer-encoding', 'connection'
     ]
