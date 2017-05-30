@@ -109,7 +109,7 @@ class FSM(object):
         activity_type = self.next_string()
         enrollment = self.next_string()
         enrollment_limit = self.next_string()
-        location = self.next_string()
+        location = re.sub(r'\s+-', '-', self.next_string())
         if not activity_type:
             return PrimaryActivity(
                 instructors=instructors,
