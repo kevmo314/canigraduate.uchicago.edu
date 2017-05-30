@@ -79,7 +79,7 @@ def scrape_data(db):
     index = 0
     known_course_info = db.child('course-info').get().val()
     while terms:
-        term = terms.pop(0)
+        term = terms.pop()
         index += 1
         updates = {}
         for course, sections in term.courses.items():

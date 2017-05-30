@@ -74,11 +74,11 @@ class CourseSearch(object):
         departments = map(lambda x: x['value'],
                           page.select('#UC_CLSRCH_WRK2_SUBJECT option'))
         departments = set(filter(len, departments))
-        count = len(departments) * 25
+        count = len(departments) * 5
         departments = pool.imap_unordered(
             # Create a new object so we get a new session.
             CourseSearch(self.term, self.coursesearch_id),
-            itertools.product(departments, range(25)))
+            itertools.product(departments, range(5)))
         for index, department in enumerate(departments, 1):
             print('{0:%}'.format(index / count))
             for section in department:
@@ -94,7 +94,7 @@ class CourseSearch(object):
             warnings.warn('[%s %s] %s' % (self.term, department, error))
         records = page.select('tr[id^="DESCR100"]')
         for index, row in enumerate(records):
-            if self.index_shard != -1 and index != self.index_shard:
+            if self.index_shard != -1 and index % 5 == self.index_shard:
                 # Ignore this course if we're not delegated to this index shard.
                 continue
             chip = row.find('span', {'class': 'label'})
