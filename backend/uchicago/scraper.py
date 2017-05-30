@@ -26,6 +26,14 @@ def get_words(text):
     return set(ALPHANUMERIC.sub('', text.lower()).split())
 
 
+def scrub_data(db):
+    updates = {}
+    course_info = db.child('course-info').get().val()
+    for course, info in course_info.items():
+        updates['course-info/%s/crosslists' % course] = list(filter(lambda x: len(x) == 10, info.get('crosslists', [])))
+    db.update(updates)
+
+
 def rebuild_indexes(db):
     schedules = db.child('schedules').get().val()
     course_info = db.child('course-info').get().val()

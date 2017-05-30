@@ -13,9 +13,9 @@ FIREBASE = 'https://canigraduate-43286.firebaseio.com'
 
 @app.route('/api/transcript', methods=['GET'])
 @flask_cors.cross_origin()
-def transcript(*args, **kwargs):
+def transcript():
     resp = requests.get(
-        url=CLOUD_FUNCTIONS + urllib.parse.urlparse(flask.request.url).path,
+        url=CLOUD_FUNCTIONS + '/api/transcript',
         headers={
             key: value
             for (key, value) in flask.request.headers if key != 'Host'
@@ -42,7 +42,7 @@ def course_info(course):
 
 @app.route('/api/schedules', methods=['GET'])
 @flask_cors.cross_origin()
-def schedules(*args, **kwargs):
+def schedules():
     department = flask.request.args.get('department')
     course = flask.request.args.get('course')
     period = flask.request.args.get("period")
@@ -79,9 +79,10 @@ def schedules(*args, **kwargs):
         yield '{"response": ['
         for candidate in candidates:
             # We could optimize here, however the paylods are so small it doesn't matter.
-            data = transform(
-                requests.get('%s/schedules/%s.json' % (FIREBASE, candidate))
-                .json())
+            data = requests.get('%s/schedules/%s.json' % (FIREBASE,
+                                                          candidate)).json()
+            if isinstance(data, list):
+                data = transform(data)
             for candidate_period, value in data.items():
                 if period and candidate_period != period:
                     continue

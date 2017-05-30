@@ -148,7 +148,7 @@ class CourseSearch(object):
         if prerequisites:
             prerequisites = prerequisites.text.strip()
         crosslists = filter(
-            len,
+            lambda x: len(x) == 10,
             map(lambda x: x['value'].split('/')[0].strip(),
                 page.select('#UC_CLS_DTL_WRK_DESCR125$0 option')))
         components = list(
