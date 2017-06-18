@@ -6,7 +6,6 @@ import {Watch} from 'app/watch';
 import {environment} from 'environments/environment';
 import {Observable} from 'rxjs/Observable';
 
-import {CountPipe} from './../course-search/course-search.component';
 import {Term} from './../term';
 
 @Component({

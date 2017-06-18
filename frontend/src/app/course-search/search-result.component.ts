@@ -36,7 +36,7 @@ export class SearchResultComponent implements AfterViewInit {
   @Input() expanded: boolean;
   @Input() crosslists: string;
   @Output() expandedChange = new EventEmitter<void>();
-  sections: Observable<Section[]>;
+  terms: Observable<string[]>;
   periods: Period[] = environment.institution.periods;
 
   constructor(private databaseService: DatabaseService) {}
@@ -45,28 +45,6 @@ export class SearchResultComponent implements AfterViewInit {
     if (!this.course) {
       throw new Error('course parameter must be specified');
     }
-    this.sections =
-        this.databaseService.schedules(this.course).map(schedules => {
-          const results = [];
-          for (const year of Object.keys(schedules)) {
-            for (const period of (
-                     schedules[year] ? Object.keys(schedules[year]) : [])) {
-              for (const sectionId of (
-                       schedules[year][period] ?
-                           Object.keys(schedules[year][period]) :
-                           [])) {
-                if (schedules[year][period][sectionId]) {
-                  results.push(
-                      Object.assign(
-                          {id: sectionId},
-                          schedules[year][period][sectionId]) as Section);
-                }
-              }
-            }
-          }
-          return results.sort(
-              (a, b) => -Term.compare(a.term, b.term) || -(a.id < b.id) ||
-                  +(a.id !== b.id));
-        });
+    this.terms = this.databaseService.offerings(this.course);
   }
 }

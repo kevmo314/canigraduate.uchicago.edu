@@ -1,0 +1,2 @@
+<cig-search-result *ngFor="let result of results | async | slice:start:end" course="{{result}}" [filters]="filters" (expandedChange)="toggleShown(result)"
+  [expanded]="getShown(result) | async" [crosslists]="getCrosslists(result) | async"></cig-search-result>

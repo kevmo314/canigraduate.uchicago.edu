@@ -2,6 +2,11 @@
 
 .results {
   margin-top: 16px;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.results.loading {
+  opacity: 0.4;
 }
 
 .results .metadata {

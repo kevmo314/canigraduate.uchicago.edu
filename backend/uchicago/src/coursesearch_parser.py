@@ -173,7 +173,9 @@ class CourseSearch(object):
         primary_components = [
             c for c in components if c not in secondary_components
         ]
-        if len(primary_components) != 1:
+        primary_rows = page.select('#win0divSSR_CLSRCH_MTG1$0 tr.ps_grid-row')
+        if len(primary_components) != 1 and len(primary_components) != len(
+                primary_rows):
             warnings.warn(
                 '[%s] Could not resolve primary components uniquely. %s - %s' %
                 (course_id, components, secondary_components))
@@ -188,10 +190,15 @@ class CourseSearch(object):
         section.prerequisites = prerequisites
         section.notes.append(notes)
         section.crosslists.update(crosslists)
-        section.primaries.extend(map(
-            lambda row: self.parse_primary(
-                row, list(primary_components)[0] if primary_components else None),
-            page.select('#win0divSSR_CLSRCH_MTG1$0 tr.ps_grid-row')))
+        for index, row in enumerate(primary_rows):
+            if len(primary_components) == 1:
+                primary_component = primary_components[0]
+            elif len(primary_components) == len(primary_rows):
+                primary_component = primary_components[index]
+            else:
+                primary_component = None
+            section.primaries.append(
+                self.parse_primary(row, primary_component))
         section.secondaries.extend(secondaries)
         # print(section)
         return section

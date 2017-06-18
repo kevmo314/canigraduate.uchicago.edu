@@ -27,6 +27,9 @@ export class DatabaseService {
   departments: Observable<string[]>;
   watches: Observable<Watch[]>;
   programs: Observable<Program[]>;
+
+  private _indexesCache = new Map<string, Observable<Set<string>>>();
+
   constructor(
       private angularFire: AngularFireDatabase,
       private angularFireAuth: AngularFireAuth, private http: Http,
@@ -84,7 +87,7 @@ export class DatabaseService {
   }
 
   description(id: string): Observable<string> {
-    return this.object(`course-info/${id}/description`);
+    return this.object(`course-descriptions/${id}`);
   }
 
   evaluations(id: string): Observable<Evaluation[]> {
@@ -118,8 +121,14 @@ export class DatabaseService {
     });
   }
 
-  schedules(id: string): Observable<any> {
-    return this.object('schedules/' + id);
+  offerings(id: string): Observable<string[]> {
+    return this.indexes('offerings/' + id, true).map(offerings => {
+      return Array.from(offerings).sort((a, b) => -Term.compare(a, b));
+    });
+  }
+
+  schedules(id: string, year: number, period: string): Observable<any> {
+    return this.object('schedules/' + id + '/' + year + '/' + period);
   }
 
   get terms(): Observable<string[]> {
@@ -134,26 +143,35 @@ export class DatabaseService {
     return subject;
   }
 
-  @Memoize()
-  indexes(query: string): Observable<Set<string>> {
+  indexes(query: string, streaming = false): Observable<Set<string>> {
+    if (this._indexesCache.has(query)) {
+      return this._indexesCache.get(query);
+    }
     const key = 'indexes/' + query;
     const subject = new ReplaySubject(1);
-    const indexes = this.angularFire.object(key);
-    Observable.fromPromise(localforage.getItem(key))
-        .filter(Boolean)
-        .takeUntil(indexes)
-        .concat(indexes)
-        .map((values: string[]) => {
-          // What the fuck, firebase...
-          return new Set<string>(Array.isArray(values) ? values : []);
-        })
-        .subscribe(subject);
-    indexes.subscribe(value => localforage.setItem(key, value));
+    const indexes =
+        (streaming ? this.angularFire.object(key) :
+                     this.http
+                         .get(
+                             environment.firebaseConfig.databaseURL + '/' +
+                             key + '.json')
+                         .map(response => response.json()))
+            .map((values: string[]) => {
+              return new Set<string>(Array.isArray(values) ? values : []);
+            })
+            .subscribe(subject);
+    this._indexesCache.set(query, subject);
     return subject;
   }
 
   @Memoize()
-  grades(id: string) {
+  grades(id: string): Observable<{
+    course: string,
+    tenure: number,
+    gpa: number,
+    section: string,
+    term: string
+  }[]> {
     const subject = new ReplaySubject(1);
     this.angularFire
         .list('grades/raw', {
@@ -163,28 +181,31 @@ export class DatabaseService {
             endAt: id,
           },
         })
-        .map(grades => {
-          const distributionMap = new Map<number, number>();
-          for (const grade of grades) {
-            distributionMap.set(
-                grade['gpa'], (distributionMap.get(grade['gpa']) || 0) + 1);
-          }
-          return [
-            {grade: 'A', count: distributionMap.get(4) || 0},
-            {grade: 'A-', count: distributionMap.get(3.7) || 0},
-            {grade: 'B+', count: distributionMap.get(3.3) || 0},
-            {grade: 'B', count: distributionMap.get(3) || 0},
-            {grade: 'B-', count: distributionMap.get(2.7) || 0},
-            {grade: 'C+', count: distributionMap.get(2.3) || 0},
-            {grade: 'C', count: distributionMap.get(2) || 0},
-            {grade: 'C-', count: distributionMap.get(1.7) || 0},
-            {grade: 'D+', count: distributionMap.get(1.3) || 0},
-            {grade: 'D', count: distributionMap.get(1) || 0},
-            {grade: 'F', count: distributionMap.get(0) || 0}
-          ]
-        })
         .subscribe(subject);
     return subject;
+  }
+
+  gradeDistribution(id: string) {
+    return this.grades(id).map(grades => {
+      const distributionMap = new Map<number, number>();
+      for (const grade of grades) {
+        distributionMap.set(
+            grade['gpa'], (distributionMap.get(grade['gpa']) || 0) + 1);
+      }
+      return [
+        {grade: 'A', count: distributionMap.get(4) || 0},
+        {grade: 'A-', count: distributionMap.get(3.7) || 0},
+        {grade: 'B+', count: distributionMap.get(3.3) || 0},
+        {grade: 'B', count: distributionMap.get(3) || 0},
+        {grade: 'B-', count: distributionMap.get(2.7) || 0},
+        {grade: 'C+', count: distributionMap.get(2.3) || 0},
+        {grade: 'C', count: distributionMap.get(2) || 0},
+        {grade: 'C-', count: distributionMap.get(1.7) || 0},
+        {grade: 'D+', count: distributionMap.get(1.3) || 0},
+        {grade: 'D', count: distributionMap.get(1) || 0},
+        {grade: 'F', count: distributionMap.get(0) || 0}
+      ]
+    });
   }
 
   @Memoize()

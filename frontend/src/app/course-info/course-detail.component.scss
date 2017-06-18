@@ -25,16 +25,24 @@ button {
   flex: 1 0 1px;
 }
 
+.sticky {
+  position: sticky;
+  top: 10px;
+}
+
 .centered-icon {
   vertical-align: middle;
 }
 
-.section:not(:last-child) {
-  & /deep/ .primaries, & /deep/ .enrollment {
-    padding-bottom: 4px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-    margin-bottom: 4px;
-  }
+.section-divider {
+  background-color: rgba(0, 0, 0, 0.12);
+  height: 1px;
+  border: none;
+  margin-left: 34px;
+}
+
+.section:last-child .section-divider {
+  display: none;
 }
 
 .term:not(:last-child) {

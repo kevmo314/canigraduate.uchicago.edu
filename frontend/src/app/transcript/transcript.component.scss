@@ -24,7 +24,11 @@
   width: 100%;
   align-items: center;
   box-sizing: border-box;
-  padding: 0 16px;
+  padding: 0 10px;
+}
+
+.gpa {
+  white-space: nowrap;
 }
 
 md-list {

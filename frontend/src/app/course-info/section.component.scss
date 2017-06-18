@@ -11,7 +11,6 @@
 
 .enrollment {
   flex: 0 0 50px;
-  white-space: nowrap;
   text-align: right;
 }
 
@@ -31,6 +30,15 @@
   margin-right: 8px;
 }
 
+.schedule, .location, .enrollment {
+  white-space: nowrap;
+}
+
 .instructors {
   flex-grow: 1;
+}
+
+.notes {
+  margin-left: 38px;
+  font-style: italic;
 }

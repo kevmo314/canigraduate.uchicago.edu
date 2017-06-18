@@ -1,10 +1,16 @@
-import {ChangeDetectionStrategy, Component, Input, OnChanges, Pipe, PipeTransform, SimpleChanges} from '@angular/core';
+import {AfterContentInit, ChangeDetectionStrategy, Component, HostListener, Input, OnChanges, OnDestroy, Pipe, PipeTransform, SimpleChanges, ViewChild} from '@angular/core';
 import {AuthenticationService} from 'app/authentication/authentication.service';
 import {DatabaseService} from 'app/database/database.service';
 import {Evaluation} from 'app/evaluation';
 import {Section} from 'app/section';
+import {environment} from 'environments/environment';
 import {Observable} from 'rxjs/Observable';
+import Stickyfill from 'stickyfill';
 import {Memoize} from 'typescript-memoize';
+
+import {Term} from './../term';
+
+const Sticky = Stickyfill();
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -12,17 +18,19 @@ import {Memoize} from 'typescript-memoize';
   templateUrl: 'course-detail.component.html',
   styleUrls: ['./course-detail.component.scss'],
 })
-export class CourseDetailComponent implements OnChanges {
+export class CourseDetailComponent implements OnChanges, AfterContentInit,
+                                              OnDestroy {
   @Input() course: string;
 
   // Do not store the index directly to ensure consistent behavior if new data
   // arrives.
   private lastTerm = null;
-  terms: string[] = [];
   evaluations: Observable<Evaluation[]>;
   authenticationValidated: Observable<boolean>;
   grades: Observable<{grade: string, count: number}[]>;
-  @Input() sections: Section[] = [];
+  @Input() terms: string[] = [];
+
+  @ViewChild('sticky') sticky;
 
   constructor(
       private databaseService: DatabaseService,
@@ -31,22 +39,43 @@ export class CourseDetailComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.sections && this.sections) {
-      const termList = this.sections.map(x => x.term);
-      this.terms = Array.from(new Set<string>(termList).values());
+    if (changes.terms && this.terms) {
       if (this.terms.length > 0) {
-        // Show around 10 courses.
-        this.lastTerm = termList[Math.min(termList.length, 10) - 1];
+        // Show around 5 courses.
+        this.lastTerm = this.terms[Math.min(this.terms.length, 5) - 1];
       }
     }
     if (changes.course && this.course) {
       this.evaluations = this.databaseService.evaluations(this.course);
-      this.grades = this.databaseService.grades(this.course);
+      this.grades = this.databaseService.gradeDistribution(this.course);
     }
   }
 
+  ngAfterContentInit() {
+    Sticky.add(this.sticky.nativeElement);
+  }
+
+  ngOnDestroy() {
+    Sticky.remove(this.sticky.nativeElement);
+  }
+
   sectionsByTerm(term: string) {
-    return this.sections.filter(x => x.term === term);
+    const year = environment.institution.getYear(term);
+    const period = environment.institution.getPeriod(term);
+    return this.databaseService.schedules(this.course, year, period.name)
+        .map(schedules => {
+          const results = [];
+          for (const sectionId of Object.keys(schedules)) {
+            if (schedules[sectionId]) {
+              results.push(
+                  Object.assign({id: sectionId}, schedules[sectionId]) as
+                  Section);
+            }
+          }
+          return results.sort(
+              (a, b) => -Term.compare(a.term, b.term) || -(a.id < b.id) ||
+                  +(a.id !== b.id));
+        });
   }
 
   get numTerms() {

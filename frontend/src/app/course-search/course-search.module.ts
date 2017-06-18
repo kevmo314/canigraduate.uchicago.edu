@@ -8,16 +8,18 @@ import {DatabaseModule} from 'app/database/database.module';
 import {environment} from 'environments/environment';
 import {FilnuxModule} from 'filnux';
 
-import {CountPipe, CourseSearchComponent} from './course-search.component';
+import {CourseSearchComponent} from './course-search.component';
 import {FiltersModule} from './filters/filters.module';
 import {PaginationComponent} from './pagination.component';
 import {SearchResultComponent} from './search-result.component';
+import {SearchResultsComponent} from './search-results.component';
 
 // This should really be named SectionSearchModule, but we name it
 // course search to reflect consistency with the UI.
 @NgModule({
   declarations: [
-    CourseSearchComponent, SearchResultComponent, PaginationComponent, CountPipe
+    CourseSearchComponent, SearchResultsComponent, SearchResultComponent,
+    PaginationComponent
   ],
   imports: [
     BrowserModule, MaterialModule, FormsModule, ReactiveFormsModule,

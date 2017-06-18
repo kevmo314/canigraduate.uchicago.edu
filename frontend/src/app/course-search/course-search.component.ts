@@ -9,6 +9,7 @@ import {TranscriptService} from 'app/transcript/transcript.service';
 import {environment} from 'environments/environment';
 import {AssignAction, Store} from 'filnux';
 import {Observable} from 'rxjs/Observable';
+import {Subject} from 'rxjs/Subject';
 import {Subscription} from 'rxjs/Subscription';
 import {Memoize} from 'typescript-memoize';
 
@@ -33,6 +34,7 @@ export class CourseSearchComponent implements AfterViewInit {
 
   filters: Observable<FiltersState>;
   results: Observable<string[]>;
+  count = new Subject<number>();
 
   constructor(
       private databaseService: DatabaseService,
@@ -46,110 +48,9 @@ export class CourseSearchComponent implements AfterViewInit {
     this.page = this.store.select(s => s.page);
     this.resultsPerPage = this.store.select(s => s.resultsPerPage);
     this.filters = this.filtersComponent.store.select(x => x);
-    this.results =
-        this.filters.debounceTime(50)
-            .do(() => this.queryTime = Date.now())
-            .flatMap((filters: FiltersState) => {
-              const subsets:
-                  Observable<Set<string>|((_: Set<string>) => Set<String>)>[] =
-                      [Observable
-                           .forkJoin(filters.periods.map(period => {
-                             return this.databaseService
-                                 .indexes('periods/' + period.name)
-                                 .first();
-                           }))
-                           .map(results => {
-                             return results.reduce(
-                                 (x, y) => new Set<string>([
-                                   ...Array.from(x.values()),
-                                   ...Array.from(y.values())
-                                 ]),
-                                 new Set<string>());
-                           })];
-              // Attempt broad course-based matching.
-              if (filters.taken) {
-                subsets.push(
-                    this.transcriptService.transcript.first().map(value => {
-                      const taken =
-                          new Set<string>(value.records.map(x => x.course));
-                      return (state: Set<string>) => {
-                        return new Set<string>(Array.from(state.values())
-                                                   .filter(x => !taken.has(x)));
-                      };
-                    }));
-              }
-              if (filters.departments.size > 0) {
-                filters.departments.forEach(department => {
-                  subsets.push(
-                      this.databaseService.indexes('departments/' + department)
-                          .first());
-                });
-              }
-              if (filters.instructors.size > 0) {
-                filters.instructors.forEach(instructor => {
-                  subsets.push(
-                      this.databaseService.indexes('instructors/' + instructor)
-                          .first());
-                });
-              }
-              if (filters.query) {
-                filters.query.toLocaleLowerCase()
-                    .split(' ')
-                    .map(q => q.trim())
-                    .filter(q => q.length > 0)
-                    .forEach(query => {
-                      subsets.push(
-                          this.databaseService.indexes('fulltext/' + query)
-                              .first());
-                    });
-              }
-              return Observable.forkJoin(subsets);
-            })
-            // Calculate intersections.
-            .map((ss: (Set<string>|((_: Set<string>) => Set<string>))[]) => {
-              let state = ss.shift() as Set<string>;
-              for (const subset of ss) {
-                if (subset instanceof Set) {
-                  state = new Set<string>(
-                      Array.from(state.values()).filter(x => subset.has(x)));
-                } else {
-                  state = subset(state);
-                }
-              }
-              return state;
-            })
-            // Convert to array and sort.
-            .map((results: Set<string>) => Array.from(results).sort())
-            .do(() => this.queryTime = Date.now() - this.queryTime);
-  }
-
-  @Memoize()
-  getShown(course: string): Observable<boolean> {
-    return Observable
-        .combineLatest(
-            this.store.select(s => s.shown.has(course)), this.results)
-        .map(([shown, results]) => {
-          return shown || results.length === 1;
-        });
-  }
-
-  toggleShown(course: string) {
-    this.store.dispatch(new ToggleShownAction(course));
   }
 
   setPage(page: number) {
     this.store.dispatch(new AssignAction<CourseSearchState>({page}));
-  }
-
-  getCrosslists(id: string) {
-    return this.databaseService.crosslists(id).map(
-        info => (info || []).join(', '));
-  }
-}
-
-@Pipe({name: 'count'})
-export class CountPipe implements PipeTransform {
-  transform(values: Observable<any[]>): Observable<number> {
-    return values ? values.map(x => x.length) : Observable.of(0);
   }
 }

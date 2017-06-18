@@ -3,13 +3,13 @@
     <md-card-title>
       <div class="id">{{course}}</div>
       <cig-course-name course="{{course}}" class="name"></cig-course-name>
-      <cig-term-offer-indicator *ngFor="let period of periods" course="{{course}}" period="{{period.name}}" color="{{period.color}}">
+      <cig-term-offer-indicator *ngFor="let period of periods" course="{{course}}" [period]="period" [disabled]="filters.periods.indexOf(period) < 0">
         {{period.shorthand}}
       </cig-term-offer-indicator>
     </md-card-title>
     <md-card-subtitle>{{crosslists}}</md-card-subtitle>
   </md-card-header>
   <md-card-content *ngIf="expanded" [@toggle]="expanded">
-    <cig-course-detail course="{{course}}" [sections]="sections | async"></cig-course-detail>
+    <cig-course-detail course="{{course}}" [terms]="terms | async"></cig-course-detail>
   </md-card-content>
 </md-card>
