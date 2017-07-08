@@ -32,7 +32,7 @@ export class ScheduleIndicatorComponent implements OnChanges {
                 return state;
               }
             }
-            state.push({times, days: [day]});
+            state.push({times: [times[0], times[1]], days: [day]});
             return state;
           }, [] as {times: [number, number], days: string[]}[]);
     }

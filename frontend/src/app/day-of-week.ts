@@ -6,5 +6,6 @@ export enum DayOfWeek {
   WEDNESDAY = 1 << 3,
   THURSDAY = 1 << 4,
   FRIDAY = 1 << 5,
-  SATURDAY = 1 << 6
+  SATURDAY = 1 << 6,
+  EVERYDAY = (1 << 7) - 1,
 }

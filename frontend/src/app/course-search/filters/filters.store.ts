@@ -5,8 +5,7 @@ import {environment} from 'environments/environment';
 import {Action} from 'filnux';
 
 export class FiltersState {
-  days?: DayOfWeek = DayOfWeek.MONDAY | DayOfWeek.TUESDAY |
-      DayOfWeek.WEDNESDAY | DayOfWeek.THURSDAY | DayOfWeek.FRIDAY;
+  days?: DayOfWeek = DayOfWeek.EVERYDAY;
   periods?: Period[] = [...environment.institution.periods];
   instructors?: Set<string> = new Set();
   departments?: Set<string> = new Set();
@@ -31,9 +30,7 @@ export class FiltersState {
 }
 
 export class ToggleDayOfWeekAction extends Action<FiltersState> {
-  constructor(private dayOfWeek: DayOfWeek) {
-    super();
-  }
+  constructor(private dayOfWeek: DayOfWeek) { super(); }
   reduce(state: FiltersState) {
     state = new FiltersState(state);
     state.days ^= this.dayOfWeek;
@@ -46,9 +43,7 @@ function toggleSet<T>(set: Set<T>, value: T) {
 }
 
 export class TogglePeriodAction extends Action<FiltersState> {
-  constructor(private period: Period) {
-    super();
-  }
+  constructor(private period: Period) { super(); }
   reduce(state: FiltersState): FiltersState {
     state = new FiltersState(state);
     return state;
@@ -56,9 +51,7 @@ export class TogglePeriodAction extends Action<FiltersState> {
 }
 
 export class ToggleDepartmentAction extends Action<FiltersState> {
-  constructor(private department: string) {
-    super();
-  }
+  constructor(private department: string) { super(); }
   reduce(state: FiltersState) {
     state = new FiltersState(state);
     toggleSet(state.departments, this.department);
@@ -67,9 +60,7 @@ export class ToggleDepartmentAction extends Action<FiltersState> {
 }
 
 export class ToggleInstructorAction extends Action<FiltersState> {
-  constructor(private instructor: string) {
-    super();
-  }
+  constructor(private instructor: string) { super(); }
   reduce(state: FiltersState) {
     state = new FiltersState(state);
     toggleSet(state.instructors, this.instructor);
@@ -78,9 +69,7 @@ export class ToggleInstructorAction extends Action<FiltersState> {
 }
 
 export class ToggleSimpleAction extends Action<FiltersState> {
-  constructor(private toggle: (State) => void) {
-    super();
-  }
+  constructor(private toggle: (State) => void) { super(); }
   reduce(state: FiltersState) {
     state = new FiltersState(state);
     this.toggle(state);
@@ -89,9 +78,7 @@ export class ToggleSimpleAction extends Action<FiltersState> {
 }
 
 export class SetQueryAction extends Action<FiltersState> {
-  constructor(private query: string) {
-    super();
-  }
+  constructor(private query: string) { super(); }
   reduce(state: FiltersState) {
     state = new FiltersState(state);
     state.query = this.query;
@@ -100,6 +87,10 @@ export class SetQueryAction extends Action<FiltersState> {
 }
 
 export const ACTIONS = [
-  ToggleDayOfWeekAction, TogglePeriodAction, ToggleDepartmentAction,
-  ToggleInstructorAction, ToggleSimpleAction, SetQueryAction
+  ToggleDayOfWeekAction,
+  TogglePeriodAction,
+  ToggleDepartmentAction,
+  ToggleInstructorAction,
+  ToggleSimpleAction,
+  SetQueryAction
 ];

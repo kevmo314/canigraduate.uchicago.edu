@@ -15,9 +15,12 @@ import localforage from 'localforage';
 import {Observable} from 'rxjs/Observable';
 import {ReplaySubject} from 'rxjs/ReplaySubject';
 import {Subject} from 'rxjs/Subject';
+import {Grade} from 'app/grade';
 import {Memoize} from 'typescript-memoize';
 
-import {AuthenticationService} from './../authentication/authentication.service';
+import {
+  AuthenticationService
+} from './../authentication/authentication.service';
 
 /** Course catalog information service. */
 @Injectable()
@@ -30,36 +33,37 @@ export class DatabaseService {
 
   private _indexesCache = new Map<string, Observable<Set<string>>>();
 
-  constructor(
-      private angularFire: AngularFireDatabase,
-      private angularFireAuth: AngularFireAuth, private http: Http,
-      private authenticationService: AuthenticationService) {
+  constructor(private angularFire: AngularFireDatabase,
+              private angularFireAuth: AngularFireAuth, private http: Http,
+              private authenticationService: AuthenticationService) {
     this.instructors =
         this.object('indexes/instructors').map(data => Object.keys(data));
     this.departments =
         this.object('indexes/departments').map(data => Object.keys(data));
-    this.watches = this.authenticationService.credentials
-                       .filter(c => c.username && c.validated)
-                       .flatMap(
-                           credentials => this.angularFire.list(
-                               'watches/' + credentials.username));
-    this.programs = this.object('programs').map(data => {
-      // Turn it into a Program.
-      return Object.keys(data)
-          .filter(key => data[key]['requirements'])
-          .map(key => {
-            const program = new Program(this);
-            program.name = key;
-            program.metadata = data[key]['metadata'];
-            program.requirements = data[key]['requirements'];
-            return program.finalize();
-          });
-    });
+    this.watches =
+        this.authenticationService.credentials.filter(c => c.username &&
+                                                           c.validated)
+            .flatMap(credentials => this.angularFire.list(
+                         'watches/' + credentials.username));
+    this.programs = this.object('programs')
+                        .map(data => {
+                          // Turn it into a Program.
+                          return Object.keys(data)
+                              .filter(key => data[key]['requirements'])
+                              .map(key => {
+                                const program = new Program(this);
+                                program.name = key;
+                                program.metadata = data[key]['metadata'];
+                                program.requirements =
+                                    data[key]['requirements'];
+                                return program.finalize();
+                              });
+                        });
   }
 
   addWatch(watch: Watch) {
-    this.authenticationService.credentials
-        .filter(c => c.username && c.validated)
+    this.authenticationService.credentials.filter(c =>
+                                                      c.username && c.validated)
         .first()
         .subscribe(credentials => {
           this.angularFire.list('watches/' + credentials.username)
@@ -69,8 +73,8 @@ export class DatabaseService {
   }
 
   deleteWatch(key: string) {
-    this.authenticationService.credentials
-        .filter(c => c.username && c.validated)
+    this.authenticationService.credentials.filter(c =>
+                                                      c.username && c.validated)
         .first()
         .subscribe(credentials => {
           this.angularFire.list('watches/' + credentials.username).remove(key);
@@ -98,8 +102,8 @@ export class DatabaseService {
     this.authenticationService.credentials.filter(x => x.validated)
         .first()
         .flatMap(credentials => {
-          return this.http
-              .post(environment.backend + '/api/evaluations/' + id, credentials)
+          return this.http.post(environment.backend + '/api/evaluations/' + id,
+                                credentials)
               .first()
               .catch(err => {
                 console.error(err);
@@ -116,15 +120,15 @@ export class DatabaseService {
     // Create a copy of the output object, it's faster than retransmitting over
     // the wire. We know that the object can be JSON'ified since it was
     // transmitted as such from the db.
-    return this.object(uri).map(node => {
-      return <Node>JSON.parse(JSON.stringify(node));
-    });
+    return this.object(uri)
+        .map(node => { return <Node>JSON.parse(JSON.stringify(node)); });
   }
 
   offerings(id: string): Observable<string[]> {
-    return this.indexes('offerings/' + id, true).map(offerings => {
-      return Array.from(offerings).sort((a, b) => -Term.compare(a, b));
-    });
+    return this.indexes('offerings/' + id, true)
+        .map(offerings => {
+          return Array.from(offerings).sort((a, b) => -Term.compare(a, b));
+        });
   }
 
   schedules(id: string, year: number, period: string): Observable<any> {
@@ -134,13 +138,32 @@ export class DatabaseService {
   get terms(): Observable<string[]> {
     // We'll pull this one via REST to avoid unnecessary data pulls.
     const subject = new ReplaySubject(1);
-    this.http
-        .get(
-            environment.firebaseConfig.databaseURL +
-            '/indexes/terms.json?shallow=true')
+    this.http.get(environment.firebaseConfig.databaseURL +
+                  '/indexes/terms.json?shallow=true')
         .map(result => Object.keys(result.json()).sort())
         .subscribe(subject);
     return subject;
+  }
+
+  @Memoize()
+  scheduleIndex(): Observable<Map<Set<[number, number]>, Set<string>>> {
+    return this.angularFire.object('indexes/schedules')
+        .map(response => {
+          const result = response.json();
+          const map = new Map<Set<[number, number]>, Set<string>>();
+          Object.keys(result).forEach(key => {
+            if (key === 'unknown') {
+              map.set(new Set(), result[key]);
+            }
+            const intervals = key.split(',').map(interval => {
+              const components =
+                  interval.split('-').map(time => parseInt(time, 10));
+              return <[number, number]>components;
+            });
+            map.set(new Set(intervals), new Set<string>(result[key]));
+          });
+          return map;
+        });
   }
 
   indexes(query: string, streaming = false): Observable<Set<string>> {
@@ -151,10 +174,8 @@ export class DatabaseService {
     const subject = new ReplaySubject(1);
     const indexes =
         (streaming ? this.angularFire.object(key) :
-                     this.http
-                         .get(
-                             environment.firebaseConfig.databaseURL + '/' +
-                             key + '.json')
+                     this.http.get(environment.firebaseConfig.databaseURL +
+                                   '/' + key + '.json')
                          .map(response => response.json()))
             .map((values: string[]) => {
               return new Set<string>(Array.isArray(values) ? values : []);
@@ -165,22 +186,16 @@ export class DatabaseService {
   }
 
   @Memoize()
-  grades(id: string): Observable<{
-    course: string,
-    tenure: number,
-    gpa: number,
-    section: string,
-    term: string
-  }[]> {
+  grades(id: string): Observable<Grade[]> {
     const subject = new ReplaySubject(1);
-    this.angularFire
-        .list('grades/raw', {
-          query: {
-            orderByChild: 'course',
-            startAt: id,
-            endAt: id,
-          },
-        })
+    this.angularFire.list('grades/raw',
+                          {
+                            query: {
+                              orderByChild: 'course',
+                              startAt: id,
+                              endAt: id,
+                            },
+                          })
         .subscribe(subject);
     return subject;
   }
@@ -189,8 +204,8 @@ export class DatabaseService {
     return this.grades(id).map(grades => {
       const distributionMap = new Map<number, number>();
       for (const grade of grades) {
-        distributionMap.set(
-            grade['gpa'], (distributionMap.get(grade['gpa']) || 0) + 1);
+        distributionMap.set(grade['gpa'],
+                            (distributionMap.get(grade['gpa']) || 0) + 1);
       }
       return [
         {grade: 'A', count: distributionMap.get(4) || 0},

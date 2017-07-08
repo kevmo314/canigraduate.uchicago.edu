@@ -1,5 +1,10 @@
 @import '~@angular/material/theming';
 
+abbr {
+  border-bottom: 1px dotted;
+  cursor: help;
+}
+
 .transcript md-card-content {
   margin: 0 -24px;
 }
@@ -14,6 +19,11 @@
 
 .header .grades-toggle {
   margin: 0;
+}
+
+.gpa-header {
+  padding: 0 10px 4px;
+  text-align: right;
 }
 
 md-progress-bar {

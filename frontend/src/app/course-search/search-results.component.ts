@@ -1,4 +1,19 @@
-import {AfterViewInit, animate, ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, state, style, transition, trigger} from '@angular/core';
+import {DayOfWeek} from 'app/day-of-week';
+import {
+  AfterViewInit,
+  animate,
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  state,
+  style,
+  transition,
+  trigger
+} from '@angular/core';
 import {DatabaseService} from 'app/database/database.service';
 import {Period} from 'app/period';
 import {Section} from 'app/section';
@@ -29,31 +44,29 @@ export class SearchResultsComponent implements OnChanges {
 
   results = new Subject<string[]>();
 
-  constructor(
-      private databaseService: DatabaseService,
-      private transcriptService: TranscriptService) {}
+  constructor(private databaseService: DatabaseService,
+              private transcriptService: TranscriptService) {}
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.filters && this.filters) {
       const subsets:
-          Observable<Set<string>|((_: Set<string>) => Set<String>)>[] = [];
+          Observable<Set<string>| ((_: Set<string>) => Set<String>)>[] = [];
       if (this.filters.periods.length ===
           environment.institution.periods.length) {
         subsets.push(this.databaseService.indexes('all').first());
       } else if (this.filters.periods.length > 0) {
         subsets.push(
-            ...[Observable
-                    .forkJoin(this.filters.periods.map(period => {
-                      return this.databaseService
-                          .indexes('periods/' + period.name)
-                          .first();
-                    }))
+            ...[Observable.forkJoin(this.filters.periods.map(period => {
+                            return this.databaseService.indexes('periods/' +
+                                                                period.name)
+                                .first();
+                          }))
                     .map(results => {
-                      return results.reduce(
-                          (x, y) => new Set<string>([
-                            ...Array.from(x.values()), ...Array.from(y.values())
-                          ]),
-                          new Set<string>());
+                      return results.reduce((x, y) => new Set<string>([
+                                              ...Array.from(x.values()),
+                                              ...Array.from(y.values())
+                                            ]),
+                                            new Set<string>());
                     })]);
       } else {
         return Observable.of([new Set<string>()]);
@@ -90,9 +103,26 @@ export class SearchResultsComponent implements OnChanges {
                            .first());
         });
       }
+      if (this.filters.days !== DayOfWeek.EVERYDAY) {
+        subsets.push(
+            this.databaseService.scheduleIndex().first().map(schedules => {
+              return (state: Set<string>) => {
+                // Find the schedule blocks that are strictly intersected by the
+                // filter.
+                // These are courses that have at least one section that matches
+                // the filter.
+                const matchingCourses = new Set<string>();
+
+                // Then calculate the intersection of this set of courses with
+                // the provided state.
+                return new Set(Array.from(state).filter(
+                    course => matchingCourses.has(course)));
+              };
+            }));
+      }
       Observable.forkJoin(subsets)
           .first()
-          .map((ss: (Set<string>|((_: Set<string>) => Set<string>))[]) => {
+          .map((ss: (Set<string>| ((_: Set<string>) => Set<string>))[]) => {
             let state = ss.shift() as Set<string>;
             for (const subset of ss) {
               if (subset instanceof Set) {
@@ -115,9 +145,8 @@ export class SearchResultsComponent implements OnChanges {
 
   @Memoize()
   getShown(course: string): Observable<boolean> {
-    return Observable
-        .combineLatest(
-            this.store.select(s => s.shown.has(course)), this.countChange)
+    return Observable.combineLatest(this.store.select(s => s.shown.has(course)),
+                                    this.countChange)
         .map(([shown, count]) => shown || count === 1)
         .distinctUntilChanged();
   }
@@ -127,7 +156,7 @@ export class SearchResultsComponent implements OnChanges {
   }
 
   getCrosslists(id: string) {
-    return this.databaseService.crosslists(id).map(
-        info => (info || []).join(', '));
+    return this.databaseService.crosslists(id)
+        .map(info => (info || []).join(', '));
   }
 }

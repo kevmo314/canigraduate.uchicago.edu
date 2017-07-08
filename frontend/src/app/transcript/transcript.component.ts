@@ -1,6 +1,7 @@
 import {animate, ChangeDetectionStrategy, Component, Input, state, style, transition, trigger} from '@angular/core';
 import {Transcript} from 'app/transcript';
 import {TranscriptRecord} from 'app/transcript-record';
+import {mean, median} from 'math';
 import {Observable} from 'rxjs/Observable';
 import {Memoize} from 'typescript-memoize';
 
@@ -35,18 +36,15 @@ export class TranscriptComponent {
 
   @Memoize()
   getTermEgpa(term: string) {
-    const records =
-        this.transcript.getCumulativeTranscript(term)
-            .records.map(record => record.course)
-            .map(course => {
-              return this.databaseService.grades(course).map(grades => {
-                return grades.map(grade => grade.gpa)
-                           .reduce((a, b) => a + b, 0) /
-                    grades.length;
-              });
-            });
+    const records = this.transcript.getCumulativeTranscript(term)
+                        .records.map(record => record.course)
+                        .map(course => {
+                          return this.databaseService.grades(course)
+                              .map(grades => grades.map(grade => grade.gpa))
+                              .map(median);
+                        });
     return Observable.combineLatest(records)
         .map(grades => grades.filter(grade => !isNaN(grade)))
-        .map(grades => grades.reduce((a, b) => a + b, 0) / grades.length);
+        .map(mean);
   }
 }

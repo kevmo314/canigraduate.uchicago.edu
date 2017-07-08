@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import { Injectable, Type } from '@angular/core';
 import {Period} from 'app/period';
 import {environment} from 'environments/environment';
 import {Action} from 'filnux';
