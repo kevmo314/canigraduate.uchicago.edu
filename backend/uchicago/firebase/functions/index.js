@@ -39,6 +39,7 @@ app.use((err, req, res, next) => {
     return next(err);
   }
   if (res.statusCode === 200) {
+    res.statusMessage = err.message || err;
     res.status(400);
   }
   res.json({'error': err.message || err});
