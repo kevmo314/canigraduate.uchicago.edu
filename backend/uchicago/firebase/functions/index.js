@@ -6,9 +6,11 @@ const express = require('express');
 const functions = require('firebase-functions');
 const serviceAccount = require('./service-account.json');
 
-admin.initializeApp(Object.assign(
-    {}, functions.config().firebase,
-    {credential: admin.credential.cert(serviceAccount)}));
+admin.initializeApp(
+  Object.assign({}, functions.config().firebase, {
+    credential: admin.credential.cert(serviceAccount),
+  }),
+);
 
 const app = express();
 
@@ -19,8 +21,8 @@ app.use((req, res, next) => {
   const authorization = req.get('authorization');
   if (authorization) {
     const credentials = new Buffer(authorization.split(' ').pop(), 'base64')
-                            .toString('ascii')
-                            .split(':');
+      .toString('ascii')
+      .split(':');
     req.username = credentials[0];
     req.password = credentials[1];
   }
@@ -42,7 +44,7 @@ app.use((err, req, res, next) => {
     res.statusMessage = err.message || err;
     res.status(400);
   }
-  res.json({'error': err.message || err});
+  res.json({ error: err.message || err });
 });
 
 exports.api = functions.https.onRequest(app);

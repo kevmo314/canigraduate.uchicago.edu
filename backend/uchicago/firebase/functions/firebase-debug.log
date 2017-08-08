@@ -1,0 +1,179 @@
+[debug] [2017-08-08T05:23:47.824Z] ----------------------------------------------------------------------
+[debug] [2017-08-08T05:23:47.827Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\bin\firebase deploy --only functions
+[debug] [2017-08-08T05:23:47.827Z] CLI Version:   3.9.2
+[debug] [2017-08-08T05:23:47.827Z] Platform:      win32
+[debug] [2017-08-08T05:23:47.827Z] Node Version:  v8.2.1
+[debug] [2017-08-08T05:23:47.828Z] Time:          Tue Aug 08 2017 01:23:47 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:23:47.828Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2017-08-08T05:23:47.851Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2017-08-08T05:23:47.852Z] > authorizing via signed-in user
+[debug] [2017-08-08T05:23:47.855Z] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] [2017-08-08T05:23:47.855Z] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token { refresh_token: '1/JOWVCpxWL5RQGsTA2kvy6baDcVVxrAy7ZUTjp-alb1Q',
+  client_id: '563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com',
+  client_secret: 'j9iVZfS8kkCEFUPaAeJV0sAi',
+  grant_type: 'refresh_token',
+  scope: 'email https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/cloudplatformprojects.readonly https://www.googleapis.com/auth/firebase openid' } 
+ Tue Aug 08 2017 01:23:47 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:23:48.040Z] <<< HTTP RESPONSE 200
+[debug] [2017-08-08T05:23:48.052Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/canigraduate-43286  
+ Tue Aug 08 2017 01:23:48 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:23:48.698Z] <<< HTTP RESPONSE 200
+[debug] [2017-08-08T05:23:48.698Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/canigraduate-43286/tokens  
+ Tue Aug 08 2017 01:23:48 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:23:49.357Z] <<< HTTP RESPONSE 200
+[info] 
+[info] === Deploying to 'canigraduate-43286'...
+[info] 
+[info] i  deploying functions
+[debug] [2017-08-08T05:23:50.025Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "dependencies": {
+    "@google-cloud/pubsub": "^0.13.2",
+    "base64url": "^2.0.0",
+    "cheerio": "^1.0.0-rc.2",
+    "cors": "^2.8.4",
+    "express": "^4.15.4",
+    "firebase-admin": "^5.1.0",
+    "firebase-functions": "^0.6.1",
+    "ldapjs": "^1.0.1",
+    "nodemailer": "^4.0.1",
+    "request": "^2.81.0",
+    "request-promise-native": "^1.0.4"
+  },
+  "private": true,
+  "devDependencies": {
+    "chai": "^4.1.1",
+    "mocha": "^3.5.0",
+    "mockery": "^2.1.0",
+    "nodemailer-mock": "^1.3.4",
+    "request-debug": "^0.2.0",
+    "sinon": "^2.4.1",
+    "supertest": "^3.0.0"
+  }
+}
+[info] i  functions: ensuring necessary APIs are enabled...
+[info] i  runtimeconfig: ensuring necessary APIs are enabled...
+[debug] [2017-08-08T05:23:50.027Z] >>> HTTP REQUEST GET https://servicemanagement.googleapis.com/v1/services/cloudfunctions.googleapis.com/projectSettings/canigraduate-43286?view=CONSUMER_VIEW  
+ Tue Aug 08 2017 01:23:50 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:23:50.027Z] >>> HTTP REQUEST GET https://servicemanagement.googleapis.com/v1/services/runtimeconfig.googleapis.com/projectSettings/canigraduate-43286?view=CONSUMER_VIEW  
+ Tue Aug 08 2017 01:23:50 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:23:50.702Z] <<< HTTP RESPONSE 200
+[info] +  runtimeconfig: all necessary APIs are enabled
+[debug] [2017-08-08T05:23:50.733Z] <<< HTTP RESPONSE 200
+[info] +  functions: all necessary APIs are enabled
+[debug] [2017-08-08T05:23:50.735Z] >>> HTTP REQUEST GET https://appengine.googleapis.com/v1/apps/canigraduate-43286  
+ Tue Aug 08 2017 01:23:50 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:23:50.735Z] >>> HTTP REQUEST GET https://apikeys.googleapis.com/v1/projects/canigraduate-43286/apiKeys  
+ Tue Aug 08 2017 01:23:50 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:23:51.109Z] <<< HTTP RESPONSE 200
+[debug] [2017-08-08T05:23:51.163Z] <<< HTTP RESPONSE 200
+[info] i  functions: preparing functions directory for uploading...
+[debug] [2017-08-08T05:24:03.974Z] >>> HTTP REQUEST GET https://runtimeconfig.googleapis.com/v1beta1/projects/canigraduate-43286/configs  
+ Tue Aug 08 2017 01:24:03 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:24:04.124Z] <<< HTTP RESPONSE 200
+[debug] [2017-08-08T05:24:04.125Z] >>> HTTP REQUEST GET https://runtimeconfig.googleapis.com/v1beta1/projects/canigraduate-43286/configs/smtp/variables  
+ Tue Aug 08 2017 01:24:04 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:24:04.240Z] <<< HTTP RESPONSE 200
+[debug] [2017-08-08T05:24:04.241Z] >>> HTTP REQUEST GET https://runtimeconfig.googleapis.com/v1beta1/projects/canigraduate-43286/configs/smtp/variables/email  
+ Tue Aug 08 2017 01:24:04 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:24:04.241Z] >>> HTTP REQUEST GET https://runtimeconfig.googleapis.com/v1beta1/projects/canigraduate-43286/configs/smtp/variables/password  
+ Tue Aug 08 2017 01:24:04 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:24:04.335Z] <<< HTTP RESPONSE 200
+[debug] [2017-08-08T05:24:04.346Z] <<< HTTP RESPONSE 200
+[info] i  functions: packaged functions (61.71 KB) for uploading
+[debug] [2017-08-08T05:24:15.147Z] >>> HTTP REQUEST GET https://www.googleapis.com/storage/v1/b/staging.canigraduate-43286.appspot.com  
+ Tue Aug 08 2017 01:24:15 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:24:15.326Z] <<< HTTP RESPONSE 200
+[debug] [2017-08-08T05:24:15.326Z] >>> HTTP REQUEST POST https://www.googleapis.com/upload/storage/v1/b/staging.canigraduate-43286.appspot.com/o?uploadType=media&name=firebase-functions-source ReadStream {
+  _readableState: 
+   ReadableState {
+     objectMode: false,
+     highWaterMark: 65536,
+     buffer: BufferList { head: [Object], tail: [Object], length: 1 },
+     length: 63186,
+     pipes: null,
+     pipesCount: 0,
+     flowing: null,
+     ended: true,
+     endEmitted: false,
+     reading: false,
+     sync: false,
+     needReadable: false,
+     emittedReadable: true,
+     readableListening: false,
+     resumeScheduled: false,
+     destroyed: false,
+     defaultEncoding: 'utf8',
+     awaitDrain: 0,
+     readingMore: false,
+     decoder: null,
+     encoding: null },
+  readable: true,
+  domain: null,
+  _events: { end: [Function] },
+  _eventsCount: 1,
+  _maxListeners: undefined,
+  path: 'C:\\Users\\Kevin\\AppData\\Local\\Temp\\firebase-functions-18264s4LwqvLD99iE.zip',
+  fd: 5,
+  flags: 'r',
+  mode: 438,
+  start: undefined,
+  end: undefined,
+  autoClose: true,
+  pos: undefined,
+  bytesRead: 63186 } 
+ Tue Aug 08 2017 01:24:15 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:24:15.800Z] <<< HTTP RESPONSE 200
+[info] +  functions: functions folder uploaded successfully
+[info] i  starting release process (may take several minutes)...
+[debug] [2017-08-08T05:24:15.804Z] >>> HTTP REQUEST GET https://cloudfunctions.googleapis.com/v1beta2/projects/canigraduate-43286/locations/us-central1/functions  
+ Tue Aug 08 2017 01:24:15 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:24:16.235Z] <<< HTTP RESPONSE 200
+[info] i  functions: creating function watches...
+[debug] [2017-08-08T05:24:16.239Z] Trigger is: 
+[info] i  functions: updating function api...
+[debug] [2017-08-08T05:24:16.241Z] Trigger is: 
+[info] i  functions: updating function grades...
+[debug] [2017-08-08T05:24:16.242Z] Trigger is: 
+[debug] [2017-08-08T05:24:16.242Z] >>> HTTP REQUEST POST https://cloudfunctions.googleapis.com/v1beta2/projects/canigraduate-43286/locations/us-central1/functions { sourceArchiveUrl: 'gs://staging.canigraduate-43286.appspot.com/firebase-functions-source',
+  name: 'projects/canigraduate-43286/locations/us-central1/functions/watches',
+  entryPoint: 'watches',
+  eventTrigger: 
+   { resource: 'projects/_/instances/canigraduate-43286/refs/schedules/{course}/{year}/{period}/{section}',
+     eventType: 'providers/google.firebase.database/eventTypes/ref.write' } } 
+ Tue Aug 08 2017 01:24:16 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:24:16.243Z] >>> HTTP REQUEST PUT https://cloudfunctions.googleapis.com/v1beta2/projects/canigraduate-43286/locations/us-central1/functions/api { sourceArchiveUrl: 'gs://staging.canigraduate-43286.appspot.com/firebase-functions-source',
+  name: 'projects/canigraduate-43286/locations/us-central1/functions/api',
+  entryPoint: 'api',
+  timeout: '60s',
+  availableMemoryMb: 256,
+  httpsTrigger: {} } 
+ Tue Aug 08 2017 01:24:16 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:24:16.244Z] >>> HTTP REQUEST PUT https://cloudfunctions.googleapis.com/v1beta2/projects/canigraduate-43286/locations/us-central1/functions/grades { sourceArchiveUrl: 'gs://staging.canigraduate-43286.appspot.com/firebase-functions-source',
+  name: 'projects/canigraduate-43286/locations/us-central1/functions/grades',
+  entryPoint: 'grades',
+  timeout: '60s',
+  availableMemoryMb: 256,
+  eventTrigger: 
+   { resource: 'projects/canigraduate-43286/topics/grades',
+     eventType: 'providers/cloud.pubsub/eventTypes/topic.publish' } } 
+ Tue Aug 08 2017 01:24:16 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:24:16.637Z] <<< HTTP RESPONSE 200
+[debug] [2017-08-08T05:24:16.676Z] <<< HTTP RESPONSE 200
+[debug] [2017-08-08T05:24:16.677Z] <<< HTTP RESPONSE 200
+[debug] [2017-08-08T05:24:16.679Z] >>> HTTP REQUEST GET https://cloudfunctions.googleapis.com/v1beta2/projects/canigraduate-43286/locations/us-central1/functions  
+ Tue Aug 08 2017 01:24:16 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:24:16.682Z] >>> HTTP REQUEST GET https://cloudfunctions.googleapis.com/v1beta2/operations/Y2FuaWdyYWR1YXRlLTQzMjg2L3VzLWNlbnRyYWwxL3dhdGNoZXMvM1h3VWhSNEdvS00  
+ Tue Aug 08 2017 01:24:16 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:24:16.683Z] >>> HTTP REQUEST GET https://cloudfunctions.googleapis.com/v1beta2/operations/Y2FuaWdyYWR1YXRlLTQzMjg2L3VzLWNlbnRyYWwxL2FwaS9tdTJNa0p2Wk56VQ  
+ Tue Aug 08 2017 01:24:16 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:24:16.684Z] >>> HTTP REQUEST GET https://cloudfunctions.googleapis.com/v1beta2/operations/Y2FuaWdyYWR1YXRlLTQzMjg2L3VzLWNlbnRyYWwxL2dyYWRlcy9MZmlNNUFfSkxFMA  
+ Tue Aug 08 2017 01:24:16 GMT-0400 (Eastern Daylight Time)
+[debug] [2017-08-08T05:24:17.021Z] <<< HTTP RESPONSE 200
+[debug] [2017-08-08T05:24:17.024Z] <<< HTTP RESPONSE 200
+[debug] [2017-08-08T05:24:17.036Z] <<< HTTP RESPONSE 200
+[debug] [2017-08-08T05:24:17.036Z] [functions] operation poll: watches: create operations/Y2FuaWdyYWR1YXRlLTQzMjg2L3VzLWNlbnRyYWwxL3dhdGNoZXMvM1h3VWhSNEdvS00 is not done.
+[debug] [2017-08-08T05:24:17.036Z] [functions] operation poll: api: update operations/Y2FuaWdyYWR1YXRlLTQzMjg2L3VzLWNlbnRyYWwxL2FwaS9tdTJNa0p2Wk56VQ is not done.
+[debug] [2017-08-08T05:24:17.036Z] [functions] operation poll: grades: update operations/Y2FuaWdyYWR1YXRlLTQzMjg2L3VzLWNlbnRyYWwxL2dyYWRlcy9MZmlNNUFfSkxFMA is not done.
