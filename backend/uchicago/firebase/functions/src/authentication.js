@@ -48,6 +48,7 @@ module.exports.authenticate = (username, password) => {
               resolved = true;
               const uid = (CHICAGO_ID_MAP[username] =
                 entry.object['chicagoID']);
+              const displayName = entry.object['displayName'];
               admin
                 .auth()
                 .createUser({
