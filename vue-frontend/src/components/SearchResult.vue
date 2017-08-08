@@ -1,6 +1,6 @@
 <template>
   <v-card>
-    <v-card-title v-ripple @click="show = !show" class="title py-2">
+    <v-card-title @click="show = !show" class="title py-2">
       <div class="course pr-2">
         <div class="subheading grey--text text--darken-4 single-line">{{course}}
           <span class="grey--text caption">{{crosslists}}</span>
@@ -39,6 +39,7 @@ import { mapState } from 'vuex';
 
 export default {
   name: 'search-result',
+  props: { value: Boolean },
   components: { CourseName, TermOfferingIndicator },
   computed: {
     ...mapState('institution', {
@@ -47,10 +48,12 @@ export default {
     }),
     show: {
       get() {
-        return this.$store.state.search.expanded.includes(this.course);
+        return this.value || this.$store.state.search.expanded.includes(this.course);
       },
       set(expanded) {
-        this.$store.commit('search/setExpanded', { course: this.course, expanded });
+        if (!this.value) {
+          this.$store.commit('search/setExpanded', { course: this.course, expanded });
+        }
       }
     }
   },

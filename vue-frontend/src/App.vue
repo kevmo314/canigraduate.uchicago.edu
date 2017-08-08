@@ -1,6 +1,6 @@
 <template>
   <v-app toolbar footer>
-    <v-navigation-drawer absolute persistent light :mini-variant.sync="mini" v-model="drawer" overflow>
+    <v-navigation-drawer fixed persistent light v-model="drawer" overflow>
       <v-toolbar flat class="transparent">
         <v-list class="pa-0">
           <v-list-tile avatar tag="div">
@@ -10,19 +10,18 @@
             <v-list-tile-content>
               <v-list-tile-title>{{ institutionName }}</v-list-tile-title>
             </v-list-tile-content>
-            <v-list-tile-action>
-              <v-btn icon @click.native.stop="mini = !mini">
-                <v-icon>chevron_left</v-icon>
-              </v-btn>
-            </v-list-tile-action>
           </v-list-tile>
         </v-list>
       </v-toolbar>
       <v-list class="pt-0">
+        <template v-if="loggedIn">
+          <v-divider></v-divider>
+          <v-subheader>Signed in as {{email}}</v-subheader>
+        </template>
         <v-divider></v-divider>
         <v-list-tile router to="/">
           <v-list-tile-action>
-            <v-icon>dashboard</v-icon>
+            <v-icon>library_books</v-icon>
           </v-list-tile-action>
           <v-list-tile-content>
             <v-list-tile-title>College Catalog</v-list-tile-title>
@@ -30,7 +29,7 @@
         </v-list-tile>
         <v-list-tile router to="/search">
           <v-list-tile-action>
-            <v-icon>dashboard</v-icon>
+            <v-icon>search</v-icon>
           </v-list-tile-action>
           <v-list-tile-content>
             <v-list-tile-title>Course Search</v-list-tile-title>
@@ -38,7 +37,7 @@
         </v-list-tile>
         <v-list-tile router to="/watches" :disabled="!loggedIn">
           <v-list-tile-action>
-            <v-icon>dashboard</v-icon>
+            <v-icon>timer</v-icon>
           </v-list-tile-action>
           <v-list-tile-content>
             <v-list-tile-title>Enrollment Watches</v-list-tile-title>
@@ -47,7 +46,7 @@
         <v-divider></v-divider>
         <v-list-tile>
           <v-list-tile-action>
-            <v-icon>dashboard</v-icon>
+            <v-icon>settings</v-icon>
           </v-list-tile-action>
           <v-list-tile-content>
             <v-list-tile-title>Settings</v-list-tile-title>
@@ -55,7 +54,7 @@
         </v-list-tile>
         <v-list-tile router to="/about">
           <v-list-tile-action>
-            <v-icon>dashboard</v-icon>
+            <v-icon>info</v-icon>
           </v-list-tile-action>
           <v-list-tile-content>
             <v-list-tile-title>About</v-list-tile-title>
@@ -64,7 +63,7 @@
         <v-divider v-if="loggedIn"></v-divider>
         <v-list-tile v-if="loggedIn" @click="$store.dispatch('authentication/reset')">
           <v-list-tile-action>
-            <v-icon>dashboard</v-icon>
+            <v-icon>exit_to_app</v-icon>
           </v-list-tile-action>
           <v-list-tile-content>
             <v-list-tile-title>Sign Out</v-list-tile-title>
@@ -72,8 +71,8 @@
         </v-list-tile>
       </v-list>
     </v-navigation-drawer>
-    <v-toolbar class="indigo darken-4" dark>
-      <v-toolbar-side-icon @click.native.stop="drawer = !drawer"></v-toolbar-side-icon>
+    <v-toolbar fixed class="indigo darken-4" dark>
+      <v-toolbar-side-icon class="hidden-md-and-up" @click.native.stop="drawer = !drawer"></v-toolbar-side-icon>
       <v-toolbar-title>Can I Graduate?</v-toolbar-title>
     </v-toolbar>
     <main>
@@ -86,11 +85,8 @@
         </v-layout>
       </v-container>
     </main>
-    <v-footer class="main-footer">
-      <p>DISCLAIMER: The data presented is not guaranteed to be correct. Periodically verify your requirements with your academic advisor prior to graduation.</p>
-      <p>Looking for APIs or statistical data? Questions or comments? Email me!</p>
-      <p>This site is not affiliated with {{ institutionName }}.</p>
-      <p>© 2017 Kevin Wang - GitHub</p>
+    <v-footer class="indigo darken-4">
+      <span class="white--text">The data presented is not guaranteed to be correct. Periodically verify your requirements with your academic advisor prior to graduation.</span>
     </v-footer>
   </v-app>
 </template>
@@ -106,17 +102,14 @@ export default {
   computed: {
     ...mapState('authentication', {
       loggedIn: state => state.status == AuthenticationStatus.AUTHENTICATED,
+      email: state => state.data.email,
     }),
     ...mapState('institution', {
       institutionName: state => state.name,
     }),
   },
   data() {
-    return {
-      drawer: true,
-      mini: false,
-      right: null
-    }
+    return { drawer: true }
   },
 }
 </script>

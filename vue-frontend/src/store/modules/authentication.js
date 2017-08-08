@@ -13,6 +13,7 @@ const DEFAULT_STATE = {
   token: null,
   status: AuthenticationStatus.UNAUTHENTICATED,
   message: '',
+  data: {},
 };
 
 export default {
@@ -36,6 +37,7 @@ export default {
             context.commit('update', {
               status: AuthenticationStatus.AUTHENTICATED,
               token: response.data.token,
+              data: response.data.data,
             });
             context.commit('transcript/update', response.data.transcript, {
               root: true,

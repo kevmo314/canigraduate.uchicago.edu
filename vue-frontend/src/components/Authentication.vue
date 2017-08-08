@@ -55,8 +55,8 @@
                 <v-card-text>
                   Manage your students' progress with
                   <strong>Can I Graduate?</strong> with ease!
-                  <v-text-field name="username" label="Email address" v-model="username" required :rules="[() => rejected ? '' : true]"></v-text-field>
-                  <v-text-field name="password" label="Password" v-model="password" type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
+                  <v-text-field name="username" label="Email address" v-model.lazy="username" required :rules="[() => rejected ? '' : true]"></v-text-field>
+                  <v-text-field name="password" label="Password" v-model.lazy="password" type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
                 </v-card-text>
               </v-card>
             </v-tabs-content>

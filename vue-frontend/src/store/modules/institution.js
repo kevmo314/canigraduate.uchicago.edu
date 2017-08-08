@@ -5,8 +5,14 @@ export default {
   namespaced: true,
   state: uchicago,
   mutations: {
-    change(state, institution) {
-      state = institution;
+    setInstitution(state, institution) {
+      Object.assign(state, institution);
+    },
+  },
+  actions: {
+    change(context, institution) {
+      context.commit('setInstitution', institution);
+      context.dispatch('filter/reset', null, { root: true });
     },
   },
 };

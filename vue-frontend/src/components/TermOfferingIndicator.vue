@@ -1,5 +1,5 @@
 <template>
-  <v-chip label small class="ma-0 ml-1 white--text" v-tooltip:bottom="tooltip && {html:tooltip}" :style="{backgroundColor}">
+  <v-chip label small class="ma-0 ml-1 white--text elevation-0" v-tooltip:bottom="tooltip && {html:tooltip}" :style="{backgroundColor}">
     {{period.shorthand}}
   </v-chip>
 </template>
@@ -27,7 +27,7 @@ export default {
     const tooltip = this.offerings(this.course).map(terms => {
       // Find the most recent relevant offering.
       for (const term of terms) {
-        if (this.converters.termToPeriod(term) === this.period) {
+        if (this.converters.termToPeriod(term).name == this.period.name) {
           return this.period.name + ' ' + this.converters.termToYear(term);
         }
       }

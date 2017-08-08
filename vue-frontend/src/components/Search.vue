@@ -1,7 +1,7 @@
 <template>
   <div>
     <filters></filters>
-    <search-result v-for="result in results.slice((page - 1) * resultsPerPage, page * resultsPerPage)" :key="result">{{result}}</search-result>
+    <search-result v-for="result in (results || []).slice((page - 1) * resultsPerPage, page * resultsPerPage)" :key="result" :value="results.length == 1">{{result}}</search-result>
     <div class="text-xs-center mt-3" v-if="results && results.length > 0">
       <v-pagination :length="Math.ceil(results.length / resultsPerPage)" v-model="page"></v-pagination>
     </div>
@@ -24,6 +24,9 @@ export default {
   data() { return { resultsPerPage: 10 } },
   computed: {
     ...mapState('institution', { search: state => state.endpoints.search }),
+    ...mapState('filter', {
+      filter: state => state
+    }),
     page: {
       get() {
         return this.$store.state.search.page;
@@ -38,12 +41,17 @@ export default {
       results: Observable.fromEventPattern(
         handle => this.$store.watch(
           state => state.filter,
-          handle,
+          filter => handle(filter),
           { deep: true, immediate: true }),
         (handle, signal) => signal(),
       )
         .flatMap(filters => this.search(filters))
-        .do(results => this.$store.commit('search/setPage', 1))
+        .do(results => {
+          const maxPage = Math.ceil(results.length / this.resultsPerPage);
+          if (this.$store.state.search.page > maxPage && maxPage > 0) {
+            this.$store.commit('search/setPage', maxPage)
+          }
+        })
     }
   },
   methods: mapActions('filter', ['reset'])

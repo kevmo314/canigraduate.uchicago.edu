@@ -10,7 +10,10 @@ import Rx from 'rxjs/Rx';
 Vue.use(Vuetify);
 Vue.use(VueRx, Rx);
 
-Vue.config.performance = process.env.NODE_ENV !== 'production';
+const PRODUCTION = process.env.NODE_ENV === 'PRODUCTION';
+
+Vue.config.silent = PRODUCTION;
+Vue.config.performance = !PRODUCTION;
 
 export default new Vue({
   el: '#app',

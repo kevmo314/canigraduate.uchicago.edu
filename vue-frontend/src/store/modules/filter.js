@@ -2,7 +2,7 @@ export default {
   namespaced: true,
   state: {
     query: '',
-    periods: [], // Populated in Search to get the right max value.
+    periods: [0, 1, 2, 3, 4, 5, 6, 7],
     days: [0, 1, 2, 3, 4],
     departments: [],
     instructors: [],

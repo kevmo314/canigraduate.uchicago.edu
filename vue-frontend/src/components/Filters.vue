@@ -2,7 +2,7 @@
   <div>
     <v-card>
       <v-card-title primary-title class="headline">
-        Course Search
+        Course search
       </v-card-title>
       <v-card-text>
         <v-layout row>
@@ -87,9 +87,6 @@ export default {
     days: createComputedProperty.call(this, 'days'),
     departments: createComputedProperty.call(this, 'departments'),
     instructors: createComputedProperty.call(this, 'instructors'),
-  },
-  created() {
-    this.$store.dispatch('filter/reset');
   },
   subscriptions() {
     if (!departmentsObservable) {
