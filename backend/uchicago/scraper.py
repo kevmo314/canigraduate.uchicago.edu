@@ -19,8 +19,11 @@ FIREBASE = pyrebase.initialize_app({
     'service_account_key.json'
 })
 
+
 def transform(a):
+
     return dict([(i, j) for i, j in enumerate(a) if j is not None])
+
 
 def get_words(text):
     return set(ALPHANUMERIC.sub('', text.lower()).split())
@@ -28,15 +31,18 @@ def get_words(text):
 
 def scrub_data(db):
     updates = {}
-    course_info = db.child('course-info').get().val()
+        updates['course-info/%s/crosslists' %
+                course] = list(filter(lambda x: len(x) == 10, info.get('crosslists', [])))
     for course, info in course_info.items():
-        updates['course-info/%s/crosslists' % course] = list(filter(lambda x: len(x) == 10, info.get('crosslists', [])))
+        updates['course-info/%s/crosslists' %
+                course] = list(filter(lambda x: len(x) == 10, info.get('crosslists', [])))
     db.update(updates)
 
 
 def rebuild_indexes(db):
     schedules = db.child('schedules').get().val()
     course_info = db.child('course-info').get().val()
+    course_descriptions = db.child('course-descriptions').get().val()
     instructors = collections.defaultdict(set)
     departments = collections.defaultdict(set)
     periods = collections.defaultdict(set)
@@ -62,7 +68,8 @@ def rebuild_indexes(db):
                     # Construct the inverted index based on the course description and name.
                     info = course_info.get(course_id, {})
                     name = info.get('name', '')
-                    description = info.get('description', '')
+                    description = course_descriptions.get(
+                        course_id, {}).get('description', '')
                     for word in get_words(course_id) | get_words(
                             name) | get_words(description):
                         inverted[word].add(course_id)
@@ -122,10 +129,10 @@ def scrape_data(db):
                                 'instructors': secondary.instructors,
                                 'schedule': secondary.schedule,
                                 'type': secondary.type,
-                                'location': secondary.location,
+                }
                                 'enrollment': secondary.enrollment
                             }) for secondary in section.secondaries])
-                        }
+                }
             known_course_info[course.id] = data
             updates['course-info/%s' % course.id] = data
         try:
