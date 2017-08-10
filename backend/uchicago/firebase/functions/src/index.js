@@ -33,6 +33,7 @@ app.disable('x-powered-by');
 
 app.all('/evaluations/:id', require('./evaluations'));
 app.all('/transcript', require('./transcript'));
+app.all('/grades', require('./grade-distribution'));
 
 // Create an error handler.
 app.use((err, req, res, next) => {
