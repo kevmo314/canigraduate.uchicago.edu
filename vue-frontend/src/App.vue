@@ -16,7 +16,10 @@
       <v-list class="pt-0">
         <template v-if="loggedIn">
           <v-divider></v-divider>
-          <v-subheader>Signed in as {{email}}</v-subheader>
+          <v-subheader class="body-2 user-subheader mt-2">
+            <div class="single-line">{{user.displayName}}</div>
+          </v-subheader>
+          <v-subheader class="body-1 user-subheader mb-2">{{user.email}} </v-subheader>
         </template>
         <v-divider></v-divider>
         <v-list-tile router to="/">
@@ -61,7 +64,7 @@
           </v-list-tile-content>
         </v-list-tile>
         <v-divider v-if="loggedIn"></v-divider>
-        <v-list-tile v-if="loggedIn" @click="$store.dispatch('authentication/reset')">
+        <v-list-tile v-if="loggedIn" @click="signOut">
           <v-list-tile-action>
             <v-icon>exit_to_app</v-icon>
           </v-list-tile-action>
@@ -77,7 +80,7 @@
     </v-toolbar>
     <main>
       <v-container fluid>
-        <v-layout row>
+        <v-layout row align-start>
           <div class="content">
             <router-view></router-view>
           </div>
@@ -86,7 +89,8 @@
       </v-container>
     </main>
     <v-footer class="indigo darken-4">
-      <span class="white--text">The data presented is not guaranteed to be correct. Periodically verify your requirements with your academic advisor prior to graduation.</span>
+      <span class="white--text">The data presented is not guaranteed to be correct. Periodically verify your
+        requirements with your academic advisor prior to graduation.</span>
     </v-footer>
   </v-app>
 </template>
@@ -94,7 +98,7 @@
 <script>
 import Sidebar from '@/components/Sidebar.vue'
 import { AuthenticationStatus } from '@/store/modules/authentication'
-import { mapState } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 
 export default {
   name: 'app',
@@ -102,7 +106,7 @@ export default {
   computed: {
     ...mapState('authentication', {
       loggedIn: state => state.status == AuthenticationStatus.AUTHENTICATED,
-      email: state => state.data.email,
+      user: state => state.data,
     }),
     ...mapState('institution', {
       institutionName: state => state.name,
@@ -111,6 +115,11 @@ export default {
   data() {
     return { drawer: true }
   },
+  methods: {
+    signOut() {
+      this.$store.dispatch('authentication/reset', AuthenticationStatus.LOGGED_OUT);
+    }
+  }
 }
 </script>
 
@@ -123,6 +132,10 @@ export default {
 .sidebar {
   flex: 0 0 540px;
 }
+
+.user-subheader {
+  height: 24px;
+}
 </style>
 
 <style>
@@ -131,4 +144,16 @@ export default {
   white-space: nowrap;
   overflow: hidden;
 }
+
+.flex {
+  display: flex;
+}
+
+.grow {
+  flex-grow: 1;
+}
+</style>
+
+<style lang="stylus">
+@require './main'
 </style>

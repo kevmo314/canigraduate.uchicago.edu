@@ -53,13 +53,11 @@ export default {
           },
         );
     },
-    reset(context) {
-      context.commit(
-        'update',
-        Object.assign({}, DEFAULT_STATE, {
-          status: AuthenticationStatus.LOGGED_OUT,
-        }),
-      );
+    reset(context, status = AuthenticationStatus.UNAUTHENTICATED) {
+      if (context.state.status == AuthenticationStatus.AUTHENTICATED) {
+        context.rootState.institution.endpoints.signOut();
+      }
+      context.commit('update', Object.assign({}, DEFAULT_STATE, { status }));
     },
   },
 };

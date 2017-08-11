@@ -1,5 +1,6 @@
 <template>
-  <v-chip label small class="ma-0 ml-1 white--text elevation-0" v-tooltip:bottom="tooltip && {html:tooltip}" :style="{backgroundColor}">
+  <v-chip label small class="ma-0 ml-1 white--text elevation-0" v-tooltip:bottom="tooltip && {html:tooltip}"
+    :style="{backgroundColor: suppressed ? '' : backgroundColor}">
     {{period.shorthand}}
   </v-chip>
 </template>
@@ -19,10 +20,18 @@ export default {
       required: true,
     }
   },
-  computed: mapState({
-    converters: state => state.institution.converters,
-    offerings: state => state.institution.endpoints.offerings
-  }),
+  computed: {
+    ...mapState('institution', {
+      converters: state => state.converters,
+      offerings: state => state.endpoints.offerings,
+      periods: state => state.periods,
+    }), ...mapState('filter', {
+      suppressed(state) {
+        return state.periods.filter(i => i < this.periods.length)
+          .find(i => this.periods[i].name == this.period.name) == null;
+      },
+    })
+  },
   subscriptions() {
     const tooltip = this.offerings(this.course).map(terms => {
       // Find the most recent relevant offering.

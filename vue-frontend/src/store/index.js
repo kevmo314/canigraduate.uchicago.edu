@@ -17,7 +17,20 @@ const plugins = [
 
 if (PRODUCTION) {
   LogRocket.init('e5pnvu/can-i-graduate');
-  plugins.push(createLogRocket(LogRocket));
+  plugins.push(
+    createLogRocket(LogRocket, mutation => {
+      if (mutation.type == 'authentication/update') {
+        return {
+          type: mutation.type,
+          payload: {
+            ...mutation.payload,
+            password: undefined,
+          },
+        };
+      }
+      return mutation;
+    }),
+  );
 }
 
 export default new Vuex.Store({

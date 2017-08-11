@@ -10,7 +10,8 @@
         </v-layout>
         <v-layout row>
           <v-btn-toggle v-bind:items="periodItems" multiple v-model="periods" class="hidden-sm-and-down"></v-btn-toggle>
-          <v-btn-toggle v-bind:items="periodItems.map(({value, abbr}) => ({value, text: abbr}))" multiple v-model="periods" class="hidden-md-and-up"></v-btn-toggle>
+          <v-btn-toggle v-bind:items="periodItems.map(({value, abbr}) => ({value, text: abbr}))"
+            multiple v-model="periods" class="hidden-md-and-up"></v-btn-toggle>
         </v-layout>
         <v-divider></v-divider>
         <v-layout row>
@@ -18,22 +19,26 @@
         </v-layout>
         <v-layout row>
           <v-btn-toggle v-bind:items="dayItems" multiple v-model="days" class="hidden-sm-and-down"></v-btn-toggle>
-          <v-btn-toggle v-bind:items="dayItems.map(({value, abbr}) => ({value, text: abbr}))" multiple v-model="days" class="hidden-md-and-up"></v-btn-toggle>
+          <v-btn-toggle v-bind:items="dayItems.map(({value, abbr}) => ({value, text: abbr}))"
+            multiple v-model="days" class="hidden-md-and-up"></v-btn-toggle>
         </v-layout>
         <v-divider></v-divider>
         <v-layout row>
           <v-flex xs6>
-            <v-select label="Departments" v-bind:items="departmentItems" v-model="departments" multiple chips autocomplete></v-select>
+            <v-select label="Departments" v-bind:items="departmentItems" v-model="departments"
+              multiple chips autocomplete></v-select>
           </v-flex>
           <v-flex xs6>
-            <v-select label="Instructors" v-bind:items="instructorItems" v-model="instructors" multiple chips autocomplete></v-select>
+            <v-select label="Instructors" v-bind:items="instructorItems" v-model="instructors"
+              multiple chips autocomplete></v-select>
           </v-flex>
         </v-layout>
       </v-card-text>
     </v-card>
     <v-card class="my-3">
       <v-card-text>
-        <v-text-field aria-label="Search" :placeholder="searchPlaceholder" prepend-icon="search" single-line hide-details class="pa-0" v-model="query"></v-text-field>
+        <v-text-field aria-label="Search" :placeholder="searchPlaceholder" prepend-icon="search"
+          single-line hide-details class="pa-0" v-model="query"></v-text-field>
       </v-card-text>
     </v-card>
   </div>

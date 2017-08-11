@@ -9,7 +9,7 @@
         </div>
       </v-card-text>
     </v-card>
-    <form>
+    <form @submit.prevent="addWatch">
       <v-card class="mt-3">
         <v-card-title primary-title class="headline">Add a watch</v-card-title>
         <v-card-text>
@@ -19,7 +19,8 @@
               <v-select :items="terms" v-model="term" label="Term" autocomplete></v-select>
             </v-flex>
             <v-flex xs4>
-              <v-select :items="courses" v-model="course" label="Course" :hint="courseHint" persistent-hint autocomplete></v-select>
+              <v-select :items="courses" v-model="course" label="Course" :hint="courseHint" persistent-hint
+                autocomplete></v-select>
             </v-flex>
             <v-flex xs4>
               <v-text-field label="Section" v-model="section"></v-text-field>
@@ -27,7 +28,7 @@
           </v-layout>
         </v-card-text>
         <v-card-actions>
-          <v-btn flat class="orange--text" @click="addWatch()" type="submit">Add Watch</v-btn>
+          <v-btn flat class="orange--text" type="submit">Add Watch</v-btn>
         </v-card-actions>
       </v-card>
     </form>
@@ -55,7 +56,7 @@ export default {
   },
   methods: {
     addWatch() {
-      
+
     }
   }
 }

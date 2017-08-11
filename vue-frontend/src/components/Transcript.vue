@@ -21,7 +21,8 @@
             </v-flex>
           </v-layout>
           <v-list two-line dense>
-            <v-list-tile v-for="record in transcript.filter(t => t.term == term)" :key="record.course" router to="/search" @click.native="update({query: record.course})">
+            <v-list-tile v-for="record in transcript.filter(t => t.term == term)" :key="record.course"
+              router to="/search" @click.native="reset({query: record.course})">
               <v-list-tile-content avatar class="grey--text text--darken-4">
                 <v-list-tile-title>{{record.course}}</v-list-tile-title>
                 <v-list-tile-sub-title>
@@ -41,7 +42,7 @@
 
 <script>
 import CourseName from '@/components/CourseName.vue';
-import { mapState, mapMutations } from 'vuex';
+import { mapState, mapActions } from 'vuex';
 
 function mean(x) {
   return x.map(record => record.gpa).reduce((a, b) => a + b, 0) / x.length;
@@ -60,7 +61,7 @@ export default {
     transcript: state => state.transcript,
   }),
   methods: {
-    ...mapMutations('filter', ['update']),
+    ...mapActions('filter', ['reset']),
     getQuarterGpa(term) {
       return mean(this.transcript.filter(record => record.term == term && record.quality));
     },

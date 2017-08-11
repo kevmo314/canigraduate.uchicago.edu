@@ -1,9 +1,15 @@
 import firebase from 'firebase';
 import axios from 'axios';
 import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
+import 'rxjs/add/observable/fromPromise';
+import 'rxjs/add/observable/defer';
 import 'rxjs/add/observable/fromEventPattern';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/publishReplay';
+
+const CLOUD_FUNCTIONS =
+  'https://us-central1-canigraduate-43286.cloudfunctions.net';
 
 const app = firebase.initializeApp(
   {
@@ -28,6 +34,19 @@ function ref(path) {
     .refCount();
 }
 
+/** Mitigates Firebase's array heuristic */
+function arrayToObject(array) {
+  if (!Array.isArray(array)) {
+    return array;
+  }
+  return array.reduce((state, value, key) => {
+    if (value) {
+      state[key] = value;
+    }
+    return state;
+  }, {});
+}
+
 function memoize(f) {
   const cache = new Map();
   return key => {
@@ -45,6 +64,13 @@ const instructors = ref('/indexes/instructors');
 const courses = ref('/indexes/all');
 const terms = ref('/indexes/terms');
 const periods = ref('/indexes/periods');
+// This pulls for all courses because the number of grades is used for search ranking.
+const gradeDistribution = Observable.defer(() =>
+  axios.get(CLOUD_FUNCTIONS + '/api/grades'),
+)
+  .map(response => response.data)
+  .publishReplay()
+  .refCount();
 const courseName = new Map();
 const offerings = new Map();
 const crosslists = new Map();
@@ -59,23 +85,38 @@ const UCHICAGO = {
     { name: 'Spring', shorthand: 'S', color: '#4caf50' },
     { name: 'Summer', shorthand: 'S', color: '#ff5252' },
   ],
+  /** The set of valid GPAs that can be issued by the institution in ascending order. */
+  gpas: [0.0, 1.0, 1.3, 1.7, 2.0, 2.3, 2.7, 3.0, 3.3, 3.7, 4.0],
   /** Used in the search bar, usually a canonical course that all students are familiar with. */
   searchPlaceholder: 'Math 15300',
   endpoints: {
     transcript(auth) {
       return Observable.fromPromise(
-        axios.get(
-          'https://us-central1-canigraduate-43286.cloudfunctions.net/api/transcript',
-          { auth },
-        ),
+        axios.get(CLOUD_FUNCTIONS + '/api/transcript', { auth }),
       ).flatMap(response =>
         firebaseAuth.signInWithCustomToken(response.data.token).then(() => {
-          response.data.data = firebaseAuth.currentUser;
+          response.data.data = {
+            displayName: firebaseAuth.currentUser.displayName,
+            email: firebaseAuth.currentUser.email,
+          };
           return response;
         }),
       );
     },
+    signOut() {
+      firebaseAuth.signOut();
+    },
+    gradeDistribution() {
+      return gradeDistribution;
+    },
     courseName: memoize(id => ref('/course-info/' + id + '/name')),
+    schedules(id, term) {
+      const year = UCHICAGO.converters.termToYear(term);
+      const period = UCHICAGO.converters.termToPeriod(term).name;
+      return ref('/schedules/' + id + '/' + year + '/' + period).map(
+        arrayToObject,
+      );
+    },
     departments() {
       return departments.map(value => Object.keys(value));
     },
@@ -110,52 +151,47 @@ const UCHICAGO = {
       ref('/course-info/' + id + '/crosslists').map(x => x || []),
     ),
     query: memoize(term => ref('/indexes/fulltext/' + term)),
-    search(filter) {
+    search(filter$) {
       const filterAny = (filter, dataset) => {
-        return Observable.forkJoin([
-          state,
-          dataset.first(),
-        ]).map(([courses, dataset]) => {
+        return dataset.first().map(dataset => {
           dataset = filter.map(key => new Set(dataset[key]));
-          return courses.filter(course =>
-            dataset.some(data => data.has(course)),
-          );
+          return results =>
+            results.filter(course => dataset.some(data => data.has(course)));
         });
       };
-      let state = UCHICAGO.endpoints.courses().first();
-      if (filter.query) {
-        state = Observable.forkJoin([
-          state,
-          ...filter.query
-            .toLowerCase()
-            .split(' ')
-            .filter(x => x.length)
-            .map(token => {
-              return UCHICAGO.endpoints
-                .query(token)
-                .first()
-                .map(matches => new Set(matches));
-            }),
-        ]).map(([courses, ...matches]) => {
-          return courses.filter(course =>
-            matches.every(match => match.has(course)),
-          );
-        });
+      function* generateSubsetters(filter) {
+        if (filter.query) {
+          yield* filter.query.split(' ').filter(x => x.length).map(token => {
+            return UCHICAGO.endpoints
+              .query(token.toLowerCase())
+              .first()
+              .map(matches => new Set(matches))
+              .map(matches => results => results.filter(c => matches.has(c)));
+          });
+        }
+        if (filter.departments.length) {
+          yield filterAny(filter.departments, departments);
+        }
+        if (filter.instructors.length) {
+          yield filterAny(filter.instructors, instructors);
+        }
+        yield filterAny(
+          filter.periods
+            .map(i => UCHICAGO.periods[i])
+            .filter(Boolean)
+            .map(period => period.name),
+          periods,
+        );
       }
-      if (filter.departments.length) {
-        state = filterAny(filter.departments, departments);
-      }
-      if (filter.instructors.length) {
-        state = filterAny(filter.instructors, instructors);
-      }
-      state = filterAny(
-        filter.periods
-          .map(period => UCHICAGO.periods[period])
-          .filter(Boolean)
-          .map(period => period.name),
-        periods,
+      const subsetters = filter$.flatMap(filter =>
+        Observable.forkJoin(...generateSubsetters(filter)),
       );
-      return state;
+      return Observable.combineLatest(subsetters, courses)
+        .take(1)
+        .concat(subsetters.skip(1).withLatestFrom(courses))
+        .map(([subsetters, results]) => {
+          return subsetters.reduce((results, sub) => sub(results), results);
+        });
     },
     watches: {
       create(attrs) {},
@@ -173,7 +209,7 @@ const UCHICAGO = {
         term.startsWith(period.name),
       );
       const year = parseInt(term.substring(term.length - 4), 10) * 4;
-      return index + year;
+      return (index + 3) % 4 + year;
     },
   },
 };

@@ -1,15 +1,13 @@
 <template>
   <div class="hello">
-    Catalog
+    Catalog IT'S A PLACEHOLDER MINKE
   </div>
 </template>
 
 <script>
 export default {
   data() {
-    return {
-      msg: 'Welcome to Your Vue.js PWA'
-    }
+    return {}
   }
 }
 </script>

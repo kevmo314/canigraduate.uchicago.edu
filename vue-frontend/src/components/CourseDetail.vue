@@ -1,35 +1,36 @@
 <template>
-  <v-card>
-    <v-card-title @click="show = !show" class="title py-2">
-      <div class="course pr-2">
-        <div class="subheading grey--text text--darken-4 single-line">{{course}}
-          <span class="grey--text caption">{{crosslists}}</span>
+  <v-card-text>
+    <v-slide-x-transition>
+      <p v-show="description">{{description}}</p>
+    </v-slide-x-transition>
+    <v-layout row>
+      <v-spacer>
+        <div class="subheading">Sections</div>
+        <div v-for="term of filteredOfferings.slice(0, maxTerm)" :key="term">
+          <div class="subheading">{{term}}</div>
+          <section-detail :term="term">{{course}}</section-detail>
         </div>
-        <div class="body-1 grey--text text--darken-2 single-line">
-          <course-name>{{course}}</course-name>
+        <div class="text-xs-center" v-if="maxTerm < filteredOfferings.length">
+          <v-btn block flat @click="maxTerm += 1">Show {{filteredOfferings[maxTerm]}}</v-btn>
         </div>
+      </v-spacer>
+      <div class="grades">
+        <div class="subheading">Grades</div>
+        <grade-distribution :value="grades"></grade-distribution>
       </div>
-      <div class="offering-indicators">
-        <term-offering-indicator v-for="period of periods" :key="period.name" :period="period"
-          :course="course"></term-offering-indicator>
-      </div>
-    </v-card-title>
-    <v-slide-y-transition>
-      <course-detail v-if="show">{{course}}</course-detail>
-    </v-slide-y-transition>
-  </v-card>
+    </v-layout>
+  </v-card-text>
 </template>
 
 <script>
-import CourseName from '@/components/CourseName';
-import TermOfferingIndicator from '@/components/TermOfferingIndicator';
+import GradeDistribution from '@/components/GradeDistribution';
+import SectionDetail from '@/components/SectionDetail';
 import { Observable } from 'rxjs/Observable';
 import { mapState } from 'vuex';
 
 export default {
-  name: 'search-result',
-  props: { value: Boolean },
-  components: { CourseName, TermOfferingIndicator, CourseDetail: () => import('@/components/CourseDetail') },
+  name: 'course-detail',
+  components: { GradeDistribution, SectionDetail },
   computed: {
     ...mapState('institution', {
       endpoints: state => state.endpoints,
@@ -62,11 +63,11 @@ export default {
     return {
       course: this.$slots.default[0].text,
       maxTerm: 4,
+      schedules: {},
     };
   },
   subscriptions() {
     return {
-      crosslists: this.endpoints.crosslists(this.course).map(identifiers => identifiers.join(', ')).first(),
       description: this.endpoints.description(this.course).first(),
       offerings: Observable.of([]).concat(this.endpoints.offerings(this.course).first()),
       gradeDistribution: Observable.of({}).concat(this.endpoints.gradeDistribution().map(grades => grades[this.course] || {}).first()),
@@ -91,5 +92,9 @@ export default {
 .offering-indicators {
   align-self: flex-start;
   flex-shrink: 0;
+}
+
+.grades {
+  width: 300px;
 }
 </style>
