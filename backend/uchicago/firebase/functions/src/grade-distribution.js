@@ -2,10 +2,8 @@
 
 const admin = require('firebase-admin');
 
-const ref = admin.database().ref('grades/raw');
-
 module.exports = (req, res, next) => {
-  ref.once('value', data => {
+  admin.database().ref('grades/raw').once('value', data => {
     const results = {};
     data.forEach(record => {
       const course = record.child('course').val();

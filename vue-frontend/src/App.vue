@@ -1,6 +1,7 @@
 <template>
   <v-app toolbar footer>
-    <v-navigation-drawer fixed persistent light v-model="drawer" overflow>
+    <v-navigation-drawer fixed :temporary="deviceWidth < 1600" :persistent="deviceWidth >= 1600" light 
+      v-model="drawer">
       <v-toolbar flat class="transparent">
         <v-list class="pa-0">
           <v-list-tile avatar tag="div">
@@ -14,7 +15,7 @@
         </v-list>
       </v-toolbar>
       <v-list class="pt-0">
-        <template v-if="loggedIn">
+        <template v-if="authenticated">
           <v-divider></v-divider>
           <v-subheader class="body-2 user-subheader mt-2">
             <div class="single-line">{{user.displayName}}</div>
@@ -38,7 +39,7 @@
             <v-list-tile-title>Course Search</v-list-tile-title>
           </v-list-tile-content>
         </v-list-tile>
-        <v-list-tile router to="/watches" :disabled="!loggedIn">
+        <v-list-tile router to="/watches" :disabled="!authenticated">
           <v-list-tile-action>
             <v-icon>timer</v-icon>
           </v-list-tile-action>
@@ -63,8 +64,8 @@
             <v-list-tile-title>About</v-list-tile-title>
           </v-list-tile-content>
         </v-list-tile>
-        <v-divider v-if="loggedIn"></v-divider>
-        <v-list-tile v-if="loggedIn" @click="signOut">
+        <v-divider v-if="authenticated"></v-divider>
+        <v-list-tile v-if="authenticated" @click="signOut">
           <v-list-tile-action>
             <v-icon>exit_to_app</v-icon>
           </v-list-tile-action>
@@ -75,16 +76,22 @@
       </v-list>
     </v-navigation-drawer>
     <v-toolbar fixed class="indigo darken-4" dark>
-      <v-toolbar-side-icon class="hidden-md-and-up" @click.native.stop="drawer = !drawer"></v-toolbar-side-icon>
+      <v-toolbar-side-icon @click.stop="drawer = !drawer" v-if="deviceWidth < 1600"></v-toolbar-side-icon>
       <v-toolbar-title>Can I Graduate?</v-toolbar-title>
     </v-toolbar>
     <main>
       <v-container fluid>
         <v-layout row align-start>
           <div class="content">
-            <router-view></router-view>
+            <v-slide-y-reverse-transition>
+              <router-view></router-view>
+            </v-slide-y-reverse-transition>
           </div>
-          <sidebar class="sidebar"></sidebar>
+          <div class="sidebar">
+            <authentication v-if="!authenticated">
+            </authentication>
+            <sidebar v-else></sidebar>
+          </div>
         </v-layout>
       </v-container>
     </main>
@@ -96,16 +103,17 @@
 </template>
 
 <script>
+import Authentication from '@/components/Authentication.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import { AuthenticationStatus } from '@/store/modules/authentication'
 import { mapState, mapActions } from 'vuex'
 
 export default {
   name: 'app',
-  components: { Sidebar },
+  components: { Authentication, Sidebar },
   computed: {
     ...mapState('authentication', {
-      loggedIn: state => state.status == AuthenticationStatus.AUTHENTICATED,
+      authenticated: state => state.status == AuthenticationStatus.AUTHENTICATED,
       user: state => state.data,
     }),
     ...mapState('institution', {
@@ -113,9 +121,20 @@ export default {
     }),
   },
   data() {
-    return { drawer: true }
+    const deviceWidth = document.documentElement.clientWidth;
+    return { drawer: deviceWidth >= 1600, deviceWidth }
+  },
+  mounted() {
+    window.addEventListener('resize', this.handleResize)
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.handleResize)
   },
   methods: {
+    handleResize() {
+      this.deviceWidth = document.documentElement.clientWidth
+      this.drawer = this.deviceWidth >= 1600;
+    },
     signOut() {
       this.$store.dispatch('authentication/reset', AuthenticationStatus.LOGGED_OUT);
     }

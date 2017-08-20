@@ -68,7 +68,7 @@ const periods = ref('/indexes/periods');
 const gradeDistribution = Observable.defer(() =>
   axios.get(CLOUD_FUNCTIONS + '/api/grades'),
 )
-  .map(response => response.data)
+  .map(response => Object.freeze(response.data))
   .publishReplay()
   .refCount();
 const courseName = new Map();
@@ -89,6 +89,7 @@ const UCHICAGO = {
   gpas: [0.0, 1.0, 1.3, 1.7, 2.0, 2.3, 2.7, 3.0, 3.3, 3.7, 4.0],
   /** Used in the search bar, usually a canonical course that all students are familiar with. */
   searchPlaceholder: 'Math 15300',
+  emailDomain: '@uchicago.edu',
   endpoints: {
     transcript(auth) {
       return Observable.fromPromise(

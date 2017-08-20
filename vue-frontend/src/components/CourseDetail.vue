@@ -14,7 +14,7 @@
           <v-btn block flat @click="maxTerm += 1">Show {{filteredOfferings[maxTerm]}}</v-btn>
         </div>
       </v-spacer>
-      <div class="grades">
+      <div class="grades" ref="grades">
         <div class="subheading">Grades</div>
         <grade-distribution :value="grades"></grade-distribution>
       </div>
@@ -25,8 +25,11 @@
 <script>
 import GradeDistribution from '@/components/GradeDistribution';
 import SectionDetail from '@/components/SectionDetail';
+import Stickyfill from 'stickyfill';
 import { Observable } from 'rxjs/Observable';
 import { mapState } from 'vuex';
+
+const STICKYFILL = Stickyfill();
 
 export default {
   name: 'course-detail',
@@ -66,6 +69,12 @@ export default {
       schedules: {},
     };
   },
+  mounted() {
+    STICKYFILL.add(this.$refs.grades);
+  },
+  destroyed() {
+    STICKYFILL.remove(this.$refs.grades);
+  },
   subscriptions() {
     return {
       description: this.endpoints.description(this.course).first(),
@@ -96,5 +105,8 @@ export default {
 
 .grades {
   width: 300px;
+  position: sticky;
+  top: 75px;
+  align-self: flex-start;
 }
 </style>

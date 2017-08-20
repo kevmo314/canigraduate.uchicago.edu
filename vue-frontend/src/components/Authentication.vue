@@ -8,7 +8,7 @@
       Uh oh, your credentials expired. You'll need to log in again.
       <v-btn dark flat @click.native="reset()">Okay</v-btn>
     </v-snackbar>
-    <form @submit.prevent="authenticate">
+    <form @submit.prevent="authenticateStudents">
       <v-card>
         <v-card-title primary-title class="headline">Students</v-card-title>
         <v-card-text>
@@ -17,11 +17,12 @@
             CNetID and password to import your data from AIS.
           </p>
           <v-layout row>
-            <v-flex fluid>
-              <v-text-field name="username" label="CNetID" v-model="username" :rules="[() => rejected ? '' : true]"></v-text-field>
+            <v-flex xs6>
+              <v-text-field name="username" label="CNetID" v-model.lazy="students.username" :suffix="emailDomain"
+                :rules="[() => rejected ? '' : true]"></v-text-field>
             </v-flex>
-            <v-flex fluid>
-              <v-text-field name="password" label="Password" v-model="password" type="password"
+            <v-flex xs6>
+              <v-text-field name="password" label="Password" v-model.lazy="students.password" type="password"
                 :rules="[() => rejected ? '' : true]"></v-text-field>
             </v-flex>
           </v-layout>
@@ -58,21 +59,22 @@
                 <v-card-text>
                   Manage your students' progress with
                   <strong>Can I Graduate?</strong> with ease!
-                  <v-text-field name="username" label="Email address" v-model.lazy="username" required
-                    :rules="[() => rejected ? '' : true]"></v-text-field>
-                  <v-text-field name="password" label="Password" v-model.lazy="password" type="password"
+                  <v-text-field name="username" label="Email address" v-model.lazy="educators.username"
                     required :rules="[() => rejected ? '' : true]"></v-text-field>
+                  <v-text-field name="password" label="Password" v-model.lazy="educators.password"
+                    type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
                 </v-card-text>
               </v-card>
             </v-tabs-content>
             <v-tabs-content id="create-an-account">
               <v-card flat>
                 <v-card-text>
-                  <v-text-field name="username" label="Email address" v-model="username" required :rules="[() => rejected ? '' : true]"></v-text-field>
-                  <v-text-field name="password" label="Password" v-model="password" type="password"
-                    required :rules="[() => rejected ? '' : true]"></v-text-field>
-                  <v-text-field name="password" label="Confirm password" v-model="password" type="password"
-                    required :rules="[() => rejected ? '' : true]"></v-text-field>
+                  <v-text-field name="username" label="Email address" v-model.lazy="educators.username"
+                    type="email" required :rules="[() => rejected ? '' : true]"></v-text-field>
+                  <v-text-field name="password" label="Password" v-model.lazy="educators.password"
+                    type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
+                  <v-text-field name="password" label="Confirm password" type="password" required v-model.lazy="educators.confirmPassword"
+                    :rules="[validateConfirmPassword]"></v-text-field>
                 </v-card-text>
               </v-card>
             </v-tabs-content>
@@ -88,6 +90,14 @@ import { AuthenticationStatus } from '@/store/modules/authentication';
 import { mapState, mapActions } from 'vuex';
 export default {
   name: 'authentication',
+  data() {
+    return {
+      students: { username: '', password: '' },
+      educators: {
+        username: '', password: '', confirmPassword: ''
+      },
+    };
+  },
   created() {
     if (this.pending) {
       // The authentication state can get stuck in pending if the user refreshes, so just reset it appropriately.
@@ -102,24 +112,22 @@ export default {
       loggedOut: state => state.status == AuthenticationStatus.LOGGED_OUT,
       message: state => state.message,
     }),
-    username: {
-      get() {
-        return this.$store.state.authentication.username;
-      },
-      set(value) {
-        this.$store.commit('authentication/update', { username: value });
-      }
-    },
-    password: {
-      get() {
-        return this.$store.state.authentication.password;
-      },
-      set(value) {
-        this.$store.commit('authentication/update', { password: value });
-      }
+    ...mapState('institution', {
+      emailDomain: state => state.emailDomain
+    }),
+    validateConfirmPassword() {
+      return this.educators.confirmPassword == this.educators.password || 'Must be the same as your password.';
     }
   },
-  methods: mapActions('authentication', ['authenticate', 'reset'])
+  methods: {
+    ...mapActions('authentication', ['reset']),
+    authenticateStudents() {
+      this.$store.dispatch('authentication/authenticate', this.students);
+    },
+    authenticateEducators() {
+      this.$store.dispatch('authentication/authenticate', this.educators);
+    },
+  },
 }
 </script>
 

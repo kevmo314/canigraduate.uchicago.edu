@@ -1,13 +1,14 @@
 <template>
   <div class="wrapper">
-    <div class="day-block" v-for="i in 5" :key="i">
-      <div class="time-block" v-for="(block, index) of blocks" :key="index">
-        <div class="schedule-block" :class="block.class" v-for="s of schedule.filter(s => Math.floor(s[0] / 1440) == i).map(s => [s[0] % 1440, s[1] % 1440])"
-          v-if="intersects(block.range, s)" :key="s[0] * 1440 + s[1]" :style="{left: (Math.max(s[0] - block.range[0], 0) * 100 / (block.range[1] - block.range[0])) + '%',
-                                                                                                              right: ((Math.min(s[1], block.range[1]) - block.range[0]) * 100 / (block.range[1] - block.range[0])) + '%'}">
-  
-        </div>
-      </div>
+    <div class="day-block" v-for="component of components" :key="component.time[0]">
+      <!--
+              <div class="time-block" v-for="(block, index) of blocks" :key="index">
+                <div class="schedule-block" :class="block.class" v-for="s of schedule.filter(s => Math.floor(s[0] / 1440) == i).map(s => [s[0] % 1440, s[1] % 1440])"
+                  v-if="intersects(block.range, s)" :key="s[0] * 1440 + s[1]" :style="{left: (Math.max(s[0] - block.range[0], 0) * 100 / (block.range[1] - block.range[0])) + '%',
+                                                                                                                              right: ((Math.min(s[1], block.range[1]) - block.range[0]) * 100 / (block.range[1] - block.range[0])) + '%'}">
+          
+                </div>
+              </div>-->
     </div>
   </div>
 </template>
@@ -20,14 +21,27 @@ export default {
       type: Array,
       required: true,
     },
+    days: ['Su', 'M', 'T', 'W', 'Th', 'Fr', 'Sa'],
     blocks: {
       type: Array,
-      default: [
+      default: () => [
         { range: [8 * 60 + 30, 10 * 60 + 30], class: 'morning' },
         { range: [10 * 60 + 30, 13 * 60 + 30], class: 'noon' },
         { range: [13 * 60 + 30, 16 * 60 + 30], class: 'afternoon' },
         { range: [16 * 60 + 30, 19 * 60 + 30], class: 'evening' },
       ]
+    }
+  },
+  computed: {
+    components() {
+      return [];
+      return schedule.map(time => {
+        return {
+          time,
+          day: Math.floor(time[0] / 1440),
+          block: this.blocks.find(block => block.range[0] <= time[0] && time[0] <= block.range[1])
+        }
+      })
     }
   },
   methods: {
@@ -56,8 +70,6 @@ export default {
 }
 
 .day-block {
-  border-left: 1px grey solid;
-  margin-left: -1px;
   display: inline-block;
 }
 

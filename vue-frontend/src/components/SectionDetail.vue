@@ -6,7 +6,7 @@
         <div class="grow primaries ml-2">
           <div class="flex section-primary" v-for="primary of section.primaries" row :key="primary.type + '/' + primary.location">
             <div class="activity-type">{{primary.type}}</div>
-            <div class="grow ml-2">{{primary.instructors.join(', ')}}</div>
+            <div class="grow ml-2">{{(primary.instructors || []).join(', ')}}</div>
             <div>{{primary.location}}</div>
             <schedule-bar :schedule="primary.schedule" />
           </div>

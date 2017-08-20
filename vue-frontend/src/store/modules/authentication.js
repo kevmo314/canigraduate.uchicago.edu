@@ -18,15 +18,16 @@ const DEFAULT_STATE = {
 
 export default {
   namespaced: true,
-  state: Object.assign({}, DEFAULT_STATE),
+  state: { ...DEFAULT_STATE },
   mutations: {
     update(state, params) {
       Object.assign(state, params);
     },
   },
   actions: {
-    async authenticate(context) {
+    async authenticate(context, data = {}) {
       context.commit('update', {
+        ...data,
         status: AuthenticationStatus.PENDING,
         message: '',
       });
@@ -57,7 +58,7 @@ export default {
       if (context.state.status == AuthenticationStatus.AUTHENTICATED) {
         context.rootState.institution.endpoints.signOut();
       }
-      context.commit('update', Object.assign({}, DEFAULT_STATE, { status }));
+      context.commit('update', { ...DEFAULT_STATE, status });
     },
   },
 };

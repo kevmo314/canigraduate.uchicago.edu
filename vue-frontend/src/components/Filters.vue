@@ -1,37 +1,31 @@
 <template>
   <div>
     <v-card>
-      <v-card-title primary-title class="headline">
-        Course search
-      </v-card-title>
       <v-card-text>
-        <v-layout row>
-          <label>{{periodName}}</label>
-        </v-layout>
-        <v-layout row>
+        <v-layout row class="my-3">
+          <label class="label body-2">{{periodName}}</label>
           <v-btn-toggle v-bind:items="periodItems" multiple v-model="periods" class="hidden-sm-and-down"></v-btn-toggle>
           <v-btn-toggle v-bind:items="periodItems.map(({value, abbr}) => ({value, text: abbr}))"
             multiple v-model="periods" class="hidden-md-and-up"></v-btn-toggle>
         </v-layout>
         <v-divider></v-divider>
-        <v-layout row>
-          <label>Days of the week</label>
-        </v-layout>
-        <v-layout row>
-          <v-btn-toggle v-bind:items="dayItems" multiple v-model="days" class="hidden-sm-and-down"></v-btn-toggle>
+        <v-layout row class="my-3">
+          <label class="label body-2">Days of the week</label>
+          <v-btn-toggle v-bind:items="dayItems" multiple v-model="days" class="hidden-md-and-down"></v-btn-toggle>
           <v-btn-toggle v-bind:items="dayItems.map(({value, abbr}) => ({value, text: abbr}))"
-            multiple v-model="days" class="hidden-md-and-up"></v-btn-toggle>
+            multiple v-model="days" class="hidden-lg-and-up"></v-btn-toggle>
         </v-layout>
         <v-divider></v-divider>
         <v-layout row>
-          <v-flex xs6>
-            <v-select label="Departments" v-bind:items="departmentItems" v-model="departments"
-              multiple chips autocomplete></v-select>
-          </v-flex>
-          <v-flex xs6>
-            <v-select label="Instructors" v-bind:items="instructorItems" v-model="instructors"
-              multiple chips autocomplete></v-select>
-          </v-flex>
+          <label class="label body-2">Departments</label>
+          <v-select :items="departmentItems" v-model="departments"
+            multiple chips autocomplete hide-details></v-select>
+        </v-layout>
+        <v-divider></v-divider>
+        <v-layout row>
+          <label class="label body-2">Instructors</label>
+          <v-select :items="instructorItems" v-model="instructors"
+            multiple chips autocomplete hide-details></v-select>
         </v-layout>
       </v-card-text>
     </v-card>
@@ -66,13 +60,13 @@ export default {
   data() {
     return {
       dayItems: [
-        { value: 0, text: 'Monday', abbr: 'M' },
-        { value: 1, text: 'Tuesday', abbr: 'T' },
-        { value: 2, text: 'Wednesday', abbr: 'W' },
-        { value: 3, text: 'Thursday', abbr: 'Th' },
-        { value: 4, text: 'Friday', abbr: 'Fr' },
-        { value: 5, text: 'Saturday', abbr: 'Sa' },
-        { value: 6, text: 'Sunday', abbr: 'Su' },
+        { value: 0, text: 'Monday', abbr: 'Mon' },
+        { value: 1, text: 'Tuesday', abbr: 'Tue' },
+        { value: 2, text: 'Wednesday', abbr: 'Wed' },
+        { value: 3, text: 'Thursday', abbr: 'Thu' },
+        { value: 4, text: 'Friday', abbr: 'Fri' },
+        { value: 5, text: 'Saturday', abbr: 'Sat' },
+        { value: 6, text: 'Sunday', abbr: 'Sun' },
       ],
       departmentItems: [],
       instructorItems: [],
@@ -107,9 +101,9 @@ export default {
 
 <style scoped>
 .label {
-  width: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  width: 150px;
+  align-self: center;
+  text-align: right;
+  margin-right: 16px;
 }
 </style>

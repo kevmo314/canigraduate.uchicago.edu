@@ -2,7 +2,7 @@ export default {
   namespaced: true,
   state: {
     expanded: [],
-    page: 0,
+    page: 1,
   },
   mutations: {
     setExpanded(state, { course, expanded }) {
