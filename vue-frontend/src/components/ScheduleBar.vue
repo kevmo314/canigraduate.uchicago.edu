@@ -1,90 +1,64 @@
 <template>
   <div class="wrapper">
-    <div class="day-block" v-for="component of components" :key="component.time[0]">
-      <!--
-              <div class="time-block" v-for="(block, index) of blocks" :key="index">
-                <div class="schedule-block" :class="block.class" v-for="s of schedule.filter(s => Math.floor(s[0] / 1440) == i).map(s => [s[0] % 1440, s[1] % 1440])"
-                  v-if="intersects(block.range, s)" :key="s[0] * 1440 + s[1]" :style="{left: (Math.max(s[0] - block.range[0], 0) * 100 / (block.range[1] - block.range[0])) + '%',
-                                                                                                                              right: ((Math.min(s[1], block.range[1]) - block.range[0]) * 100 / (block.range[1] - block.range[0])) + '%'}">
-          
-                </div>
-              </div>-->
-    </div>
+    <span v-for="{day, cssClass, tooltip} of components" :key="day + ' ' + cssClass"
+      class="ma-0 pa-1 caption black--text block" v-tooltip:bottom="tooltip && {html:tooltip}"
+      :class="cssClass" @click="showScheduleTab">
+      {{day}}
+    </span>
   </div>
 </template>
 
 <script>
+import EventBus from '@/EventBus';
+import { mapState } from 'vuex';
+
+const DAYS = ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
+
 export default {
   name: 'schedule-bar',
   props: {
     schedule: {
       type: Array,
       required: true,
-    },
-    days: ['Su', 'M', 'T', 'W', 'Th', 'Fr', 'Sa'],
-    blocks: {
-      type: Array,
-      default: () => [
-        { range: [8 * 60 + 30, 10 * 60 + 30], class: 'morning' },
-        { range: [10 * 60 + 30, 13 * 60 + 30], class: 'noon' },
-        { range: [13 * 60 + 30, 16 * 60 + 30], class: 'afternoon' },
-        { range: [16 * 60 + 30, 19 * 60 + 30], class: 'evening' },
-      ]
     }
   },
   computed: {
+    ...mapState('institution', { blocks: state => state.scheduleBlocks }),
     components() {
-      return [];
-      return schedule.map(time => {
+      return this.schedule.sort((a, b) => a[0] - b[0]).map(time => {
+        function formatTime(t) {
+          t %= 1440;
+          return ((Math.floor(t / 60) + 11) % 12 + 1) + (t % 60 < 10 ? ':0' : ':') + (t % 60) + (t < 720 ? 'a' : 'p');
+        }
+        const block = Object.keys(this.blocks)
+          .find(i => this.blocks[i][0] <= time[0] % 1440 && time[0] % 1440 < this.blocks[i][1]);
+        const day = DAYS[Math.floor(time[0] / 1440)];
         return {
-          time,
-          day: Math.floor(time[0] / 1440),
-          block: this.blocks.find(block => block.range[0] <= time[0] && time[0] <= block.range[1])
+          day,
+          cssClass: block || 'other',
+          tooltip: day + ' ' + time.map(formatTime).join('-'),
         }
       })
     }
   },
   methods: {
-    intersects(a, b) {
-      return a[0] <= b[1] && b[0] <= a[1];
+    showScheduleTab() {
+      EventBus.$emit('show-schedule-tab')
     }
   }
 }
 </script>
 
 <style scoped>
-.morning {
-  background-color: green;
+.wrapper {
+  cursor: pointer;
 }
 
-.noon {
-  background-color: blue;
+.block:first-child {
+  border-radius: 2px 0 0 2px;
 }
 
-.afternoon {
-  background-color: yellow;
-}
-
-.evening {
-  background-color: red;
-}
-
-.day-block {
-  display: inline-block;
-}
-
-.time-block {
-  border-left: 1px grey dotted;
-  margin-left: -1px;
-  display: inline-block;
-  position: relative;
-  height: 20px;
-  width: 9px;
-}
-
-.schedule-block {
-  position: absolute;
-  top: 0;
-  bottom: 0;
+.block:last-child {
+  border-radius: 0 2px 2px 0;
 }
 </style>

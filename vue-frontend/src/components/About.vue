@@ -10,27 +10,21 @@
       </v-container>
     </v-card-media>
     <v-card-text>
-      <v-layout row>
-        <v-flex xs6>
-          <div class="subheading">Credits</div>
-          <p>Built with love and
-            <a href="http://vuejs.org/">Vue.js</a>.</p>
-          <p>
-            Icons made by
-            <a href="https://www.flaticon.com/authors/popcorns-arts" title="Icon Pond">Icon Pond</a> from
-            <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by
-            <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>.</p>
-          <p>Additional contributions from:</p>
-          <ul>
-            <li>Jacob Burroughs</li>
-          </ul>
-        </v-flex>
-        <v-flex xs6>
-          <div class="subheading">Contributing</div>
-          <p>Interested in contributing? Check out our
-            <a href="http://github.com/kevmo314/canigraduate.uchicago.edu">GitHub page</a>.</p>
-        </v-flex>
-      </v-layout>
+      <p>Built with love and
+        <a href="http://vuejs.org/">Vue.js</a>.</p>
+      <p>
+        Icons made by
+        <a href="https://www.flaticon.com/authors/popcorns-arts" title="Icon Pond">Icon Pond</a> from
+        <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by
+        <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0"
+          target="_blank">CC 3.0 BY</a>.</p>
+      <p>Additional contributions from:
+        <ul>
+          <li>Jacob Burroughs</li>
+        </ul>
+      </p>
+      <p>Interested in contributing? Check out our
+        <a href="http://github.com/kevmo314/canigraduate.uchicago.edu">GitHub page</a>.</p>
     </v-card-text>
     <v-card-media class="text-xs-center">
       <v-divider></v-divider>

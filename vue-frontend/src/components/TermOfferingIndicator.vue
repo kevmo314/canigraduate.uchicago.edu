@@ -1,11 +1,13 @@
 <template>
-  <v-chip label small class="ma-0 ml-1 white--text elevation-0" v-tooltip:bottom="tooltip && {html:tooltip}"
-    :style="{backgroundColor: suppressed ? '' : backgroundColor}">
+  <v-chip :outline="outline" label small class="ma-0 ml-1 elevation-0" v-tooltip:bottom="tooltip && {html:tooltip}"
+    :style="{backgroundColor: !suppressed && backgroundColor, borderColor: backgroundColor}"
+    :class="{'grey--text': outline, 'white--text': !outline}">
     {{period.shorthand}}
   </v-chip>
 </template>
 
 <script>
+import { Observable } from 'rxjs/Observable';
 import { mapState } from 'vuex';
 
 export default {
@@ -23,6 +25,7 @@ export default {
   computed: {
     ...mapState('institution', {
       converters: state => state.converters,
+      terms: state => state.endpoints.terms,
       offerings: state => state.endpoints.offerings,
       periods: state => state.periods,
     }), ...mapState('filter', {
@@ -33,7 +36,7 @@ export default {
     })
   },
   subscriptions() {
-    const tooltip = this.offerings(this.course).map(terms => {
+    const lastPeriod = this.offerings(this.course).map(terms => {
       // Find the most recent relevant offering.
       for (const term of terms) {
         if (this.converters.termToPeriod(term).name == this.period.name) {
@@ -42,8 +45,10 @@ export default {
       }
     });
     return {
-      tooltip,
-      backgroundColor: tooltip.map(x => x && this.period.color)
+      tooltip: lastPeriod,
+      outline: Observable.combineLatest(this.terms(), lastPeriod)
+        .map(([terms, last]) => terms.indexOf(last) > 32),
+      backgroundColor: lastPeriod.map(x => x && this.period.color)
     }
   }
 }

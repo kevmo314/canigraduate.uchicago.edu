@@ -1,7 +1,7 @@
 <template>
-  <v-app toolbar footer>
-    <v-navigation-drawer fixed :temporary="deviceWidth < 1600" :persistent="deviceWidth >= 1600" light 
-      v-model="drawer">
+  <v-app toolbar footer v-resize="onResize">
+    <v-navigation-drawer fixed :temporary="deviceWidth < 1600" :persistent="deviceWidth >= 1600"
+      light v-model="drawer">
       <v-toolbar flat class="transparent">
         <v-list class="pa-0">
           <v-list-tile avatar tag="div">
@@ -48,6 +48,15 @@
           </v-list-tile-content>
         </v-list-tile>
         <v-divider></v-divider>
+        <v-list-tile router to="/analytics">
+          <v-list-tile-action>
+            <v-icon>multiline_chart</v-icon>
+          </v-list-tile-action>
+          <v-list-tile-content>
+            <v-list-tile-title>Analytics</v-list-tile-title>
+          </v-list-tile-content>
+        </v-list-tile>
+        <v-divider></v-divider>
         <v-list-tile>
           <v-list-tile-action>
             <v-icon>settings</v-icon>
@@ -87,7 +96,7 @@
               <router-view></router-view>
             </v-slide-y-reverse-transition>
           </div>
-          <div class="sidebar">
+          <div class="sidebar" v-sticky>
             <authentication v-if="!authenticated">
             </authentication>
             <sidebar v-else></sidebar>
@@ -107,10 +116,12 @@ import Authentication from '@/components/Authentication.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import { AuthenticationStatus } from '@/store/modules/authentication'
 import { mapState, mapActions } from 'vuex'
+import Sticky from '@/directives/Sticky';
 
 export default {
   name: 'app',
   components: { Authentication, Sidebar },
+  directives: { Sticky },
   computed: {
     ...mapState('authentication', {
       authenticated: state => state.status == AuthenticationStatus.AUTHENTICATED,
@@ -124,14 +135,8 @@ export default {
     const deviceWidth = document.documentElement.clientWidth;
     return { drawer: deviceWidth >= 1600, deviceWidth }
   },
-  mounted() {
-    window.addEventListener('resize', this.handleResize)
-  },
-  beforeDestroy() {
-    window.removeEventListener('resize', this.handleResize)
-  },
   methods: {
-    handleResize() {
+    onResize() {
       this.deviceWidth = document.documentElement.clientWidth
       this.drawer = this.deviceWidth >= 1600;
     },
@@ -149,7 +154,7 @@ export default {
 }
 
 .sidebar {
-  flex: 0 0 540px;
+  flex: 0 0 480px;
 }
 
 .user-subheader {
@@ -170,6 +175,26 @@ export default {
 
 .grow {
   flex-grow: 1;
+}
+
+.morning {
+  background-color: #8BC34A !important;
+  fill: #8BC34A;
+}
+
+.noon {
+  background-color: #03A9F4 !important;
+  fill: #03A9F4;
+}
+
+.afternoon {
+  background-color: #FFEB3B !important;
+  fill: #FFEB3B;
+}
+
+.evening {
+  background-color: #FF9800 !important;
+  fill: #FF9800;
 }
 </style>
 

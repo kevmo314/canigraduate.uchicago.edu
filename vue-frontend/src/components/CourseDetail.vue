@@ -5,16 +5,15 @@
     </v-slide-x-transition>
     <v-layout row>
       <v-spacer>
-        <div class="subheading">Sections</div>
         <div v-for="term of filteredOfferings.slice(0, maxTerm)" :key="term">
-          <div class="subheading">{{term}}</div>
+          <div class="subheading term-heading">{{term}}</div>
           <section-detail :term="term">{{course}}</section-detail>
         </div>
         <div class="text-xs-center" v-if="maxTerm < filteredOfferings.length">
           <v-btn block flat @click="maxTerm += 1">Show {{filteredOfferings[maxTerm]}}</v-btn>
         </div>
       </v-spacer>
-      <div class="grades" ref="grades">
+      <div class="grades ml-2" v-sticky>
         <div class="subheading">Grades</div>
         <grade-distribution :value="grades"></grade-distribution>
       </div>
@@ -25,15 +24,14 @@
 <script>
 import GradeDistribution from '@/components/GradeDistribution';
 import SectionDetail from '@/components/SectionDetail';
-import Stickyfill from 'stickyfill';
+import Sticky from '@/directives/Sticky';
 import { Observable } from 'rxjs/Observable';
 import { mapState } from 'vuex';
-
-const STICKYFILL = Stickyfill();
 
 export default {
   name: 'course-detail',
   components: { GradeDistribution, SectionDetail },
+  directives: { Sticky },
   computed: {
     ...mapState('institution', {
       endpoints: state => state.endpoints,
@@ -69,12 +67,6 @@ export default {
       schedules: {},
     };
   },
-  mounted() {
-    STICKYFILL.add(this.$refs.grades);
-  },
-  destroyed() {
-    STICKYFILL.remove(this.$refs.grades);
-  },
   subscriptions() {
     return {
       description: this.endpoints.description(this.course).first(),
@@ -104,9 +96,23 @@ export default {
 }
 
 .grades {
-  width: 300px;
-  position: sticky;
+  width: 150px;
   top: 75px;
   align-self: flex-start;
+}
+
+.term-heading {
+  position: relative;
+  overflow: hidden;
+}
+
+.term-heading:after {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  margin-left: 8px;
+  height: 1px;
+  content: '\a0';
+  background-color: lightgrey;
 }
 </style>

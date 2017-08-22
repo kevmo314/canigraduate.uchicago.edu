@@ -5,7 +5,9 @@ import { Subject } from 'rxjs/Subject';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/observable/defer';
 import 'rxjs/add/observable/fromEventPattern';
+import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/publishReplay';
 
 const CLOUD_FUNCTIONS =
@@ -23,16 +25,6 @@ const app = firebase.initializeApp(
 );
 const db = app.database();
 const firebaseAuth = app.auth();
-
-function ref(path) {
-  return Observable.fromEventPattern(
-    handler => db.ref(path).on('value', handler),
-    handler => db.ref(path).off('value', handler),
-  )
-    .map(snapshot => snapshot.val())
-    .publishReplay(1)
-    .refCount();
-}
 
 /** Mitigates Firebase's array heuristic */
 function arrayToObject(array) {
@@ -58,6 +50,27 @@ function memoize(f) {
     return result;
   };
 }
+
+const ref = memoize(path => {
+  let first = true;
+  return Observable.create(
+    observer => {
+      const callback = data => {
+        first = false;
+        observer.next(data);
+      };
+      const event = first ? 'value' : 'child_changed';
+      db.ref(path).on(event, callback, error => observer.error(error));
+      return { event, callback };
+    },
+    (handler, { event, callback }) => {
+      db.ref(path).off(event, callback);
+    },
+  )
+    .map(snapshot => snapshot.val())
+    .publishReplay(1)
+    .refCount();
+});
 
 const departments = ref('/indexes/departments');
 const instructors = ref('/indexes/instructors');
@@ -85,6 +98,12 @@ const UCHICAGO = {
     { name: 'Spring', shorthand: 'S', color: '#4caf50' },
     { name: 'Summer', shorthand: 'S', color: '#ff5252' },
   ],
+  scheduleBlocks: {
+    morning: [8 * 60 + 30, 10 * 60 + 30],
+    noon: [10 * 60 + 30, 13 * 60 + 30],
+    afternoon: [13 * 60 + 30, 16 * 60 + 30],
+    evening: [16 * 60 + 30, 19 * 60 + 30],
+  },
   /** The set of valid GPAs that can be issued by the institution in ascending order. */
   gpas: [0.0, 1.0, 1.3, 1.7, 2.0, 2.3, 2.7, 3.0, 3.3, 3.7, 4.0],
   /** Used in the search bar, usually a canonical course that all students are familiar with. */
@@ -110,7 +129,9 @@ const UCHICAGO = {
     gradeDistribution() {
       return gradeDistribution;
     },
-    courseName: memoize(id => ref('/course-info/' + id + '/name')),
+    courseName(id) {
+      return ref('/course-info/' + id + '/name');
+    },
     schedules(id, term) {
       const year = UCHICAGO.converters.termToYear(term);
       const period = UCHICAGO.converters.termToPeriod(term).name;
@@ -138,7 +159,7 @@ const UCHICAGO = {
     courses() {
       return courses;
     },
-    offerings: memoize(id => {
+    offerings(id) {
       return ref('/indexes/offerings/' + id).map(offerings =>
         offerings.sort(
           (a, b) =>
@@ -146,12 +167,16 @@ const UCHICAGO = {
             UCHICAGO.converters.termToOrdinal(a),
         ),
       );
-    }),
-    description: memoize(id => ref('/course-descriptions/' + id)),
-    crosslists: memoize(id =>
-      ref('/course-info/' + id + '/crosslists').map(x => x || []),
-    ),
-    query: memoize(term => ref('/indexes/fulltext/' + term)),
+    },
+    description(id) {
+      return ref('/course-descriptions/' + id);
+    },
+    crosslists(id) {
+      return ref('/course-info/' + id + '/crosslists').map(x => x || []);
+    },
+    query(term) {
+      return ref('/indexes/fulltext/' + term);
+    },
     search(filter$) {
       const filterAny = (filter, dataset) => {
         return dataset.first().map(dataset => {

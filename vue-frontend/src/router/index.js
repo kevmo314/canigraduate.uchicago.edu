@@ -4,6 +4,7 @@ import About from '@/components/About';
 import Catalog from '@/components/Catalog';
 import Search from '@/components/Search';
 import Watches from '@/components/Watches';
+import Analytics from '@/components/Analytics';
 
 Vue.use(Router);
 
@@ -29,6 +30,11 @@ export default new Router({
       path: '/about',
       name: 'About',
       component: About,
+    },
+    {
+      path: '/analytics',
+      name: 'Analytics',
+      component: Analytics,
     },
   ],
 });
