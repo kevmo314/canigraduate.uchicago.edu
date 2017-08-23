@@ -131,8 +131,6 @@ class CourseSearch(object):
             return None
         course_id = match.group('id')
         section_id = match.group('section')
-        description = page.find(
-            'span', {'id': 'UC_CLS_DTL_WRK_DESCRLONG$0'}).text.strip()
         enrollment = page.find(
             'span', {'id':
                      'UC_CLS_DTL_WRK_DESCR1$0'}).text.split()[-1].split('/')
@@ -185,8 +183,6 @@ class CourseSearch(object):
             name=course_name,
             enrollment=enrollment,
             units=units)
-        if description:
-            section.course.description = description
         section.prerequisites = prerequisites
         section.notes.append(notes)
         section.crosslists.update(crosslists)

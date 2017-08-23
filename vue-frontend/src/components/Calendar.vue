@@ -50,7 +50,7 @@
       </svg>
     </svg>
     <v-list two-line dense>
-      <v-list-tile v-for="({course, section, activity, schedule, type}, color) of schedules.reduce((a, b) => Object.assign(a, {[b.color]: b}), {})"
+      <v-list-tile v-for="{course, section, activity, schedule, type, color, temporary} of legend"
         :key="color" class="legend-tile" @click.native="reset({query: course})">
         <v-list-tile-action>
           <v-chip small label :style="{backgroundColor: color, borderColor: 'black'}" class="ma-0 elevation-0"
@@ -66,6 +66,9 @@
             <course-name>{{course}}</course-name>
           </v-list-tile-sub-title>
         </v-list-tile-content>
+        <v-list-tile-action v-if="temporary">
+          <v-chip small class="primary white--text">Planned</v-chip>
+        </v-list-tile-action>
       </v-list-tile>
     </v-list>
   </div>
@@ -111,6 +114,15 @@ export default {
       return (this.schedules || []).length > 0 ?
         (Math.ceil(Math.max(...this.schedules.map(x => x.schedule[1] % 1440)) / 30) * 30) : 1260;
     },
+    legend() {
+      return Object.values(this.schedules.reduce((a, b) => Object.assign(a, { [b.color]: b }), {}))
+        .sort((a, b) => {
+          if (a.course == b.course) {
+            return a.section < b.section ? -1 : 1
+          }
+          return a.course < b.course ? -1 : 1
+        })
+    }
   },
   methods: {
     ...mapActions('filter', ['reset']),
@@ -132,11 +144,13 @@ export default {
           requestAnimationFrame(animate)
         }
       }
-      const state = { topShift: this.topShift, height: this.height }
       this.$nextTick(() => {
+        const state = { topShift: this.topShift, height: this.height }
+        const height = Math.max(600, this.latest - this.earliest + 120);
+        const topShift = this.earliest - (height - this.latest + this.earliest) / 2;
         new TWEEN.Tween(state)
           .easing(TWEEN.Easing.Quadratic.Out)
-          .to({ topShift: this.earliest - 30, height: Math.max(600, this.latest - this.earliest + 120) }, 500)
+          .to({ topShift, height }, 500)
           .onUpdate(() => {
             this.topShift = state.topShift
             this.height = state.height
@@ -156,6 +170,7 @@ export default {
         watch(() => this.term),
         watch(() => this.temporary).map(temporary => temporary.course && Object.assign(temporary, {
           color: 'rgba(255, 235, 59, 0.8)',
+          temporary: true,
         })),
       ).debounceTime(50).switchMap(
         ([records, term, temporary]) => {
@@ -173,12 +188,7 @@ export default {
               // Pull the schedules.
               .map(schedule => this.flattenToSchedules(schedule, record.activity))
               // Add the course id.
-              .map(schedule => schedule.map(s => Object.assign(s, {
-                course: record.course,
-                section: record.section,
-                activity: record.activity,
-                color: record.color,
-              })))))
+              .map(schedule => schedule.map(s => Object.assign(s, record)))))
             // Flatten the array and assign a color.
             .map(schedule => schedule.reduce((accumulator, value, index) => {
               return accumulator.concat(value.map(block => {

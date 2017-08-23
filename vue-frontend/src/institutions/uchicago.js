@@ -93,7 +93,7 @@ const UCHICAGO = {
   /** eg Semester, Quarter, Term */
   periodName: 'Quarter',
   periods: [
-    { name: 'Autumn', shorthand: 'F', color: '#ffc107' },
+    { name: 'Autumn', shorthand: 'A', color: '#ffc107' },
     { name: 'Winter', shorthand: 'W', color: '#2196f3' },
     { name: 'Spring', shorthand: 'S', color: '#4caf50' },
     { name: 'Summer', shorthand: 'S', color: '#ff5252' },

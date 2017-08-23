@@ -4,6 +4,7 @@ import re
 import pyrebase
 
 from src import Term
+from src import CollegeCatalogParser
 
 ALPHANUMERIC = re.compile('[^a-z0-9 ]+')
 FIREBASE = pyrebase.initialize_app({
@@ -21,7 +22,6 @@ FIREBASE = pyrebase.initialize_app({
 
 
 def transform(a):
-
     return dict([(i, j) for i, j in enumerate(a) if j is not None])
 
 
@@ -31,11 +31,10 @@ def get_words(text):
 
 def scrub_data(db):
     updates = {}
-        updates['course-info/%s/crosslists' %
-                course] = list(filter(lambda x: len(x) == 10, info.get('crosslists', [])))
+    course_info = db.child('course-info').get().val()
     for course, info in course_info.items():
-        updates['course-info/%s/crosslists' %
-                course] = list(filter(lambda x: len(x) == 10, info.get('crosslists', [])))
+        updates['course-info/%s/crosslists' % course] = list(
+            filter(lambda x: len(x) == 10, info.get('crosslists', [])))
     db.update(updates)
 
 
@@ -50,6 +49,7 @@ def rebuild_indexes(db):
     intervals = collections.defaultdict(set)
     inverted = collections.defaultdict(set)
     years = collections.defaultdict(set)
+    sequences = collections.defaultdict(set)
     for course_id, a in schedules.items():
         for year, b in a.items():
             for period, c in b.items():
@@ -68,8 +68,12 @@ def rebuild_indexes(db):
                     # Construct the inverted index based on the course description and name.
                     info = course_info.get(course_id, {})
                     name = info.get('name', '')
-                    description = course_descriptions.get(
-                        course_id, {}).get('description', '')
+                    description = course_descriptions.get(course_id, {}).get(
+                        'description', '')
+                    sequence = course_descriptions.get(course_id,
+                                                       {}).get('sequence')
+                    if sequence:
+                        sequences[sequence].add(course_id)
                     for word in get_words(course_id) | get_words(
                             name) | get_words(description):
                         inverted[word].add(course_id)
@@ -89,6 +93,37 @@ def rebuild_indexes(db):
     db.child('indexes').child('years').set(flatten_set(years))
     db.child('indexes').child('schedules').set(flatten_set(intervals))
     db.child('indexes').child('all').set(list(schedules.keys()))
+    db.child('indexes').set({
+        'fulltext': flatten_set(inverted),
+        'instructors': flatten_set(instructors),
+        'departments': flatten_set(departments),
+        'periods': flatten_set(periods),
+        'terms': flatten_set(terms),
+        'years': flatten_set(years),
+        'schedules': flatten_set(intervals),
+        'all': list(schedules.keys())
+    })
+
+
+def scrape_descriptions(db):
+    course_info = db.child('course-info').get().val()
+    courses, sequences = CollegeCatalogParser()
+    updates = {}
+    for course, data in courses.items():
+        updates['course-descriptions/' + course] = {
+            'description': data['description'],
+            'notes': data['notes']
+        }
+        # The catalog is a more authoritative source.
+        updates['course-info/' + course + '/name'] = data['name']
+        updates['course-info/' + course + '/sequence'] = data['sequence']
+    for sequence, data in sequences.items():
+        updates['sequence-descriptions/' + sequence] = {
+            'description': data['description'],
+            'notes': data['notes']
+        }
+        updates['sequence-info/' + sequence + '/name'] = data['name']
+    db.update(updates)
 
 
 def scrape_data(db):
@@ -101,38 +136,42 @@ def scrape_data(db):
         updates = {}
         for course, sections in term.courses.items():
             data = known_course_info.get(course.id, {'crosslists': []})
-            data['description'] = data.get('description', course.description)
             for id, section in sections.items():
                 if data.get('name', section.name) != section.name:
                     print('[%s] Conflicting course name for %s: %s, %s' %
                           (term, course.id, data, section.name))
                 data['name'] = section.name
                 data['crosslists'] = list(
-                    set(data.get('crosslists', [])) |
-                    set(section.crosslists))
+                    set(data.get('crosslists', [])) | set(section.crosslists))
                 year = term.id[-4:]
                 period = term.id[:6]
-                updates['schedules/%s/%s/%s/%s' %
-                        (course.id, year, period, id)] = {
-                            'term': '%s %s' % (period, year),
-                            'department': course.id[:4],
-                            'prerequisites': section.prerequisites,
-                            'notes': section.notes,
-                            'enrollment': section.enrollment,
-                            'primaries': [{
-                                'instructors': primary.instructors,
-                                'schedule': primary.schedule,
-                                'type': primary.type,
-                                'location': primary.location
-                            } for primary in section.primaries],
-                            'secondaries': dict([(secondary.id, {
-                                'instructors': secondary.instructors,
-                                'schedule': secondary.schedule,
-                                'type': secondary.type,
+                update = {
+                    'term':
+                    '%s %s' % (period, year),
+                    'department':
+                    course.id[:4],
+                    'prerequisites':
+                    section.prerequisites,
+                    'notes':
+                    section.notes,
+                    'enrollment':
+                    section.enrollment,
+                    'primaries': [{
+                        'instructors': primary.instructors,
+                        'schedule': primary.schedule,
+                        'type': primary.type,
+                        'location': primary.location
+                    } for primary in section.primaries],
+                    'secondaries':
+                    dict([(secondary.id, {
+                        'instructors': secondary.instructors,
+                        'schedule': secondary.schedule,
+                        'type': secondary.type,
+                        'enrollment': secondary.enrollment
+                    }) for secondary in section.secondaries])
                 }
-                                'enrollment': secondary.enrollment
-                            }) for secondary in section.secondaries])
-                }
+                updates['schedules/%s/%s/%s/%s' % (course.id, year, period,
+                                                   id)] = update
             known_course_info[course.id] = data
             updates['course-info/%s' % course.id] = data
         try:
@@ -148,5 +187,6 @@ def scrape_data(db):
 if __name__ == '__main__':
     db = FIREBASE.database()
     # db.child('schedules').set({})
-    scrape_data(db)
-    # rebuild_indexes(db)
+    # scrape_data(db)
+    # scrape_descriptions(db)
+    rebuild_indexes(db)

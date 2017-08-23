@@ -13,7 +13,8 @@
               <span v-if="(primary.instructors || []).length == 0" class="unknown">Instructor unknown</span>
               <br/> {{primary.location}}
             </div>
-            <schedule-bar :schedule="primary.schedule || []" class="schedule-bar" />
+            <schedule-bar :schedule="primary.schedule || []" class="schedule-bar ml-2" />
+            <div class="enrollment ml-2 caption">{{section.enrollment.join('/')}}</div>
           </div>
         </div>
       </div>
@@ -25,7 +26,8 @@
         <div class="grow ml-2">{{(activity.instructors || []).join(', ')}}
           <span v-if="(activity.instructors || []).length == 0" class="unknown">Instructor unknown</span>
           <br/>{{activity.location}}</div>
-        <schedule-bar :schedule="activity.schedule || []" class="schedule-bar" />
+        <schedule-bar :schedule="activity.schedule || []" class="schedule-bar ml-2" />
+        <div class="enrollment ml-2 caption">{{section.enrollment.join('/')}}</div>
       </div>
     </div>
   </div>
@@ -48,7 +50,7 @@ export default {
   computed: mapState('institution', { endpoints: state => state.endpoints }),
   data() { return { course: this.$slots.default[0].text }; },
   subscriptions() {
-    return { schedules: this.endpoints.schedules(this.course, this.term).first() }
+    return { schedules: this.endpoints.schedules(this.course, this.term) }
   },
   methods: {
     ...mapActions('calendar', ['setTemporarySection', 'clearTemporary']),
@@ -66,7 +68,7 @@ export default {
 }
 
 .activity-type {
-  width: 60px;
+  width: 80px;
 }
 
 .schedule-bar {
@@ -76,5 +78,11 @@ export default {
 
 .unknown {
   font-style: italic;
+}
+
+.enrollment {
+  align-self: center;
+  text-align: right;
+  width: 48px;
 }
 </style>

@@ -5,17 +5,23 @@
     </v-slide-x-transition>
     <v-layout row>
       <v-spacer>
-        <div v-for="term of filteredOfferings.slice(0, maxTerm)" :key="term">
-          <div class="subheading term-heading">{{term}}</div>
+        <div v-for="(term, index) of filteredOfferings.slice(0, maxTerm)" :key="term">
+          <div class="flex pr-0">
+            <div class="subheading term-heading grow">{{term}}</div>
+            <div class="caption ml-2 enrolled-heading" v-if="index == 0">
+              Enrolled
+            </div>
+          </div>
           <section-detail :term="term">{{course}}</section-detail>
         </div>
         <div class="text-xs-center" v-if="maxTerm < filteredOfferings.length">
           <v-btn block flat @click="maxTerm += 1">Show {{filteredOfferings[maxTerm]}}</v-btn>
         </div>
       </v-spacer>
-      <div class="grades ml-2" v-sticky>
+      <div class="side ml-3" v-sticky>
         <div class="subheading">Grades</div>
         <grade-distribution :value="grades"></grade-distribution>
+        <div class="subheading mt-2">Meta</div>
       </div>
     </v-layout>
   </v-card-text>
@@ -95,7 +101,7 @@ export default {
   flex-shrink: 0;
 }
 
-.grades {
+.side {
   width: 150px;
   top: 75px;
   align-self: flex-start;
@@ -114,5 +120,9 @@ export default {
   height: 1px;
   content: '\a0';
   background-color: lightgrey;
+}
+
+.enrolled-heading {
+  align-self: center;
 }
 </style>
