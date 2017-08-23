@@ -203,6 +203,28 @@ class CourseSearch(object):
         # print(section)
         return section
 
+    def parse_schedule(self, schedule):
+        separates = [x.strip() for x in schedule.split('&')]
+        if len(separates) > 1:
+            results = []
+            for s in separates:
+                results.extend(self.parse_schedule(s))
+            return results
+        if schedule == 'TBA':
+            return []
+        components = [x.strip() for x in schedule.split(':', 1)]
+        times = [x.strip() for x in components[-1].split('-')]
+        if not times[0] or not times[1]:
+            return []
+        from_time = int((datetime.datetime.strptime(times[0], '%I:%M %p') - MIDNIGHT).total_seconds() / 60)
+        to_time = int((datetime.datetime.strptime(times[1], '%I:%M %p') - MIDNIGHT).total_seconds() / 60)
+        days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        result = []
+        for offset, day in enumerate(days):
+            if day in components[0]:
+                result.append([offset * 24 * 60 + from_time, offset * 24 * 60 + to_time])
+        return result
+
     def parse_secondary(self, row, type):
         descriptor = row.find('div',
                               {'id': re.compile(r'^win0divDISC_HTM\$\d+')})
@@ -218,9 +240,9 @@ class CourseSearch(object):
                           row.find('div', {
                               'id': re.compile(r'^win0divDISC_INSTR\$\d+')
                           }).text.split(','))
-        schedule = row.find(
+        schedule = self.parse_schedule(row.find(
             'div', {'id':
-                    re.compile(r'^win0divDISC_SCHED\$\d+')}).text.strip()
+                    re.compile(r'^win0divDISC_SCHED\$\d+')}).text.strip())
         location = row.find(
             'div', {'id': re.compile(r'^win0divDISC_ROOM\$\d+')}).text.strip()
         return SecondaryActivity(
@@ -235,8 +257,8 @@ class CourseSearch(object):
         instructors = map(
             lambda x: x.strip(),
             row.find('span', {'id': re.compile(r'^MTG\$\d+')}).text.split(','))
-        schedule = row.find(
-            'span', {'id': re.compile(r'^MTG_SCHED\$\d+')}).text.strip()
+        schedule = self.parse_schedule(row.find(
+            'span', {'id': re.compile(r'^MTG_SCHED\$\d+')}).text.strip())
         location = row.find('span',
                             {'id': re.compile(r'^MTG_LOC\$\d+')}).text.strip()
         return PrimaryActivity(
