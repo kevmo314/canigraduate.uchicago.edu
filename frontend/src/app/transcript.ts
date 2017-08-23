@@ -1,4 +1,6 @@
+import {mean} from 'math';
 import {Memoize} from 'typescript-memoize';
+
 import {TranscriptRecord} from './transcript-record';
 
 export class Transcript {
@@ -26,10 +28,7 @@ export class Transcript {
 
   getFilteredGpa(filter: (record: TranscriptRecord) => boolean) {
     const filtered = this.records.filter(r => r.quality).filter(filter);
-    return filtered.length ?
-        filtered.reduce((sum, record) => sum + record.gpa, 0) /
-            filtered.length :
-        0;
+    return filtered.length ? mean(filtered.map(record => record.gpa)) : 0;
   }
 
   @Memoize()
@@ -46,7 +45,7 @@ export class Transcript {
   }
 
   getTotalGpa() {
-    const records = this.records.filter(record => record.quality);
-    return records.reduce((a, b) => a + b.gpa, 0) / records.length;
+    return mean(this.records.filter(record => record.quality)
+                    .map(record => record.gpa));
   }
 }

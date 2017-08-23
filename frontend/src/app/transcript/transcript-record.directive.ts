@@ -1,5 +1,6 @@
 import {Directive, Input, OnChanges, SimpleChanges} from '@angular/core';
 import {TranscriptRecord} from 'app/transcript-record';
+import {median} from 'math';
 import {Observable} from 'rxjs/Observable';
 
 import {DatabaseService} from './../database/database.service';
@@ -13,11 +14,9 @@ export class TranscriptRecordDirective implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.record && this.record) {
-      this.egpa =
-          this.databaseService.grades(this.record.course).map(grades => {
-            return grades.map(grade => grade.gpa).reduce((a, b) => a + b, 0) /
-                grades.length;
-          });
+      this.egpa = this.databaseService.grades(this.record.course)
+                      .map(grades => grades.map(grade => grade.gpa))
+                      .map(median);
     }
   }
 }

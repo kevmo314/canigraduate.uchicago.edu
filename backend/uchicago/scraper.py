@@ -24,8 +24,11 @@ FIREBASE = pyrebase.initialize_app({
 MIDNIGHT = datetime.datetime.strptime('12:00AM', '%I:%M%p')
 
 
+
 def transform(a):
+
     return dict([(i, j) for i, j in enumerate(a) if j is not None])
+
 
 def get_words(text):
     return set(ALPHANUMERIC.sub('', text.lower()).split())
@@ -67,6 +70,7 @@ def scrub_data(db):
 def rebuild_indexes(db):
     schedules = db.child('schedules').get().val()
     course_info = db.child('course-info').get().val()
+    course_descriptions = db.child('course-descriptions').get().val()
     instructors = collections.defaultdict(set)
     departments = collections.defaultdict(set)
     periods = collections.defaultdict(set)
@@ -109,7 +113,8 @@ def rebuild_indexes(db):
                     # Construct the inverted index based on the course description and name.
                     info = course_info.get(course_id, {})
                     name = info.get('name', '')
-                    description = info.get('description', '')
+                    description = course_descriptions.get(
+                        course_id, {}).get('description', '')
                     for word in get_words(course_id) | get_words(
                             name) | get_words(description):
                         inverted[word].add(course_id)
@@ -182,10 +187,10 @@ def scrape_data(db):
                                 'instructors': secondary.instructors,
                                 'schedule': secondary.schedule,
                                 'type': secondary.type,
-                                'location': secondary.location,
+                }
                                 'enrollment': secondary.enrollment
                             }) for secondary in section.secondaries])
-                        }
+                }
             known_course_info[course.id] = data
             updates['course-info/%s' % course.id] = data
         try:

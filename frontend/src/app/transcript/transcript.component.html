@@ -5,8 +5,9 @@
     <md-icon [ngClass]="{'flip': !cigTranscriptTerm.expanded && !last, 'right': last}">expand_more</md-icon>
     <h3 md-subheader class="term">{{ term }}</h3>
     <h3 md-subheader class="gpa" *ngIf="showGrades">
-      Quarter {{ cigTranscriptTerm.transcript.getTotalGpa() | number:'1.2-2' }} ({{cigTranscriptTerm.egpa | async | number:'1.2-2'}})
-      &middot; Cumulative {{ transcript.getCumulativeGpa(term) | number:'1.2-2' }} ({{getTermEgpa(term) | async | number:'1.2-2'}})
+      Quarter {{ cigTranscriptTerm.transcript.getTotalGpa() | number:'1.2-2' }}&nbsp;
+      <cig-egpa [egpa]="cigTranscriptTerm.egpa | async"></cig-egpa>&nbsp;&middot; Cumulative {{ transcript.getCumulativeGpa(term) | number:'1.2-2' }}&nbsp;
+      <cig-egpa [egpa]="getTermEgpa(term) | async"></cig-egpa>&nbsp;
     </h3>
   </div>
   <div class="records" *ngIf="cigTranscriptTerm.expanded" [@toggle]="cigTranscriptTerm.expanded">
@@ -14,7 +15,11 @@
       [record]="record" class="record">
       <div class="course">{{ record.course }}</div>
       <cig-course-name [course]="record.course" class="name"></cig-course-name>
-      <div class="gpa" *ngIf="showGrades">{{ record.gpa | number:'1.1-1' }} ({{cigTranscriptRecord.egpa | async | number:'1.2-2'}})</div>
+      <div class="gpa" *ngIf="showGrades">
+        <ng-container *ngIf="record.quality">{{ record.gpa | number:'1.1-1' }}</ng-container>
+        <ng-container *ngIf="!record.quality">{{ record.grade }}</ng-container>
+        <cig-egpa [egpa]="cigTranscriptRecord.egpa | async"></cig-egpa>
+      </div>
     </div>
   </div>
 </md-list>

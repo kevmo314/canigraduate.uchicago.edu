@@ -33,6 +33,8 @@
     </md-slide-toggle>
   </md-card-title>
   <md-card-content>
-    <cig-transcript [transcript]="transcriptService.transcript | async" [showGrades]="showGrades"></cig-transcript>
+    <div class="gpa-header">GPA
+      <abbr mdTooltip="The GPA that the 50th percentile student would have received for your classes." [mdTooltipPosition]="'before'">(EGPA)</abbr></div>
+    <cig-transcript [transcript]="transcriptService.transcript | async " [showGrades]="showGrades "></cig-transcript>
   </md-card-content>
 </md-card>

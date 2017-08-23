@@ -9,6 +9,7 @@
     "mapRoot": "./",
     "module": "es6",
     "moduleResolution": "node",
+    "noStrictGenericChecks": true,
     "outDir": "../dist/out-tsc",
     "sourceMap": true,
     "target": "es5",
