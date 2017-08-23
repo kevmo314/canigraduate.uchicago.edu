@@ -1,5 +1,6 @@
 import json
 import requests
+import sqlite3
 import urllib
 
 import flask
@@ -10,6 +11,14 @@ app = flask.Flask(__name__)
 CLOUD_FUNCTIONS = 'https://us-central1-canigraduate-43286.cloudfunctions.net'
 FIREBASE = 'https://canigraduate-43286.firebaseio.com'
 
+def get_course_info():
+    return requests.get(FIREBASE + '/course-info.json').json()
+
+def get_schedules(course):
+    return requests.get(FIREBASE + '/schedules/' + course + '.json').json()
+
+def get_indexes():
+    return requests.get(FIREBASE + '/indexes.json').json()
 
 @app.route('/api/transcript', methods=['GET'])
 @flask_cors.cross_origin()
@@ -30,9 +39,10 @@ def transcript():
 @app.route('/api/course-info/<course>')
 @flask_cors.cross_origin()
 def course_info(course):
-    return flask.Response(
-        requests.get('%s/course-info/%s.json' % (FIREBASE, course)).content,
-        content_type='application/json')
+    content = requests.get(FIREBASE + '/course-info/' + course + '.json').content
+    if content == 'null':
+        return flask.jsonify({'error': 'Course not found.'}, 404)
+    return flask.Response(content, content_type='application/json')
 
 
 @app.route('/api/schedules', methods=['GET'])
@@ -50,48 +60,33 @@ def schedules():
             '"course", "period", or "year" must be specified'
         }, 400)
 
-    if department:
-        candidates = requests.get('%s/indexes/department/%s.json' %
-                                  (FIREBASE, department)).json()
-    else:
-        candidates = requests.get(FIREBASE + '/indexes/all.json').json()
-    if course and candidates:
-        candidates &= [course]
-    if period and candidates:
-        candidates &= requests.get('%s/indexes/period/%s.json' %
-                                   (FIREBASE, period)).json()
-    if year and candidates:
-        candidates &= requests.get('%s/indexes/year/%s.json' % (FIREBASE,
-                                                                year)).json()
-    if not candidates:
-        return flask.jsonify({'results': []}, 200)
+    conn = sqlite3.connect('cache.db')
+    cursor = conn.cursor()
 
-    def transform(a):
-        return dict([(i, j) for i, j in enumerate(a) if j is not None])
+    condition = []
+    params = []
+    if department:
+        condition.append('department=?')
+        params.append(department)
+    if course:
+        condition.append('course=?')
+        params.append(course)
+    if period:
+        condition.append('period=?')
+        params.append(period)
+    if year:
+        condition.append('year=?')
+        try:
+            params.append(int(year))
+        except ValueError:
+            return flask.jsonify({'error': 'Dude wtf kind of year is "%s" it\'s not even an integer.' % year}, 400)
 
     def generate():
-        count = 0
-        yield '{"response": ['
-        for candidate in candidates:
-            # We could optimize here, however the paylods are so small it doesn't matter.
-            data = requests.get('%s/schedules/%s.json' % (FIREBASE,
-                                                          candidate)).json()
-            if isinstance(data, list):
-                data = transform(data)
-            for candidate_period, value in data.items():
-                if period and candidate_period != period:
-                    continue
-                for candidate_year, sections in value.items():
-                    if year and candidate_year != year:
-                        continue
-                    for section_id, section in sections.items():
-                        section['section'] = section_id
-                        section['course'] = candidate
-                        section['year'] = year
-                        section['period'] = period
-                        if count > 0:
-                            yield ','
-                        yield json.dumps(section)
+        yield '{"results":['
+        for index, row in enumerate(cursor.execute('SELECT record FROM courses WHERE {c}'.format(c=' AND '.join(condition)), params)):
+            if index > 0:
+                yield ','
+            yield row[0]
         yield ']}'
 
     return flask.Response(generate(), content_type='application/json')
