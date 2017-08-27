@@ -1,13 +1,17 @@
 import collections
 import datetime
 import json
+import multiprocessing
+import os
 import re
+import requests
 import sqlite3
 
 import pyrebase
 
 from src import Term
 from src import CollegeCatalogParser
+from src import RibbitParser
 
 ALPHANUMERIC = re.compile('[^a-z0-9 ]+')
 FIREBASE = pyrebase.initialize_app({
@@ -112,7 +116,8 @@ def rebuild_indexes(db):
                             '-'.join(str(x) for x in s)
                             for s in sorted(schedule)
                         ])
-                        intervals[schedule_key or 'unknown'].add(course_id)
+                        intervals[schedule_key or 'unknown'].add(
+                            '%s/%s %s' % (course_id, period, year))
                     else:
                         schedule = []
                         for primary in section.get('primaries'):
@@ -124,14 +129,14 @@ def rebuild_indexes(db):
                             '-'.join(str(x) for x in s)
                             for s in sorted(schedule)
                         ])
-                        intervals[schedule_key or 'unknown'].add(course_id)
+                        intervals[schedule_key or 'unknown'].add(
+                            '%s/%s %s' % (course_id, period, year))
                     # Construct the inverted index based on the course description and name.
                     info = course_info.get(course_id, {})
                     name = info.get('name', '')
                     description = course_descriptions.get(course_id, {}).get(
                         'description', '')
-                    sequence = course_descriptions.get(course_id,
-                                                       {}).get('sequence')
+                    sequence = course_info.get(course_id, {}).get('sequence')
                     if sequence:
                         sequences[sequence].add(course_id)
                     for word in get_words(course_id) | get_words(
@@ -143,14 +148,15 @@ def rebuild_indexes(db):
                     section['course'] = course_id
                     records.append((course_id, int(year), period,
                                     course_id[:4], json.dumps(section)))
-    cache = sqlite3.connect('cache.db')
-    cursor = cache.cursor()
-    cursor.execute('DELETE FROM courses')
-    cursor.executemany(
-        'INSERT INTO courses (course, year, period, department, record) VALUES (?, ?, ?, ?, ?)',
-        records)
-    cache.commit()
-    cache.close()
+    if os.path.isfile('cache.db'):
+        cache = sqlite3.connect('cache.db')
+        cursor = cache.cursor()
+        cursor.execute('DELETE FROM courses')
+        cursor.executemany(
+            'INSERT INTO courses (course, year, period, department, record) VALUES (?, ?, ?, ?, ?)',
+            records)
+        cache.commit()
+        cache.close()
 
     def flatten_set(d):
         return dict([(a, list(b)) for a, b in d.items()])
@@ -188,6 +194,21 @@ def scrape_descriptions(db):
         }
         updates['sequence-info/' + sequence + '/name'] = data['name']
     db.update(updates)
+    if False:  # Ribbit updates.
+        updates = {}
+        course_descriptions = db.child('course-descriptions').get().val()
+        find = [
+            course for course in course_info.keys()
+            if course not in course_descriptions
+        ]
+        print('Found', len(find), 'dangling courses')
+        for course, data in RibbitParser(find).items():
+            updates['course-info/' + course + '/name'] = data.name
+            if data.description:
+                updates['course-descriptions/'
+                        + course + '/description'] = data.description
+        if updates:
+            db.update(updates)
 
 
 def scrape_data(db):
@@ -211,6 +232,10 @@ def scrape_data(db):
                 data['name'] = section.name
                 data['crosslists'] = list(
                     set(data.get('crosslists', [])) | set(section.crosslists))
+                try:
+                    data['crosslists'].remove(course.id)
+                except:
+                    pass
                 year = term.id[-4:]
                 period = term.id[:6]
                 update = {

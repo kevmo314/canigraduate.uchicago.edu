@@ -1,8 +1,14 @@
+export const SORT = {
+  BY_POPULARITY: 0,
+  ALPHABETICALLY: 1,
+};
+
 export default {
   namespaced: true,
   state: {
     expanded: [],
     page: 1,
+    sort: SORT.BY_POPULARITY,
   },
   mutations: {
     setExpanded(state, { course, expanded }) {
@@ -18,6 +24,9 @@ export default {
     },
     setPage(state, page) {
       state.page = page;
+    },
+    update(state, params) {
+      Object.assign(state, params);
     },
   },
 };

@@ -10,9 +10,9 @@
         <v-tabs-content id="transcript" class="content">
           <v-expansion-panel>
             <v-expansion-panel-content v-for="(term, index) in terms" :key="term" :value="index === terms.length - 1">
-              <div slot="header" class="header flex" align-center>
+              <div slot="header" class="header display-flex" align-center>
                 {{term}}
-                <div class="grow caption grey--text text-xs-right mr-5">
+                <div class="flex-grow caption grey--text text-xs-right mr-5">
                   <span v-if="transcript.find(t => t.term == term && t.quality)">
                     Quarter
                     <strong class="grey--text text--darken-2">{{getQuarterGpa(term).toFixed(2)}}</strong>&nbsp;&middot;&nbsp;

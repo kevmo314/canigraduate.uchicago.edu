@@ -5,10 +5,15 @@ import Vuetify from 'vuetify';
 import Vuex from 'vuex';
 import store from './store';
 import VueRx from 'vue-rx';
+import VueTimeago from 'vue-timeago';
 import Rx from 'rxjs/Rx';
 
 Vue.use(Vuetify);
 Vue.use(VueRx, Rx);
+Vue.use(VueTimeago, {
+  locale: 'en-US',
+  locales: { 'en-US': require('vue-timeago/locales/en-US.json') },
+});
 
 const PRODUCTION = process.env.NODE_ENV === 'PRODUCTION';
 

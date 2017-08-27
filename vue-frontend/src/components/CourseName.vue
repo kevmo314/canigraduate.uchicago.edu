@@ -9,10 +9,10 @@ import { mapState } from 'vuex';
 export default {
   name: 'course-name',
   computed: mapState('institution', {
-    courseName: state => state.endpoints.courseName
+    courseInfo: state => state.endpoints.courseInfo
   }),
   subscriptions() {
-    return { name: this.courseName(this.$slots.default[0].text).first() };
+    return { name: this.courseInfo(this.$slots.default[0].text).map(x => x.name).first() };
   },
 }
 </script>

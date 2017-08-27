@@ -3,10 +3,24 @@
     <v-card>
       <v-card-title primary-title class="headline">Your watches</v-card-title>
       <v-card-text>
-        <div class="text-xs-center">
-          <img src="../assets/shore.png" alt>
-          <p>You don't have any watches. Add one below!</p>
+        <div v-if="!watches" class="text-xs-center my-5">
+          <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
         </div>
+        <div class="text-xs-center" v-else-if="watches.length == 0">
+          <img src="../assets/shore.png" alt>
+          <p class="mt-3 body-2">You don't have any watches. Add one below!</p>
+        </div>
+        <v-data-table v-else :headers="headers" :items="watches" hide-actions>
+          <template slot="items" scope="props">
+            <td class="text-xs-center">{{props.item.term || '*'}}</td>
+            <td class="text-xs-center">{{props.item.course || '*'}}</td>
+            <td class="text-xs-center">{{props.item.section || '*'}}</td>
+            <td class="text-xs-center">
+              <timeago :since="props.item.created - serverTimeOffset" :auto-update="60" />
+            </td>
+            <td></td>
+          </template>
+        </v-data-table>
       </v-card-text>
     </v-card>
     <form @submit.prevent="addWatch">
@@ -40,23 +54,34 @@ import { mapState } from 'vuex';
 
 export default {
   data() {
-    return { term: '', course: '', section: '', courseHint: '' }
+    return {
+      term: '', course: '', section: '', courseHint: '',
+      headers: [
+        { text: 'Term', sortable: true, value: 'term', align: 'center' },
+        { text: 'Course', sortable: true, value: 'course', align: 'center' },
+        { text: 'Section', sortable: true, value: 'section', align: 'center' },
+        { text: 'Added', sortable: true, value: 'added', align: 'center' },
+        { text: 'Actions', sortable: false }
+      ]
+    }
   },
   computed: mapState('institution', { endpoints: state => state.endpoints }),
   subscriptions() {
     return {
       courses: this.endpoints.courses(),
-      terms: this.endpoints.terms()
+      terms: this.endpoints.terms(),
+      watches: this.endpoints.watches.read(),
+      serverTimeOffset: this.endpoints.serverTimeOffset()
     }
   },
   watch: {
     course(course) {
-      this.endpoints.courseName(course).first().subscribe(name => this.courseHint = name);
+      this.endpoints.courseInfo(course).first().subscribe(course => this.courseHint = course.name);
     }
   },
   methods: {
     addWatch() {
-
+      this.endpoints.watches.create({ term: this.term, course: this.course, section: this.section })
     }
   }
 }

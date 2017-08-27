@@ -169,11 +169,11 @@ export default {
   overflow: hidden;
 }
 
-.flex {
+.display-flex {
   display: flex;
 }
 
-.grow {
+.flex-grow {
   flex-grow: 1;
 }
 

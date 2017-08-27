@@ -1,13 +1,22 @@
 <template>
   <v-card-text>
     <v-slide-x-transition>
-      <p v-show="description">{{description}}</p>
+      <div v-show="description">
+        <p>{{description}}</p>
+        <p v-if="notes">
+          <completion-indicator>{{notes}}</completion-indicator>
+        </p>
+        <p v-if="sequence">This course is part of the
+          <span class="body-2">{{sequence}}</span> sequence which contains:
+          <completion-indicator>{{sequenceCourses.join(', ')}}</completion-indicator>
+        </p>
+      </div>
     </v-slide-x-transition>
     <v-layout row>
       <v-spacer>
         <div v-for="(term, index) of filteredOfferings.slice(0, maxTerm)" :key="term">
-          <div class="flex pr-0">
-            <div class="subheading term-heading grow">{{term}}</div>
+          <div class="display-flex pr-0">
+            <div class="subheading term-heading flex-grow">{{term}}</div>
             <div class="caption ml-2 enrolled-heading" v-if="index == 0">
               Enrolled
             </div>
@@ -29,14 +38,15 @@
 
 <script>
 import GradeDistribution from '@/components/GradeDistribution';
+import CompletionIndicator from '@/components/CompletionIndicator';
 import SectionDetail from '@/components/SectionDetail';
 import Sticky from '@/directives/Sticky';
 import { Observable } from 'rxjs/Observable';
-import { mapState } from 'vuex';
+import { mapState, mapGetters } from 'vuex';
 
 export default {
   name: 'course-detail',
-  components: { GradeDistribution, SectionDetail },
+  components: { GradeDistribution, SectionDetail, CompletionIndicator },
   directives: { Sticky },
   computed: {
     ...mapState('institution', {
@@ -52,6 +62,7 @@ export default {
         return state.periods.filter(i => i < this.periods.length).map(i => this.periods[i].name)
       }
     }),
+    ...mapGetters('filter', ['daysIntervalTree']),
     show: {
       get() {
         return this.value || this.$store.state.search.expanded.includes(this.course);
@@ -74,9 +85,23 @@ export default {
     };
   },
   subscriptions() {
+    const description = this.endpoints.description(this.course);
+    const sequence = this.endpoints.courseInfo(this.course).map(data => data && data.sequence).first();
+    const offerings = this.$watchAsObservable(() => this.daysIntervalTree, { immediate: true }).map(x => x.newValue)
+      .switchMap(daysIntervalTree => {
+        return this.endpoints.scheduleIndex(daysIntervalTree)
+          .map(courses => {
+            return courses.filter(course => course.startsWith(this.course)).map(course => course.substring(course.indexOf('/') + 1))
+          }).map(terms => [...(new Set(terms))].sort((a, b) => {
+            return this.$store.state.institution.converters.termToOrdinal(b) - this.$store.state.institution.converters.termToOrdinal(a);
+          }));
+      })
     return {
-      description: this.endpoints.description(this.course).first(),
-      offerings: Observable.of([]).concat(this.endpoints.offerings(this.course).first()),
+      description: description.map(data => data && data.description).first(),
+      notes: description.map(data => data && data.notes).first(),
+      sequence,
+      sequenceCourses: sequence.flatMap(sequence => this.endpoints.sequences().map(sequences => sequences[sequence])),
+      offerings: Observable.of([]).concat(offerings),
       gradeDistribution: Observable.of({}).concat(this.endpoints.gradeDistribution().map(grades => grades[this.course] || {}).first()),
     }
   },

@@ -34,6 +34,7 @@
 import Filters from '@/components/Filters.vue';
 import SearchResult from '@/components/SearchResult.vue';
 import { mapState, mapActions } from 'vuex';
+import { SORT } from '@/store/modules/search';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/fromEventPattern';
 
@@ -41,32 +42,54 @@ export default {
   components: { Filters, SearchResult },
   data() { return { resultsPerPage: 10 } },
   computed: {
-    ...mapState('institution', { search: state => state.endpoints.search }),
+    ...mapState('institution', {
+      search: state => state.endpoints.search,
+      courseRanking: state => state.endpoints.courseRanking,
+    }),
     page: {
       get() {
         return this.$store.state.search.page;
       },
       set(page) {
-        this.$store.commit('search/setPage', page);
+        this.$store.commit('search/update', { page });
       }
     }
   },
   subscriptions() {
-    const events = Observable.fromEventPattern(
-      handle => this.$store.watch(
-        state => state.filter,
-        filter => handle(filter),
-        { deep: true, immediate: true }),
-      (handle, signal) => signal(),
-    ).publishReplay(1).refCount();
+    const events = this.$watchAsObservable(() => this.$store.state.filter, { immediate: true, deep: true })
+      .map(x => x.newValue)
+      .publishReplay(1).refCount();
     const results = events.let(this.search).publishReplay(1).refCount();
     return {
-      results: results.do(results => {
-        const maxPage = Math.ceil(results.length / this.resultsPerPage);
-        if (this.$store.state.search.page > maxPage && maxPage > 0) {
-          this.$store.commit('search/setPage', maxPage)
-        }
-      }),
+      results: results
+        .combineLatest(this.$watchAsObservable(() => this.$store.state.search.sort, { immediate: true })
+          .map(x => x.newValue)
+          .flatMap(sort => {
+            function sortAlphabetically(a, b) {
+              if (a < b) {
+                return -1;
+              } else if (a > b) {
+                return 1;
+              }
+              return 0;
+            }
+            if (sort == SORT.BY_POPULARITY) {
+              return this.courseRanking().map(rankings => {
+                return (a, b) => {
+                  const rankDelta = (rankings[b] | 0) - (rankings[a] | 0);
+                  return rankDelta || sortAlphabetically(a, b);
+                };
+              });
+            } else if (sort == SORT.ALPHABETICALLY) {
+              return sortAlphabetically;
+            }
+          }), (results, sort) => results.sort(sort))
+        .do(results => {
+          const maxPage = Math.ceil(results.length / this.resultsPerPage);
+          if (this.$store.state.search.page > maxPage && maxPage > 0) {
+            this.$store.commit('search/setPage', maxPage)
+          }
+        }),
       eventTime: events.map(() => performance.now()),
       resultTime: results.flatMap(() => this.$nextTick()).map(() => performance.now()),
     }

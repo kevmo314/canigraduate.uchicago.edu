@@ -6,6 +6,7 @@ import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/observable/defer';
 import 'rxjs/add/observable/fromEventPattern';
 import 'rxjs/add/operator/do';
+import 'rxjs/add/operator/combineLatest';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/publishReplay';
@@ -40,18 +41,24 @@ function arrayToObject(array) {
 }
 
 function memoize(f) {
-  const cache = new Map();
+  let cache = f.length ? new Map() : null;
   return key => {
-    if (cache.has(key)) {
+    if (f.length && cache.has(key)) {
       return cache.get(key);
+    } else if (!f.length && cache) {
+      return cache;
     }
     const result = f(key);
-    cache.set(key, result);
+    if (f.length) {
+      cache.set(key, result);
+    } else {
+      cache = result;
+    }
     return result;
   };
 }
 
-const ref = memoize(path => {
+const val = memoize(path => {
   let first = true;
   return Observable.create(
     observer => {
@@ -72,21 +79,16 @@ const ref = memoize(path => {
     .refCount();
 });
 
-const departments = ref('/indexes/departments');
-const instructors = ref('/indexes/instructors');
-const courses = ref('/indexes/all');
-const terms = ref('/indexes/terms');
-const periods = ref('/indexes/periods');
+const courses = val('/indexes/all');
+const terms = val('/indexes/terms');
+const periods = val('/indexes/periods');
 // This pulls for all courses because the number of grades is used for search ranking.
 const gradeDistribution = Observable.defer(() =>
   axios.get(CLOUD_FUNCTIONS + '/api/grades'),
 )
   .map(response => Object.freeze(response.data))
-  .publishReplay()
+  .publishReplay(1)
   .refCount();
-const courseName = new Map();
-const offerings = new Map();
-const crosslists = new Map();
 
 const UCHICAGO = {
   name: 'University of Chicago',
@@ -99,7 +101,7 @@ const UCHICAGO = {
     { name: 'Summer', shorthand: 'S', color: '#ff5252' },
   ],
   scheduleBlocks: {
-    morning: [8 * 60 + 30, 10 * 60 + 30],
+    morning: [8 * 60, 10 * 60 + 30],
     noon: [10 * 60 + 30, 13 * 60 + 30],
     afternoon: [13 * 60 + 30, 16 * 60 + 30],
     evening: [16 * 60 + 30, 19 * 60 + 30],
@@ -129,21 +131,45 @@ const UCHICAGO = {
     gradeDistribution() {
       return gradeDistribution;
     },
-    courseName(id) {
-      return ref('/course-info/' + id + '/name');
+    courseInfo(id) {
+      return val('/course-info/' + id);
     },
     schedules(id, term) {
       const year = UCHICAGO.converters.termToYear(term);
       const period = UCHICAGO.converters.termToPeriod(term).name;
-      return ref('/schedules/' + id + '/' + year + '/' + period).map(
+      return val('/schedules/' + id + '/' + year + '/' + period).map(
         arrayToObject,
       );
     },
     departments() {
-      return departments.map(value => Object.keys(value));
+      return val('/indexes/departments').map(value => Object.keys(value));
     },
     instructors() {
-      return instructors.map(value => Object.keys(value));
+      return val('/indexes/instructors').map(value => Object.keys(value));
+    },
+    scheduleIndex(intervalTree) {
+      return val('/indexes/schedules').map(schedules => {
+        // Return a subsetter that will filter to any classes
+        // that match any schedule set.
+        return Object.entries(schedules)
+          .map(([key, subset]) => [
+            key
+              .split(',')
+              .map(interval =>
+                interval.split('-').map(time => parseInt(time, 10)),
+              ),
+            subset,
+          ])
+          .filter(([schedule, subset]) => {
+            console.log(
+              schedule,
+              intervalTree,
+              schedule.every(s => intervalTree.intersects(s)),
+            );
+            return schedule.every(s => intervalTree.intersects(s));
+          })
+          .reduce((a, [schedule, subset]) => a.concat(subset), []);
+      });
     },
     terms() {
       return terms
@@ -160,7 +186,7 @@ const UCHICAGO = {
       return courses;
     },
     offerings(id) {
-      return ref('/indexes/offerings/' + id).map(offerings =>
+      return val('/indexes/offerings/' + id).map(offerings =>
         offerings.sort(
           (a, b) =>
             UCHICAGO.converters.termToOrdinal(b) -
@@ -169,17 +195,42 @@ const UCHICAGO = {
       );
     },
     description(id) {
-      return ref('/course-descriptions/' + id);
+      return val('/course-descriptions/' + id);
     },
     crosslists(id) {
-      return ref('/course-info/' + id + '/crosslists').map(x => x || []);
+      return val('/course-info/' + id).map(x => x.crosslists || []);
     },
     query(term) {
-      return ref('/indexes/fulltext/' + term);
+      return val('/indexes/fulltext/' + term);
+    },
+    courseRanking() {
+      return gradeDistribution
+        .map(distribution => {
+          return Object.entries(distribution).reduce((obj, [course, data]) => {
+            obj[course] = 2 * Object.values(data).reduce((a, b) => a + b);
+            return obj;
+          }, {});
+        })
+        .combineLatest(val('/indexes/sequences'), (courseRanking, sequence) => {
+          Object.values(sequence).forEach(sequence => {
+            // Promote the rank of each course in the sequence to the max.
+            const max =
+              sequence
+                .map(course => courseRanking[course])
+                .reduce((a, b) => Math.max(a, b)) + 1;
+            sequence.forEach(course => (courseRanking[course] = max));
+          });
+          return courseRanking;
+        })
+        .publishReplay(1)
+        .refCount();
+    },
+    sequences() {
+      return val('/indexes/sequences');
     },
     search(filter$) {
       const filterAny = (filter, dataset) => {
-        return dataset.first().map(dataset => {
+        return dataset.map(dataset => {
           dataset = filter.map(key => new Set(dataset[key]));
           return results =>
             results.filter(course => dataset.some(data => data.has(course)));
@@ -190,16 +241,15 @@ const UCHICAGO = {
           yield* filter.query.split(' ').filter(x => x.length).map(token => {
             return UCHICAGO.endpoints
               .query(token.toLowerCase())
-              .first()
               .map(matches => new Set(matches))
               .map(matches => results => results.filter(c => matches.has(c)));
           });
         }
         if (filter.departments.length) {
-          yield filterAny(filter.departments, departments);
+          yield filterAny(filter.departments, val('/indexes/departments'));
         }
         if (filter.instructors.length) {
-          yield filterAny(filter.instructors, instructors);
+          yield filterAny(filter.instructors, val('/indexes/instructors'));
         }
         yield filterAny(
           filter.periods
@@ -208,19 +258,58 @@ const UCHICAGO = {
             .map(period => period.name),
           periods,
         );
+        if (filter.days.length < 7) {
+          // This is a rather expensive filter...
+          yield UCHICAGO.endpoints
+            .scheduleIndex(
+              filter.days.map(day => [1440 * day, 1440 * (day + 1)]),
+            )
+            .map(subset =>
+              subset.map(course => course.substring(0, course.indexOf('/'))),
+            )
+            .map(courses => new Set(courses))
+            .map(courses => {
+              return results => results.filter(course => courses.has(course));
+            });
+        }
       }
-      const subsetters = filter$.flatMap(filter =>
-        Observable.forkJoin(...generateSubsetters(filter)),
+      const subsetters = filter$.switchMap(filter =>
+        Observable.forkJoin(
+          [...generateSubsetters(filter)].map(x => x.first()),
+        ),
       );
-      return Observable.combineLatest(subsetters, courses)
+      return subsetters
+        .combineLatest(courses)
         .take(1)
         .concat(subsetters.skip(1).withLatestFrom(courses))
         .map(([subsetters, results]) => {
           return subsetters.reduce((results, sub) => sub(results), results);
         });
     },
+    serverTimeOffset() {
+      return val('.info/serverTimeOffset');
+    },
     watches: {
-      create(attrs) {},
+      create(value) {
+        db.ref('watches').child(firebaseAuth.currentUser.uid).push().set(
+          Object.assign(value, {
+            created: firebase.database.ServerValue.TIMESTAMP,
+          }),
+        );
+      },
+      update(key, value) {
+        db
+          .ref('watches')
+          .child(firebaseAuth.currentUser.uid)
+          .child(key)
+          .set(value);
+      },
+      read: memoize(() => {
+        return Observable.create(obs => firebaseAuth.onAuthStateChanged(obs))
+          .switchMap(user => user && val('watches/' + user.uid))
+          .map(val => (val ? Object.values(val) : []))
+          .map(Object.freeze);
+      }),
     },
   },
   converters: {
