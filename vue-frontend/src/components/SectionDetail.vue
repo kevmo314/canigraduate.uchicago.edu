@@ -61,7 +61,6 @@ export default {
           const scheduleMatches = section.primaries.every(primary => {
             return primary.schedule.every(interval => whitelistTree.intersects(interval));
           })
-          console.log(scheduleMatches, section.primaries);
           if (!scheduleMatches) {
             return accumulator;
           }

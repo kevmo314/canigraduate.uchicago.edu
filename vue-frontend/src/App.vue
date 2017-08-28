@@ -5,7 +5,7 @@
       <v-toolbar flat class="transparent">
         <v-list class="pa-0">
           <v-list-tile avatar tag="div">
-            <v-list-tile-avatar class="logo">
+            <v-list-tile-avatar>
               <img src="//communications.uchicago.edu/sites/all/files/identity/downloads/university-seal/university.seal.rgb.maroon.png">
             </v-list-tile-avatar>
             <v-list-tile-content>
@@ -23,7 +23,7 @@
           <v-subheader class="body-1 user-subheader mb-2">{{user.email}} </v-subheader>
         </template>
         <v-divider></v-divider>
-        <v-list-tile router to="/">
+        <v-list-tile router to="/catalog">
           <v-list-tile-action>
             <v-icon>library_books</v-icon>
           </v-list-tile-action>
@@ -89,19 +89,17 @@
       <v-toolbar-title>Can I Graduate?</v-toolbar-title>
     </v-toolbar>
     <main>
-      <v-container fluid>
-        <v-layout row align-start>
-          <div class="content">
-            <v-slide-y-reverse-transition>
-              <router-view></router-view>
-            </v-slide-y-reverse-transition>
-          </div>
-          <div class="sidebar" v-sticky>
-            <authentication v-if="!authenticated">
-            </authentication>
-            <sidebar v-else></sidebar>
-          </div>
-        </v-layout>
+      <v-container fluid class="display-flex">
+        <div class="flex-grow">
+          <v-slide-y-reverse-transition>
+            <router-view></router-view>
+          </v-slide-y-reverse-transition>
+        </div>
+        <div class="sidebar ml-3" v-sticky>
+          <authentication v-if="!authenticated">
+          </authentication>
+          <sidebar v-else></sidebar>
+        </div>
       </v-container>
     </main>
     <v-footer class="indigo darken-4">

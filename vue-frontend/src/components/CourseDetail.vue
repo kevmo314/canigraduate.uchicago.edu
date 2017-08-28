@@ -14,18 +14,20 @@
     </v-slide-x-transition>
     <v-layout row>
       <v-spacer>
-        <div v-for="(term, index) of filteredOfferings.slice(0, maxTerm)" :key="term">
-          <div class="display-flex pr-0">
-            <div class="subheading term-heading flex-grow">{{term}}</div>
-            <div class="caption ml-2 enrolled-heading" v-if="index == 0">
-              Enrolled
+        <template v-if="terms">
+          <div v-for="(term, index) of terms.slice(0, maxTerm)" :key="term">
+            <div class="display-flex pr-0">
+              <div class="subheading term-heading flex-grow">{{term}}</div>
+              <div class="caption ml-2 enrolled-heading" v-if="index == 0">
+                Enrolled
+              </div>
             </div>
+            <section-detail :term="term">{{course}}</section-detail>
           </div>
-          <section-detail :term="term">{{course}}</section-detail>
-        </div>
-        <div class="text-xs-center" v-if="maxTerm < filteredOfferings.length">
-          <v-btn block flat @click="maxTerm += 1">Show {{filteredOfferings[maxTerm]}}</v-btn>
-        </div>
+          <div class="text-xs-center" v-if="maxTerm < terms.length">
+            <v-btn block flat @click="maxTerm += 1">Show {{terms[maxTerm]}}</v-btn>
+          </div>
+        </template>
       </v-spacer>
       <div class="side ml-3" v-sticky>
         <div class="subheading">Grades</div>
@@ -42,7 +44,7 @@ import CompletionIndicator from '@/components/CompletionIndicator';
 import SectionDetail from '@/components/SectionDetail';
 import Sticky from '@/directives/Sticky';
 import { Observable } from 'rxjs/Observable';
-import { mapState, mapGetters } from 'vuex';
+import { mapState } from 'vuex';
 
 export default {
   name: 'course-detail',
@@ -57,12 +59,7 @@ export default {
         return state.gpas.map(gpa => ({ gpa, count: this.gradeDistribution[gpa] || 0 }));
       }
     }),
-    ...mapState('filter', {
-      activePeriods(state) {
-        return state.periods.filter(i => i < this.periods.length).map(i => this.periods[i].name)
-      }
-    }),
-    ...mapGetters('filter', ['daysIntervalTree']),
+    ...mapState('filter', { filter: state => state }),
     show: {
       get() {
         return this.value || this.$store.state.search.expanded.includes(this.course);
@@ -73,9 +70,6 @@ export default {
         }
       }
     },
-    filteredOfferings() {
-      return this.offerings.filter(term => this.activePeriods.includes(this.converters.termToPeriod(term).name));
-    },
   },
   data() {
     return {
@@ -85,23 +79,19 @@ export default {
     };
   },
   subscriptions() {
+    const terms = this.endpoints.terms().first();
+    this.$watchAsObservable(() => this.filter, { immediate: true }).map(x => x.newValue)
+      .switchMap(
+      this.$watchAsObservable()
+      )
     const description = this.endpoints.description(this.course);
     const sequence = this.endpoints.courseInfo(this.course).map(data => data && data.sequence).first();
-    const offerings = this.$watchAsObservable(() => this.daysIntervalTree, { immediate: true }).map(x => x.newValue)
-      .switchMap(daysIntervalTree => {
-        return this.endpoints.scheduleIndex(daysIntervalTree)
-          .map(courses => {
-            return courses.filter(course => course.startsWith(this.course)).map(course => course.substring(course.indexOf('/') + 1))
-          }).map(terms => [...(new Set(terms))].sort((a, b) => {
-            return this.$store.state.institution.converters.termToOrdinal(b) - this.$store.state.institution.converters.termToOrdinal(a);
-          }));
-      })
     return {
       description: description.map(data => data && data.description).first(),
       notes: description.map(data => data && data.notes).first(),
       sequence,
       sequenceCourses: sequence.flatMap(sequence => this.endpoints.sequences().map(sequences => sequences[sequence])),
-      offerings: Observable.of([]).concat(offerings),
+      terms,
       gradeDistribution: Observable.of({}).concat(this.endpoints.gradeDistribution().map(grades => grades[this.course] || {}).first()),
     }
   },

@@ -161,11 +161,6 @@ const UCHICAGO = {
             subset,
           ])
           .filter(([schedule, subset]) => {
-            console.log(
-              schedule,
-              intervalTree,
-              schedule.every(s => intervalTree.intersects(s)),
-            );
             return schedule.every(s => intervalTree.intersects(s));
           })
           .reduce((a, [schedule, subset]) => a.concat(subset), []);

@@ -4,16 +4,46 @@
       <v-card-text>
         <v-layout row class="my-3">
           <label class="label body-2">{{periodName}}</label>
-          <v-btn-toggle v-bind:items="periodItems" multiple v-model="periods" class="hidden-sm-and-down"></v-btn-toggle>
-          <v-btn-toggle v-bind:items="periodItems.map(({value, abbr}) => ({value, text: abbr}))"
-            multiple v-model="periods" class="hidden-md-and-up"></v-btn-toggle>
+          <v-btn-toggle multiple v-model="periods">
+            <v-btn v-for="item of periodItems" :key="item.value">
+              <span class="hidden-sm-and-down">{{item.text}}</span>
+              <span class="hidden-md-and-up">{{item.abbr}}</span>
+            </v-btn>
+          </v-btn-toggle>
         </v-layout>
         <v-divider></v-divider>
         <v-layout row class="my-3">
           <label class="label body-2">Days of the week</label>
-          <v-btn-toggle v-bind:items="dayItems" multiple v-model="days" class="hidden-md-and-down"></v-btn-toggle>
-          <v-btn-toggle v-bind:items="dayItems.map(({value, abbr}) => ({value, text: abbr}))"
-            multiple v-model="days" class="hidden-lg-and-up"></v-btn-toggle>
+          <v-btn-toggle multiple v-model="days">
+            <v-btn>
+              <span class="hidden-sm-and-down">Sunday</span>
+              <span class="hidden-md-and-up">Sun</span>
+            </v-btn>
+            <v-btn>
+              <span class="hidden-sm-and-down">Monday</span>
+              <span class="hidden-md-and-up">Mon</span>
+            </v-btn>
+            <v-btn>
+              <span class="hidden-sm-and-down">Tuesday</span>
+              <span class="hidden-md-and-up">Tue</span>
+            </v-btn>
+            <v-btn>
+              <span class="hidden-sm-and-down">Wednesday</span>
+              <span class="hidden-md-and-up">Wed</span>
+            </v-btn>
+            <v-btn>
+              <span class="hidden-sm-and-down">Thursday</span>
+              <span class="hidden-md-and-up">Thu</span>
+            </v-btn>
+            <v-btn>
+              <span class="hidden-sm-and-down">Friday</span>
+              <span class="hidden-md-and-up">Fri</span>
+            </v-btn>
+            <v-btn>
+              <span class="hidden-sm-and-down">Saturday</span>
+              <span class="hidden-md-and-up">Sat</span>
+            </v-btn>
+          </v-btn-toggle>
         </v-layout>
         <v-divider></v-divider>
         <v-layout row>
@@ -47,6 +77,7 @@
 </template>
 
 <script>
+import { Observable } from 'rxjs/Observable';
 import { SORT } from '@/store/modules/search';
 import { mapState } from 'vuex';
 
@@ -61,28 +92,14 @@ function createComputedProperty(field, namespace = 'filter') {
   }
 }
 
-let departmentsObservable = null;
-let instructorsObservable = null;
-
 export default {
   name: 'filters',
   data() {
     return {
-      dayItems: [
-        { value: 1, text: 'Monday', abbr: 'Mon' },
-        { value: 2, text: 'Tuesday', abbr: 'Tue' },
-        { value: 3, text: 'Wednesday', abbr: 'Wed' },
-        { value: 4, text: 'Thursday', abbr: 'Thu' },
-        { value: 5, text: 'Friday', abbr: 'Fri' },
-        { value: 6, text: 'Saturday', abbr: 'Sat' },
-        { value: 0, text: 'Sunday', abbr: 'Sun' },
-      ],
       sortItems: [
         { value: SORT.BY_POPULARITY, text: 'By popularity' },
         { value: SORT.ALPHABETICALLY, text: 'Alphabetically' },
       ],
-      departmentItems: [],
-      instructorItems: [],
     }
   },
   computed: {
@@ -102,13 +119,10 @@ export default {
     sort: createComputedProperty.call(this, 'sort', 'search'),
   },
   subscriptions() {
-    if (!departmentsObservable) {
-      departmentsObservable = this.endpoints.departments();
+    return {
+      departmentItems: Observable.of([]).concat(this.endpoints.departments()),
+      instructorItems: Observable.of([]).concat(this.endpoints.instructors())
     }
-    if (!instructorsObservable) {
-      instructorsObservable = this.endpoints.instructors();
-    }
-    return { departmentItems: departmentsObservable, instructorItems: instructorsObservable }
   }
 }
 </script>
