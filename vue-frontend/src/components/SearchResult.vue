@@ -11,11 +11,11 @@
       </div>
       <div class="offering-indicators">
         <term-offering-indicator v-for="period of periods" :key="period.name" :period="period"
-          :course="course"></term-offering-indicator>
+          :course="course" :serialized="serialized"></term-offering-indicator>
       </div>
     </v-card-title>
     <v-slide-y-transition>
-      <course-detail v-if="show">{{course}}</course-detail>
+      <course-detail v-if="show" :serialized="serialized">{{course}}</course-detail>
     </v-slide-y-transition>
   </v-card>
 </template>
@@ -28,7 +28,7 @@ import { mapState } from 'vuex';
 
 export default {
   name: 'search-result',
-  props: { value: Boolean },
+  props: { value: Boolean, serialized: Object },
   components: { CourseName, TermOfferingIndicator, CourseDetail: () => import('@/components/CourseDetail') },
   computed: {
     ...mapState('institution', {
@@ -54,9 +54,6 @@ export default {
         }
       }
     },
-    filteredOfferings() {
-      return this.offerings.filter(term => this.activePeriods.includes(this.converters.termToPeriod(term).name));
-    },
   },
   data() {
     return {
@@ -68,7 +65,6 @@ export default {
     return {
       crosslists: this.endpoints.crosslists(this.course).map(identifiers => identifiers.join(', ')).first(),
       description: this.endpoints.description(this.course).first(),
-      offerings: Observable.of([]).concat(this.endpoints.offerings(this.course).first()),
       gradeDistribution: Observable.of({}).concat(this.endpoints.gradeDistribution().map(grades => grades[this.course] || {}).first()),
     }
   },

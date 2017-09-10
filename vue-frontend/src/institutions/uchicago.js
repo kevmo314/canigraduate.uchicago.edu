@@ -1,13 +1,20 @@
 import firebase from 'firebase';
 import axios from 'axios';
+import pako from 'pako';
+import TypedFastBitSet from 'fastbitset';
+import withLatestFromBlocking from '@/lib/with-latest-from-blocking';
+import binarySearch from '@/lib/binary-search';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
+import { ReplaySubject } from 'rxjs/ReplaySubject';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/observable/defer';
+import 'rxjs/add/observable/forkJoin';
 import 'rxjs/add/observable/fromEventPattern';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/combineLatest';
 import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/let';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/publishReplay';
 
@@ -79,9 +86,192 @@ const val = memoize(path => {
     .refCount();
 });
 
-const courses = val('/indexes/all');
-const terms = val('/indexes/terms');
-const periods = val('/indexes/periods');
+const cardinalities = val('/indexes/cardinalities')
+  .map(data => new Uint16Array(pako.inflate(window.atob(data)).buffer))
+  // Cardinalities are stored as 16-bit integers.
+  .map(data => {
+    const isBigEndian = new Uint16Array(new Uint8Array([0, 1]).buffer)[0] == 1;
+    // TODO: Probably report some telemetry on what fraction of users are actually on big endian systems.
+    return isBigEndian
+      ? data.map(x => (x & (0xff00 >> 8)) | (x & (0x00ff << 8)))
+      : data;
+  })
+  .publishReplay(1)
+  .refCount();
+
+const packedIndex = memoize(path => {
+  const subject = new ReplaySubject(1);
+  val('/indexes/' + path)
+    .map(data => {
+      return data
+        ? JSON.parse(pako.inflate(window.atob(data), { to: 'string' }))
+        : null;
+    })
+    .subscribe(subject);
+  return subject;
+});
+
+function cdf(array) {
+  const result = new Uint32Array(array.length + 1);
+  for (let i = 1; i < result.length; i++) {
+    result[i] += array[i - 1] + result[i - 1];
+  }
+  return result;
+}
+
+const courseTermOffsets = cardinalities
+  .map(cdf)
+  .publishReplay(1)
+  .refCount();
+
+const courseOffsets = cardinalities
+  .combineLatest(packedIndex('terms'), (data, terms) => {
+    const result = new Uint32Array(data.length / terms.length);
+    for (let i = 0; i < data.length; i++) {
+      result[(i / terms.length) | 0] += data[i];
+    }
+    return cdf(result);
+  })
+  .publishReplay(1)
+  .refCount();
+
+function decompress(data, cardinalities, courseTermOffsets, courses, terms) {
+  const result = new TypedFastBitSet();
+  const totalCardinality = courseTermOffsets[courseTermOffsets.length - 1];
+  if (data instanceof Uint8Array) {
+    const length = data.length;
+    result.resize(length);
+    let index = 0;
+    if (
+      length == Math.ceil(courses.length / 8) ||
+      length == Math.ceil(terms.length / 8)
+    ) {
+      const useCourseIndex = length == Math.ceil(courses.length / 8);
+      for (let i = 0; i < courses.length; i++) {
+        for (let j = 0; j < terms.length; j++) {
+          const dataIndex = useCourseIndex ? i : j;
+          if ((data[(dataIndex / 8) | 0] >> (7 - dataIndex % 8)) & 1) {
+            for (let k = 0; k < cardinalities[i * terms.length + j]; k++) {
+              result.add(index++);
+            }
+          } else {
+            index += cardinalities[i * terms.length + j];
+          }
+        }
+      }
+    } else if (length == Math.ceil(totalCardinality / 8)) {
+      for (let i = 0; i < totalCardinality; i++) {
+        if ((data[(i / 8) | 0] >> (7 - i % 8)) & 1) {
+          result.add(i);
+        }
+      }
+    } else {
+      throw new Error('Invalid data length: ' + length);
+    }
+  } else {
+    const length = Math.ceil(data.shift() / 8);
+    result.resize(length);
+    if (length == Math.ceil(courses.length / 8)) {
+      data.forEach(i => {
+        for (let j = 0; j < terms.length; j++) {
+          for (let k = 0; k < cardinalities[i * terms.length + j]; k++) {
+            result.add(courseTermOffsets[i * terms.length + j] + k);
+          }
+        }
+      });
+    } else if (length == Math.ceil(terms.length / 8)) {
+      for (let i = 0; i < courses.length; i++) {
+        data.forEach(j => {
+          for (let k = 0; k < cardinalities[i * terms.length + j]; k++) {
+            result.add(courseTermOffsets[i * terms.length + j] + k);
+          }
+        });
+      }
+    } else if (length == Math.ceil(totalCardinality / 8)) {
+      data.forEach(i => result.add(i));
+    } else {
+      throw new Error('Invalid data length: ' + length);
+    }
+  }
+  return result;
+}
+
+const compressedIndex = memoize(path => {
+  const subject = new ReplaySubject(1);
+  val('/indexes/' + path)
+    .do(() => console.log('decompressing', path))
+    .map(data => {
+      if (!data) {
+        return data;
+      }
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        return pako.inflate(window.atob(data));
+      }
+    })
+    .let(
+      withLatestFromBlocking(
+        cardinalities,
+        courseTermOffsets,
+        packedIndex('courses'),
+        packedIndex('terms'),
+      ),
+    )
+    .map(([data, cardinalities, courseTermOffsets, courses, terms]) => {
+      if (!data) {
+        return data;
+      }
+      return decompress(data, cardinalities, courseTermOffsets, courses, terms);
+    })
+    .do(() => console.log('done decompressing', path))
+    .subscribe(subject);
+  return subject;
+});
+
+const scheduleIndex = memoize(() => {
+  const subject = new ReplaySubject(1);
+  val('/indexes/schedules')
+    .do(() => console.log('inflating schedule'))
+    .map(data => {
+      return Object.keys(data).reduce((state, key) => {
+        try {
+          state[key] = JSON.parse(data[key]);
+        } catch (e) {
+          state[key] = pako.inflate(window.atob(data[key]));
+        }
+        return state;
+      }, {});
+    })
+    .do(() => console.log('getting indices'))
+    .let(
+      withLatestFromBlocking(
+        cardinalities,
+        courseOffsets,
+        packedIndex('courses'),
+        packedIndex('terms'),
+      ),
+    )
+    .do(() => console.log('decompressing schedule'))
+    .map(([schedules, cardinalities, offsets, courses, terms]) => {
+      // Return a subsetter that will filter to any classes
+      // that match any schedule set.
+      return Object.entries(schedules).map(([key, subset]) => {
+        const bitset = decompress(
+          subset,
+          cardinalities,
+          offsets,
+          courses,
+          terms,
+        );
+        return [key, bitset.array()];
+      });
+    })
+    .do(() => console.log('done schedule'))
+    .subscribe(subject);
+  return subject;
+});
+
 // This pulls for all courses because the number of grades is used for search ranking.
 const gradeDistribution = Observable.defer(() =>
   axios.get(CLOUD_FUNCTIONS + '/api/grades'),
@@ -134,69 +324,29 @@ const UCHICAGO = {
     courseInfo(id) {
       return val('/course-info/' + id);
     },
-    schedules(id, term) {
-      const year = UCHICAGO.converters.termToYear(term);
-      const period = UCHICAGO.converters.termToPeriod(term).name;
-      return val('/schedules/' + id + '/' + year + '/' + period).map(
-        arrayToObject,
-      );
-    },
     departments() {
       return val('/indexes/departments').map(value => Object.keys(value));
     },
     instructors() {
       return val('/indexes/instructors').map(value => Object.keys(value));
     },
-    scheduleIndex(intervalTree) {
-      return val('/indexes/schedules').map(schedules => {
-        // Return a subsetter that will filter to any classes
-        // that match any schedule set.
-        return Object.entries(schedules)
-          .map(([key, subset]) => [
-            key
-              .split(',')
-              .map(interval =>
-                interval.split('-').map(time => parseInt(time, 10)),
-              ),
-            subset,
-          ])
-          .filter(([schedule, subset]) => {
-            return schedule.every(s => intervalTree.intersects(s));
-          })
-          .reduce((a, [schedule, subset]) => a.concat(subset), []);
-      });
-    },
     terms() {
-      return terms
-        .map(value => Object.keys(value))
-        .map(terms =>
-          terms.sort(
-            (a, b) =>
-              UCHICAGO.converters.termToOrdinal(b) -
-              UCHICAGO.converters.termToOrdinal(a),
-          ),
-        );
-    },
-    courses() {
-      return courses;
-    },
-    offerings(id) {
-      return val('/indexes/offerings/' + id).map(offerings =>
-        offerings.sort(
+      return packedIndex('terms').map(terms =>
+        [...terms].sort(
           (a, b) =>
             UCHICAGO.converters.termToOrdinal(b) -
             UCHICAGO.converters.termToOrdinal(a),
         ),
       );
     },
+    courses() {
+      return packedIndex('courses');
+    },
     description(id) {
       return val('/course-descriptions/' + id);
     },
     crosslists(id) {
       return val('/course-info/' + id).map(x => x.crosslists || []);
-    },
-    query(term) {
-      return val('/indexes/fulltext/' + term);
     },
     courseRanking() {
       return gradeDistribution
@@ -206,91 +356,270 @@ const UCHICAGO = {
             return obj;
           }, {});
         })
-        .combineLatest(val('/indexes/sequences'), (courseRanking, sequence) => {
-          Object.values(sequence).forEach(sequence => {
-            // Promote the rank of each course in the sequence to the max.
-            const max =
-              sequence
-                .map(course => courseRanking[course])
-                .reduce((a, b) => Math.max(a, b)) + 1;
-            sequence.forEach(course => (courseRanking[course] = max));
-          });
-          return courseRanking;
-        })
+        .combineLatest(
+          UCHICAGO.endpoints.sequences(),
+          (courseRanking, sequences) => {
+            Object.values(sequences).forEach(sequence => {
+              // Promote the rank of each course in the sequence to the max.
+              const max =
+                sequence
+                  .map(course => courseRanking[course])
+                  .reduce((a, b) => Math.max(a, b)) + 1;
+              sequence.forEach(course => (courseRanking[course] = max));
+            });
+            return courseRanking;
+          },
+        )
         .publishReplay(1)
         .refCount();
     },
     sequences() {
-      return val('/indexes/sequences');
+      return val('/indexes/sequences').combineLatest(
+        packedIndex('courses'),
+        (sequences, courses) => {
+          return Object.keys(sequences).reduce((state, key) => {
+            let data = null;
+            try {
+              data = JSON.parse(sequences[key]);
+            } catch (e) {
+              data = pako.inflate(window.atob(sequences[key]));
+            }
+            if (data instanceof Uint8Array) {
+              state[key] = [];
+              for (let i = 0; i < courses.length; i++) {
+                if ((data[(i / 8) | 0] >> (7 - i % 8)) & 1) {
+                  state[key].push(courses[i]);
+                }
+              }
+            } else {
+              state[key] = data.map(i => courses[i]);
+            }
+            return state;
+          }, {});
+        },
+      );
     },
     search(filter$) {
-      const filterAny = (filter, dataset) => {
-        return dataset.map(dataset => {
-          dataset = filter.map(key => new Set(dataset[key]));
-          return results =>
-            results.filter(course => dataset.some(data => data.has(course)));
-        });
+      const filterAny = (filter, pathPrefix) => {
+        if (filter.length == 0) {
+          return Observable.of(results => new TypedFastBitSet());
+        }
+        return Observable.combineLatest(
+          filter.map(key => compressedIndex(`${pathPrefix}/${key}`)),
+        )
+          .map(masks => {
+            return masks.reduce((a, b) => a.union(b), new TypedFastBitSet());
+          })
+          .map(mask => results => results.intersection(mask));
       };
       function* generateSubsetters(filter) {
         if (filter.query) {
-          yield* filter.query.split(' ').filter(x => x.length).map(token => {
-            return UCHICAGO.endpoints
-              .query(token.toLowerCase())
-              .map(matches => new Set(matches))
-              .map(matches => results => results.filter(c => matches.has(c)));
-          });
+          yield* filter.query
+            .split(' ')
+            .filter(x => x.length)
+            .map(token => token.toLowerCase())
+            .map(token => {
+              return compressedIndex(`fulltext/${token}`).map(mask => {
+                return results => {
+                  if (mask) {
+                    return results.intersection(mask);
+                  }
+                  results.clear();
+                  return results;
+                };
+              });
+            });
         }
         if (filter.departments.length) {
-          yield filterAny(filter.departments, val('/indexes/departments'));
+          console.log('dept');
+          yield filterAny(filter.departments, 'departments');
         }
         if (filter.instructors.length) {
-          yield filterAny(filter.instructors, val('/indexes/instructors'));
+          console.log('inst');
+          yield filterAny(filter.instructors, 'instructors');
         }
         yield filterAny(
           filter.periods
             .map(i => UCHICAGO.periods[i])
             .filter(Boolean)
             .map(period => period.name),
-          periods,
+          'periods',
         );
-        if (filter.days.length < 7) {
-          // This is a rather expensive filter...
-          yield UCHICAGO.endpoints
-            .scheduleIndex(
-              filter.days.map(day => [1440 * day, 1440 * (day + 1)]),
-            )
-            .map(subset =>
-              subset.map(course => course.substring(0, course.indexOf('/'))),
-            )
-            .map(courses => new Set(courses))
-            .map(courses => {
-              return results => results.filter(course => courses.has(course));
-            });
+
+        // This is a rather expensive filter...
+        if (filter.days) {
+          console.log('days');
+          yield scheduleIndex().map(schedules => {
+            // Return a subsetter that will filter to any classes
+            // that match any schedule set.
+            const intersections = {};
+            const indices = schedules
+              .filter(([schedule, subset]) => {
+                return schedule.split(',').reduce((state, interval) => {
+                  if (!state) {
+                    return false;
+                  }
+                  if (interval in intersections) {
+                    return intersections[interval];
+                  }
+                  return (intersections[interval] = filter.days.intersects(
+                    interval.split('-').map(t => parseInt(t, 10)),
+                  ));
+                }, true);
+              })
+              .reduce((a, [schedule, subset]) => {
+                subset.forEach(i => a.add(i));
+                return a;
+              }, new Set());
+            return results =>
+              results.intersection(new TypedFastBitSet(indices));
+          });
         }
       }
-      const subsetters = filter$.switchMap(filter =>
-        Observable.forkJoin(
-          [...generateSubsetters(filter)].map(x => x.first()),
+      console.log('initializing');
+      return courseOffsets
+        .map(offsets => {
+          const bitSet = new TypedFastBitSet();
+          bitSet.resize(offsets[offsets.length - 1]);
+          for (let i = 0; i < offsets[offsets.length - 1]; i++) {
+            bitSet.add(i);
+          }
+          return bitSet;
+        })
+        .do(() => console.log('got offsets'))
+        .combineLatest(
+          filter$
+            .do(() => console.log('filtering'))
+            .switchMap(filter =>
+              Observable.forkJoin(
+                [...generateSubsetters(filter)].map(x => x.first()),
+              ),
+            )
+            .do(() => console.log('got subsetters')),
+          (state, subsetters) => {
+            console.log('combined with subsetters');
+            console.log(state);
+            return subsetters.reduce((state, f) => f(state), state.clone());
+          },
+        )
+        .do(() => console.log('reduced'))
+        .do(console.log)
+        .let(
+          withLatestFromBlocking(
+            courseOffsets,
+            packedIndex('courses'),
+            packedIndex('terms'),
+          ),
+        )
+        .do(() => console.log('combined with indices'))
+        .map(([data, courseOffsets, courses, terms]) => {
+          // Convert the bitset state to a proper result set.
+          let lowerBound = 0;
+          const results = [];
+          data.forEach(index => {
+            if (index < lowerBound) {
+              return;
+            }
+            const location = binarySearch(courseOffsets, index);
+            const courseIndex = location < 0 ? ~location - 1 : location;
+            results.push(courses[courseIndex]);
+            lowerBound = courseOffsets[courseIndex + 1];
+          });
+          return { courses: results, serialized: data };
+        })
+        .do(() => console.log('shipping result'));
+    },
+    schedules(id, term, serialized = undefined) {
+      const year = UCHICAGO.converters.termToYear(term);
+      const period = UCHICAGO.converters.termToPeriod(term).name;
+      if (!serialized) {
+        return val(`/schedules/${id}/${year}/${period}`).map(arrayToObject);
+      }
+      // The serialized filter table has been provided.
+      // Filter the schedules to the corresponding indices.
+      return cardinalities.combineLatest(
+        courseTermOffsets.combineLatest(
+          packedIndex('courses'),
+          packedIndex('terms'),
+          (courseTermOffsets, courses, terms) => {
+            return courseTermOffsets[
+              courses.indexOf(id) * terms.length + terms.indexOf(term)
+            ];
+          },
         ),
+        val(`/schedules/${id}/${year}/${period}`).map(arrayToObject),
+        (cardinalities, index, schedules) => {
+          // Create a schedule subset that contains the visible activities.
+          const result = {};
+          for (const sectionId of Object.keys(schedules).sort()) {
+            const section = Object.assign({}, schedules[sectionId]);
+            if (!section.secondaries || section.secondaries.length == 0) {
+              if (serialized.has(index++)) {
+                result[sectionId] = section;
+              }
+            } else {
+              const secondaries = section.secondaries;
+              section.secondaries = {};
+              for (const activityId of Object.keys(secondaries).sort()) {
+                if (serialized.has(index++)) {
+                  section.secondaries[activityId] = secondaries[activityId];
+                }
+              }
+              if (Object.keys(section.secondaries).length > 0) {
+                result[sectionId] = section;
+              }
+            }
+          }
+          return result;
+        },
       );
-      return subsetters
-        .combineLatest(courses)
-        .take(1)
-        .concat(subsetters.skip(1).withLatestFrom(courses))
-        .map(([subsetters, results]) => {
-          return subsetters.reduce((results, sub) => sub(results), results);
-        });
+    },
+    offerings(id, serialized) {
+      return cardinalities.combineLatest(
+        courseOffsets,
+        packedIndex('courses'),
+        packedIndex('terms'),
+        (cardinalities, courseOffsets, courses, terms) => {
+          const courseIndex = courses.indexOf(id);
+          const offerings = [];
+          if (courseIndex == -1) {
+            return offerings;
+          }
+          let from = courseOffsets[courseIndex];
+          for (let i = 0; i < terms.length; i++) {
+            const to = from + cardinalities[courseIndex * terms.length + i];
+            // Check if any bits between [from, to) are set.
+            let matches = false;
+            for (let j = from; j < to; j++) {
+              if (serialized.has(j)) {
+                matches = true;
+                break;
+              }
+            }
+            if (matches) {
+              // Course was offered in this term.
+              offerings.push(terms[i]);
+            }
+            from = to;
+          }
+          return offerings.reverse();
+        },
+      );
     },
     serverTimeOffset() {
       return val('.info/serverTimeOffset');
     },
     watches: {
       create(value) {
-        db.ref('watches').child(firebaseAuth.currentUser.uid).push().set(
-          Object.assign(value, {
-            created: firebase.database.ServerValue.TIMESTAMP,
-          }),
-        );
+        db
+          .ref('watches')
+          .child(firebaseAuth.currentUser.uid)
+          .push()
+          .set(
+            Object.assign(value, {
+              created: firebase.database.ServerValue.TIMESTAMP,
+            }),
+          );
       },
       update(key, value) {
         db

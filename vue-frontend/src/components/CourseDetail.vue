@@ -8,7 +8,7 @@
         </p>
         <p v-if="sequence">This course is part of the
           <span class="body-2">{{sequence}}</span> sequence which contains:
-          <completion-indicator>{{sequenceCourses.join(', ')}}</completion-indicator>
+          <completion-indicator v-if="sequenceCourses">{{sequenceCourses.join(', ')}}</completion-indicator>
         </p>
       </div>
     </v-slide-x-transition>
@@ -22,7 +22,7 @@
                 Enrolled
               </div>
             </div>
-            <section-detail :term="term">{{course}}</section-detail>
+            <section-detail :serialized="serialized" :term="term">{{course}}</section-detail>
           </div>
           <div class="text-xs-center" v-if="maxTerm < terms.length">
             <v-btn block flat @click="maxTerm += 1">Show {{terms[maxTerm]}}</v-btn>
@@ -49,6 +49,7 @@ import { mapState } from 'vuex';
 export default {
   name: 'course-detail',
   components: { GradeDistribution, SectionDetail, CompletionIndicator },
+  props: { serialized: Object },
   directives: { Sticky },
   computed: {
     ...mapState('institution', {
@@ -79,11 +80,11 @@ export default {
     };
   },
   subscriptions() {
-    const terms = this.endpoints.terms().first();
-    this.$watchAsObservable(() => this.filter, { immediate: true }).map(x => x.newValue)
-      .switchMap(
-      this.$watchAsObservable()
-      )
+    // Offerings are filter-invariant.
+    const terms = this.$watchAsObservable(() => this.serialized, { immediate: true })
+      .filter(Boolean)
+      .map(x => x.newValue)
+      .flatMap(serialized => this.endpoints.offerings(this.course, serialized));
     const description = this.endpoints.description(this.course);
     const sequence = this.endpoints.courseInfo(this.course).map(data => data && data.sequence).first();
     return {

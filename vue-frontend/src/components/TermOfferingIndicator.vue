@@ -20,7 +20,8 @@ export default {
     course: {
       type: String,
       required: true,
-    }
+    },
+    serialized: Object,
   },
   computed: {
     ...mapState('institution', {
@@ -36,18 +37,19 @@ export default {
     })
   },
   subscriptions() {
-    const lastPeriod = this.offerings(this.course).map(terms => {
-      // Find the most recent relevant offering.
-      for (const term of terms) {
-        if (this.converters.termToPeriod(term).name == this.period.name) {
-          return this.period.name + ' ' + this.converters.termToYear(term);
+    const lastPeriod = this.$watchAsObservable(() => this.serialized, { immediate: true }).filter(Boolean).map(x => x.newValue)
+      .flatMap(serialized => this.offerings(this.course, this.serialized))
+      .map(terms => {
+        // Find the most recent relevant offering.
+        for (const term of terms) {
+          if (this.converters.termToPeriod(term).name == this.period.name) {
+            return this.period.name + ' ' + this.converters.termToYear(term);
+          }
         }
-      }
-    });
+      });
     return {
       tooltip: lastPeriod,
-      outline: Observable.combineLatest(this.terms(), lastPeriod)
-        .map(([terms, last]) => terms.indexOf(last) > 32),
+      outline: this.terms().combineLatest(lastPeriod, (terms, last) => terms.indexOf(last) > 32),
       backgroundColor: lastPeriod.map(x => x && this.period.color)
     }
   }

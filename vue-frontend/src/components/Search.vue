@@ -4,15 +4,15 @@
     <v-slide-y-reverse-transition>
       <div v-if="results && results.length > 0">
         <search-result v-for="result in results.slice((page - 1) * resultsPerPage, page * resultsPerPage)"
-          :key="result" :value="results.length == 1">{{result}}</search-result>
+          :key="result" :value="resultCount == 1" :serialized="serialized">{{result}}</search-result>
         <div class="text-xs-center mt-3">
-          <v-pagination v-if="results.length > 1" :length="Math.ceil(results.length / resultsPerPage)"
+          <v-pagination v-if="resultCount > 1" :length="Math.ceil(resultCount / resultsPerPage)"
             v-model="page"></v-pagination>
           <div class="caption grey--text text--lighten-1 mt-3" v-if="resultTime - eventTime > 0">
             Query rendered
             <span class="green--text text--darken-1">
-              {{results.length}}
-              <template v-if="results.length == 1">result</template>
+              {{resultCount}}
+              <template v-if="resultCount == 1">result</template>
               <template v-else>results</template>
             </span> in
             <span class="green--text text--darken-1">{{Math.ceil(resultTime - eventTime)}}ms</span>
@@ -33,6 +33,8 @@
 <script>
 import Filters from '@/components/Filters.vue';
 import SearchResult from '@/components/SearchResult.vue';
+import IntervalTree from '@/lib/interval-tree';
+import quickselect from 'quickselect';
 import { mapState, mapActions } from 'vuex';
 import { SORT } from '@/store/modules/search';
 import { Observable } from 'rxjs/Observable';
@@ -56,12 +58,25 @@ export default {
     }
   },
   subscriptions() {
-    const events = this.$watchAsObservable(() => this.$store.state.filter, { immediate: true, deep: true })
+    const page = this.$watchAsObservable(() => this.page, { immediate: true });
+    const resultsPerPage = this.$watchAsObservable(() => this.resultsPerPage, { immediate: true });
+    const events = this.$watchAsObservable(() => this.$store.state.filter, { immediate: true, deep: true });
+    const results = events
       .map(x => x.newValue)
-      .publishReplay(1).refCount();
-    const results = events.let(this.search).publishReplay(1).refCount();
+      .map(x => Object.assign({}, x, {
+        days: x.days
+          .map(day => [1440 * day, 1440 * (day + 1)])
+          .reduce((tree, interval) => tree.add(interval), new IntervalTree())
+      })).do(() => console.log('searching')).let(this.search).publishReplay(1).refCount();
     return {
       results: results
+        .do(results => {
+          const maxPage = Math.ceil(results.length / this.resultsPerPage);
+          if (this.$store.state.search.page > maxPage && maxPage > 0) {
+            this.$store.commit('search/setPage', maxPage)
+          }
+        })
+        .do(() => console.log('sorting'))
         .combineLatest(this.$watchAsObservable(() => this.$store.state.search.sort, { immediate: true })
           .map(x => x.newValue)
           .flatMap(sort => {
@@ -83,15 +98,20 @@ export default {
             } else if (sort == SORT.ALPHABETICALLY) {
               return sortAlphabetically;
             }
-          }), (results, sort) => results.sort(sort))
-        .do(results => {
-          const maxPage = Math.ceil(results.length / this.resultsPerPage);
-          if (this.$store.state.search.page > maxPage && maxPage > 0) {
-            this.$store.commit('search/setPage', maxPage)
+          }), page, resultsPerPage,
+        (results, sortFn, page, resultsPerPage) => {
+          const selected = [];
+          for (let i = page * resultsPerPage; i < (page + 1) * resultsPerPage; i++) {
+            quickselect(results, i, 0, results.length, sortFn);
+            selected.push(results[i]);
           }
-        }),
+          return selected;
+        })
+        .do(() => console.log('rendering')),
+      serialized: results.map(results => Object.freeze(results.serialized)),
       eventTime: events.map(() => performance.now()),
       resultTime: results.flatMap(() => this.$nextTick()).map(() => performance.now()),
+      resultCount: results.map(results => results.courses.length),
     }
   },
   methods: mapActions('filter', ['reset'])

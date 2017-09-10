@@ -1,8 +1,14 @@
+import bitarray
+import base64
 import collections
 import datetime
 import json
+import math
 import multiprocessing
 import os
+import binascii
+import zlib
+import pickle
 import re
 import requests
 import sqlite3
@@ -30,7 +36,9 @@ MIDNIGHT = datetime.datetime.strptime('12:00AM', '%I:%M%p')
 
 
 def transform(a):
-    return dict([(i, j) for i, j in enumerate(a) if j is not None])
+    if isinstance(a, list):
+        return {i: j for i, j in enumerate(a) if j is not None}
+    return a
 
 
 def get_words(text):
@@ -73,82 +81,133 @@ def scrub_data(db):
     db.update(updates)
 
 
-def rebuild_indexes(db):
-    schedules = db.child('schedules').get().val()
-    course_info = db.child('course-info').get().val()
-    course_descriptions = db.child('course-descriptions').get().val()
-    instructors = collections.defaultdict(set)
-    departments = collections.defaultdict(set)
-    periods = collections.defaultdict(set)
-    terms = collections.defaultdict(set)
-    intervals = collections.defaultdict(set)
-    inverted = collections.defaultdict(set)
-    years = collections.defaultdict(set)
-    sequences = collections.defaultdict(set)
-    offerings = collections.defaultdict(set)
-    records = []
+def iterate_schedules(schedules):
     for course_id, a in schedules.items():
         for year, b in a.items():
             for period, c in b.items():
-                if isinstance(c, list):
-                    # Deal with Firebase's array heuristic.
-                    c = transform(c)
-                periods[period].add(course_id)
-                years[year].add(course_id)
-                departments[course_id[:4]].add(course_id)
-                terms['%s %s' % (period, year)].add(course_id)
-                offerings[course_id].add('%s %s' % (period, year))
-                for id, section in c.items():
-                    for activity in section['primaries'] + list(
-                            section.get('secondaries', {}).values()):
-                        for instructor in activity.get('instructors', []):
-                            instructors[instructor.replace('.', '')].add(
-                                course_id)
-                    for secondary in section.get('secondaries', {}).values():
-                        schedule = [(s[0], s[1])
-                                    for s in secondary.get('schedule', [])]
-                        for primary in section.get('primaries'):
-                            schedule.extend(
-                                [(s[0], s[1])
-                                 for s in primary.get('schedule', [])])
-                        # schedule contains a complete representation of one option.
-                        schedule_key = ','.join([
-                            '-'.join(str(x) for x in s)
-                            for s in sorted(schedule)
-                        ])
-                        intervals[schedule_key or 'unknown'].add(
-                            '%s/%s %s' % (course_id, period, year))
-                    else:
-                        schedule = []
-                        for primary in section.get('primaries'):
-                            schedule.extend(
-                                [(s[0], s[1])
-                                 for s in primary.get('schedule', [])])
-                        # schedule contains a complete representation of one option.
-                        schedule_key = ','.join([
-                            '-'.join(str(x) for x in s)
-                            for s in sorted(schedule)
-                        ])
-                        intervals[schedule_key or 'unknown'].add(
-                            '%s/%s %s' % (course_id, period, year))
-                    # Construct the inverted index based on the course description and name.
-                    info = course_info.get(course_id, {})
-                    name = info.get('name', '')
-                    description = course_descriptions.get(course_id, {}).get(
-                        'description', '')
-                    sequence = course_info.get(course_id, {}).get('sequence')
-                    if sequence:
-                        sequences[sequence].add(course_id)
-                    for word in get_words(course_id) | get_words(
-                            name) | get_words(description):
-                        inverted[word].add(course_id)
-                    section['section'] = id
-                    section['year'] = int(year)
-                    section['period'] = period
-                    section['course'] = course_id
-                    records.append((course_id, int(year), period,
-                                    course_id[:4], json.dumps(section)))
+                yield (course_id, year, period, transform(c))
+
+
+def firebase_cached_read(db, child):
+    try:
+        with open(child + '.pkl', 'rb') as f:
+            data = pickle.load(f)
+    except IOError:
+        data = db.child(child).get().val()
+        with open(child + '.pkl', 'wb') as f:
+            pickle.dump(data, f)
+    return data
+
+
+# There are three types of indices:
+# - Course-based whitelist
+#   The ith bit indicates that the ith course is in this set.
+# - Term-based whitelist
+#   The (i % len)th bit indicates that the ith term is in this set.
+# - Activity-based whitelist
+#   A multidimensional, jagged array is flattened with the outermost dimension
+#   representing the term, the next dimension representing the course, the next
+#   dimension representing the section index, and the innermost dimension
+#   representing the activity index. The resultant bit indicates inclusion in the
+#   set.
+#
+# Index keys are provided to calculate offsets. Each (term, course) pair holds
+# a length indicating the size of its activity allocation.
+def rebuild_indexes(db):
+    schedules = firebase_cached_read(db, 'schedules')
+    course_info = firebase_cached_read(db, 'course-info')
+    course_descriptions = firebase_cached_read(db, 'course-descriptions')
+
+    cardinalities = {}
+    terms = set()
+
+    for (course_id, year, period, course) in iterate_schedules(schedules):
+        term = Term('%s %s' % (period, year))
+        terms.add(term)
+        cardinality = sum(
+            max(1, len(section.get('secondaries', {})))
+            for section in course.values())
+        cardinalities[(term, course_id)] = cardinality
+
+    def init(size):
+        b = bitarray.bitarray(size)
+        b.setall(False)
+        return b
+
+    # Construct the indices.
+    periods = collections.defaultdict(lambda: init(len(terms)))
+    departments = collections.defaultdict(lambda: init(len(schedules)))
+    inverted = collections.defaultdict(lambda: init(len(schedules)))
+    sequences = collections.defaultdict(lambda: init(len(schedules)))
+    instructors = collections.defaultdict(
+        lambda: init(sum(cardinalities.values())))
+    times = collections.defaultdict(lambda: init(sum(cardinalities.values())))
+
+    # Construct the coarse indices.
+    for index, term in enumerate(sorted(terms)):
+        year = term.id[-4:]
+        period = term.id[:6]
+        periods[period][index] = True
+
+    for index, course_id in enumerate(sorted(schedules.keys())):
+        departments[course_id[:4]][index] = True
+        name = course_info.get(course_id, {}).get('name', '')
+        desc = course_descriptions.get(course_id, {}).get('description', '')
+        for word in get_words(course_id) | get_words(name) | get_words(desc):
+            inverted[word][index] = True
+        sequence = course_info.get(course_id, {}).get('sequence')
+        if sequence:
+            sequences[sequence][index] = True
+
+    # Construct the fine indices.
+    def serialize_schedule(schedule):
+        return ','.join(
+            ['-'.join(str(x) for x in s) for s in sorted(schedule)])
+
+    index = 0
+    for course_id in sorted(schedules.keys()):
+        print(course_id)
+        for term in sorted(terms):
+            if (term, course_id) not in cardinalities:
+                continue
+            year = term.id[-4:]
+            period = term.id[:6]
+            course = transform(schedules[course_id][year][period])
+
+            for primary_id in sorted(course.keys()):
+                primary_instructors = []
+                primary_schedules = []
+                for primary in course[primary_id]['primaries']:
+                    primary_instructors.extend(primary.get('instructors', []))
+                    primary_schedules.extend(primary.get('schedule', []))
+                secondaries = transform(
+                    course[primary_id].get('secondaries', {}))
+                for secondary_id in sorted(secondaries.keys()):
+                    activity = course[primary_id]['secondaries'][secondary_id]
+                    secondary_instructors = activity.get('instructors', [])
+                    secondary_schedules = activity.get('schedule', [])
+                    for instructor in primary_instructors + secondary_instructors:
+                        instructors[instructor.replace('.', '')][index] = True
+                    times[serialize_schedule(primary_schedules +
+                                             secondary_schedules)
+                          or 'unknown'][index] = True
+                    index += 1
+                if not course[primary_id].get('secondaries', {}):
+                    for instructor in primary_instructors:
+                        instructors[instructor.replace('.', '')][index] = True
+                    times[serialize_schedule(primary_schedules)
+                          or 'unknown'][index] = True
+                    index += 1
+    # Quick sanity check.
+    assert index == sum(cardinalities.values())
+
     if os.path.isfile('cache.db'):
+        records = []
+        for (term, course_id) in cardinalities:
+            year = term.id[-4:]
+            period = term.id[:6]
+            records.append((course_id, int(year), period, course_id[:4],
+                            json.dumps(schedules[course_id][year][period])))
         cache = sqlite3.connect('cache.db')
         cursor = cache.cursor()
         cursor.execute('DELETE FROM courses')
@@ -158,20 +217,44 @@ def rebuild_indexes(db):
         cache.commit()
         cache.close()
 
-    def flatten_set(d):
-        return dict([(a, list(b)) for a, b in d.items()])
+    def pack(d):
+        return base64.b64encode(
+            zlib.compress(json.dumps(list(d)).encode('utf-8'), 9)).decode()
+
+    def compress(d):
+        def pick(v):
+            sparse = [i for i, x in enumerate(v.tolist()) if x]
+            if len(sparse) < 128:
+                return json.dumps([v.length()] + sparse)
+            return base64.b64encode(zlib.compress(v.tobytes(), 9)).decode()
+
+        return {k: pick(v) for k, v in d.items()}
+
+    data = bytearray()
+    for course in sorted(schedules.keys()):
+        for term in sorted(terms):
+            cardinality = cardinalities.get((term, course), 0)
+            data.append((cardinality >> 0) & 0xFF)
+            data.append((cardinality >> 8) & 0xFF)
+    data = base64.b64encode(zlib.compress(data, 9)).decode()
+
+    # Certain courses do not have any schedule records. These are omitted from the
+    # reference tables to save space (as they'll always match 0), and instead manually
+    # added by the filtering algorithm when relevant.
+    orphans = set(schedules.keys()) - set(course_info.keys())
 
     db.child('indexes').set({
-        'fulltext': flatten_set(inverted),
-        'instructors': flatten_set(instructors),
-        'departments': flatten_set(departments),
-        'periods': flatten_set(periods),
-        'terms': flatten_set(terms),
-        'years': flatten_set(years),
-        'schedules': flatten_set(intervals),
-        'offerings': flatten_set(offerings),
-        'sequences': flatten_set(sequences),
-        'all': list(schedules.keys())
+        'fulltext': compress(inverted),
+        'instructors': compress(instructors),
+        'departments': compress(departments),
+        'periods': compress(periods),
+        'schedules': compress(times),
+        'sequences': compress(sequences),
+        # Reference tables.
+        'cardinalities': data,
+        'terms': pack(map(lambda t: t.id, sorted(terms))),
+        'courses': pack(sorted(schedules.keys())),
+        'orphans': pack(sorted(orphans))
     })
 
 

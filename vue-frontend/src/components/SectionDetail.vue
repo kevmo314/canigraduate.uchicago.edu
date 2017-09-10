@@ -46,28 +46,16 @@ export default {
     term: {
       type: String,
       required: true,
-    }
+    },
+    serialized: Object
   },
-  computed: {
-    ...mapState('institution', { endpoints: state => state.endpoints }),
-    ...mapGetters('filter', ['daysIntervalTree'])
-  },
+  computed: mapState('institution', { endpoints: state => state.endpoints }),
   data() { return { course: this.$slots.default[0].text }; },
   subscriptions() {
-    const schedules = this.$watchAsObservable(() => this.daysIntervalTree, { immediate: true })
+    const schedules = this.$watchAsObservable(() => this.serialized, { immediate: true })
+      .filter(Boolean)
       .map(x => x.newValue)
-      .combineLatest(this.endpoints.schedules(this.course, this.term), (whitelistTree, schedules) => {
-        return Object.entries(schedules).reduce((accumulator, [key, section]) => {
-          const scheduleMatches = section.primaries.every(primary => {
-            return primary.schedule.every(interval => whitelistTree.intersects(interval));
-          })
-          if (!scheduleMatches) {
-            return accumulator;
-          }
-          accumulator[key] = section;
-          return accumulator;
-        }, {});
-      })
+      .flatMap(serialized => this.endpoints.schedules(this.course, this.term, serialized));
     return { schedules }
   },
   methods: {
