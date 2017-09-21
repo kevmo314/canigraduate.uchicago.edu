@@ -49,35 +49,37 @@
         <v-card-title primary-title class="headline">Educators</v-card-title>
         <v-card-media>
           <v-tabs grow>
-            <v-tabs-bar slot="activators" class="white">
+            <v-tabs-bar class="white">
               <v-tabs-slider class="blue"></v-tabs-slider>
               <v-tabs-item href="#sign-in">Sign in</v-tabs-item>
               <v-tabs-item href="#create-an-account">Create an account</v-tabs-item>
             </v-tabs-bar>
-            <v-tabs-content id="sign-in">
-              <v-card flat>
-                <v-card-text>
-                  Manage your students' progress with
-                  <strong>Can I Graduate?</strong> with ease!
-                  <v-text-field name="username" label="Email address" v-model.lazy="educators.username"
-                    required :rules="[() => rejected ? '' : true]"></v-text-field>
-                  <v-text-field name="password" label="Password" v-model.lazy="educators.password"
-                    type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
-                </v-card-text>
-              </v-card>
-            </v-tabs-content>
-            <v-tabs-content id="create-an-account">
-              <v-card flat>
-                <v-card-text>
-                  <v-text-field name="username" label="Email address" v-model.lazy="educators.username"
-                    type="email" required :rules="[() => rejected ? '' : true]"></v-text-field>
-                  <v-text-field name="password" label="Password" v-model.lazy="educators.password"
-                    type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
-                  <v-text-field name="password" label="Confirm password" type="password" required v-model.lazy="educators.confirmPassword"
-                    :rules="[validateConfirmPassword]"></v-text-field>
-                </v-card-text>
-              </v-card>
-            </v-tabs-content>
+            <v-tabs-items>
+              <v-tabs-content id="sign-in">
+                <v-card flat>
+                  <v-card-text>
+                    Manage your students' progress with
+                    <strong>Can I Graduate?</strong> with ease!
+                    <v-text-field name="username" label="Email address" v-model.lazy="educators.username"
+                      required :rules="[() => rejected ? '' : true]"></v-text-field>
+                    <v-text-field name="password" label="Password" v-model.lazy="educators.password"
+                      type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
+                  </v-card-text>
+                </v-card>
+              </v-tabs-content>
+              <v-tabs-content id="create-an-account">
+                <v-card flat>
+                  <v-card-text>
+                    <v-text-field name="username" label="Email address" v-model.lazy="educators.username"
+                      type="email" required :rules="[() => rejected ? '' : true]"></v-text-field>
+                    <v-text-field name="password" label="Password" v-model.lazy="educators.password"
+                      type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
+                    <v-text-field name="password" label="Confirm password" type="password" required v-model.lazy="educators.confirmPassword"
+                      :rules="[validateConfirmPassword]"></v-text-field>
+                  </v-card-text>
+                </v-card>
+              </v-tabs-content>
+            </v-tabs-items>
           </v-tabs>
         </v-card-media>
       </v-card>
