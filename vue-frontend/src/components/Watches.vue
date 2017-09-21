@@ -1,7 +1,7 @@
 <template>
   <div>
+    <v-subheader>Your watches</v-subheader>
     <v-card>
-      <v-card-title primary-title class="headline">Your watches</v-card-title>
       <v-card-text>
         <div v-if="!watches" class="text-xs-center my-5">
           <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
@@ -23,18 +23,18 @@
         </v-data-table>
       </v-card-text>
     </v-card>
+    <v-subheader>Add a watch</v-subheader>
     <form @submit.prevent="addWatch">
-      <v-card class="mt-3">
-        <v-card-title primary-title class="headline">Add a watch</v-card-title>
+      <v-card>
         <v-card-text>
           <p>Blank fields will act as wildcards.</p>
           <v-layout row>
             <v-flex xs4>
-              <v-select :items="terms" v-model="term" label="Term" autocomplete></v-select>
+              <v-select :items="terms" v-model="term" label="Term" editable></v-select>
             </v-flex>
             <v-flex xs4>
               <v-select :items="courses" v-model="course" label="Course" :hint="courseHint" persistent-hint
-                autocomplete></v-select>
+                editable></v-select>
             </v-flex>
             <v-flex xs4>
               <v-text-field label="Section" v-model="section"></v-text-field>

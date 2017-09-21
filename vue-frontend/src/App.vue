@@ -1,5 +1,5 @@
 <template>
-  <v-app toolbar footer v-resize="onResize">
+  <v-app toolbar v-resize="onResize">
     <v-navigation-drawer fixed :temporary="deviceWidth < 1600" :persistent="deviceWidth >= 1600"
       light v-model="drawer">
       <v-toolbar flat class="transparent">
@@ -95,17 +95,15 @@
             <router-view></router-view>
           </v-slide-y-reverse-transition>
         </div>
-        <div class="sidebar ml-3" v-sticky>
-          <authentication v-if="!authenticated">
-          </authentication>
-          <sidebar v-else></sidebar>
+        <div class="sidebar ml-3">
+          <div v-sticky>
+            <authentication v-if="!authenticated">
+            </authentication>
+            <sidebar v-else></sidebar>
+          </div>
         </div>
       </v-container>
     </main>
-    <v-footer class="indigo darken-4">
-      <span class="white--text">The data presented is not guaranteed to be correct. Periodically verify your
-        requirements with your academic advisor prior to graduation.</span>
-    </v-footer>
   </v-app>
 </template>
 
@@ -169,6 +167,10 @@ export default {
 
 .display-flex {
   display: flex;
+}
+
+.display-flex>* {
+  min-width: 0;
 }
 
 .flex-grow {

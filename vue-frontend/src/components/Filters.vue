@@ -59,7 +59,7 @@
         </v-layout>
       </v-card-text>
     </v-card>
-    <div class="display-flex my-3">
+    <div class="display-flex mt-3">
       <v-card class="flex-grow">
         <v-card-text>
           <v-text-field aria-label="Search" :placeholder="searchPlaceholder" prepend-icon="search"
@@ -105,7 +105,7 @@ export default {
   computed: {
     ...mapState('institution', {
       endpoints: state => state.endpoints,
-      searchPlaceholder: state => state.searchPlaceholder,
+      searchPlaceholder: state => 'Try "' + state.searchPlaceholder + '"',
       periodName: state => state.periodName,
       periodItems: state => state.periods.map((period, value) => ({
         value, text: period.name, abbr: period.shorthand
@@ -136,6 +136,6 @@ export default {
 }
 
 .sort {
-  flex: 0 0 200px;
+  flex-shrink: 0;
 }
 </style>

@@ -199,7 +199,6 @@ function decompress(data, cardinalities, courseTermOffsets, courses, terms) {
 const compressedIndex = memoize(path => {
   const subject = new ReplaySubject(1);
   val('/indexes/' + path)
-    .do(() => console.log('decompressing', path))
     .map(data => {
       if (!data) {
         return data;
@@ -224,7 +223,6 @@ const compressedIndex = memoize(path => {
       }
       return decompress(data, cardinalities, courseTermOffsets, courses, terms);
     })
-    .do(() => console.log('done decompressing', path))
     .subscribe(subject);
   return subject;
 });
@@ -232,7 +230,6 @@ const compressedIndex = memoize(path => {
 const scheduleIndex = memoize(() => {
   const subject = new ReplaySubject(1);
   val('/indexes/schedules')
-    .do(() => console.log('inflating schedule'))
     .map(data => {
       return Object.keys(data).reduce((state, key) => {
         try {
@@ -243,7 +240,6 @@ const scheduleIndex = memoize(() => {
         return state;
       }, {});
     })
-    .do(() => console.log('getting indices'))
     .let(
       withLatestFromBlocking(
         cardinalities,
@@ -252,7 +248,6 @@ const scheduleIndex = memoize(() => {
         packedIndex('terms'),
       ),
     )
-    .do(() => console.log('decompressing schedule'))
     .map(([schedules, cardinalities, offsets, courses, terms]) => {
       // Return a subsetter that will filter to any classes
       // that match any schedule set.
@@ -267,7 +262,6 @@ const scheduleIndex = memoize(() => {
         return [key, bitset.array()];
       });
     })
-    .do(() => console.log('done schedule'))
     .subscribe(subject);
   return subject;
 });
@@ -299,7 +293,7 @@ const UCHICAGO = {
   /** The set of valid GPAs that can be issued by the institution in ascending order. */
   gpas: [0.0, 1.0, 1.3, 1.7, 2.0, 2.3, 2.7, 3.0, 3.3, 3.7, 4.0],
   /** Used in the search bar, usually a canonical course that all students are familiar with. */
-  searchPlaceholder: 'Math 15300',
+  searchPlaceholder: 'Foucault',
   emailDomain: '@uchicago.edu',
   endpoints: {
     transcript(auth) {
@@ -352,8 +346,9 @@ const UCHICAGO = {
       return gradeDistribution
         .map(distribution => {
           return Object.entries(distribution).reduce((obj, [course, data]) => {
-            obj[course] = 2 * Object.values(data).reduce((a, b) => a + b);
-            return obj;
+            return Object.assign(obj, {
+              [course]: 2 * Object.values(data).reduce((a, b) => a + b),
+            });
           }, {});
         })
         .combineLatest(
@@ -363,7 +358,7 @@ const UCHICAGO = {
               // Promote the rank of each course in the sequence to the max.
               const max =
                 sequence
-                  .map(course => courseRanking[course])
+                  .map(course => courseRanking[course] | 0)
                   .reduce((a, b) => Math.max(a, b)) + 1;
               sequence.forEach(course => (courseRanking[course] = max));
             });
@@ -381,6 +376,7 @@ const UCHICAGO = {
             let data = null;
             try {
               data = JSON.parse(sequences[key]);
+              data.shift(); // Drop the header value.
             } catch (e) {
               data = pako.inflate(window.atob(sequences[key]));
             }
@@ -431,11 +427,9 @@ const UCHICAGO = {
             });
         }
         if (filter.departments.length) {
-          console.log('dept');
           yield filterAny(filter.departments, 'departments');
         }
         if (filter.instructors.length) {
-          console.log('inst');
           yield filterAny(filter.instructors, 'instructors');
         }
         yield filterAny(
@@ -448,12 +442,11 @@ const UCHICAGO = {
 
         // This is a rather expensive filter...
         if (filter.days) {
-          console.log('days');
           yield scheduleIndex().map(schedules => {
             // Return a subsetter that will filter to any classes
             // that match any schedule set.
             const intersections = {};
-            const indices = schedules
+            const mask = schedules
               .filter(([schedule, subset]) => {
                 return schedule.split(',').reduce((state, interval) => {
                   if (!state) {
@@ -470,13 +463,11 @@ const UCHICAGO = {
               .reduce((a, [schedule, subset]) => {
                 subset.forEach(i => a.add(i));
                 return a;
-              }, new Set());
-            return results =>
-              results.intersection(new TypedFastBitSet(indices));
+              }, new TypedFastBitSet());
+            return results => results.intersection(mask);
           });
         }
       }
-      console.log('initializing');
       return courseOffsets
         .map(offsets => {
           const bitSet = new TypedFastBitSet();
@@ -486,24 +477,16 @@ const UCHICAGO = {
           }
           return bitSet;
         })
-        .do(() => console.log('got offsets'))
         .combineLatest(
-          filter$
-            .do(() => console.log('filtering'))
-            .switchMap(filter =>
-              Observable.forkJoin(
-                [...generateSubsetters(filter)].map(x => x.first()),
-              ),
-            )
-            .do(() => console.log('got subsetters')),
+          filter$.switchMap(filter =>
+            Observable.forkJoin(
+              [...generateSubsetters(filter)].map(x => x.first()),
+            ),
+          ),
           (state, subsetters) => {
-            console.log('combined with subsetters');
-            console.log(state);
             return subsetters.reduce((state, f) => f(state), state.clone());
           },
         )
-        .do(() => console.log('reduced'))
-        .do(console.log)
         .let(
           withLatestFromBlocking(
             courseOffsets,
@@ -511,7 +494,6 @@ const UCHICAGO = {
             packedIndex('terms'),
           ),
         )
-        .do(() => console.log('combined with indices'))
         .map(([data, courseOffsets, courses, terms]) => {
           // Convert the bitset state to a proper result set.
           let lowerBound = 0;
@@ -526,8 +508,7 @@ const UCHICAGO = {
             lowerBound = courseOffsets[courseIndex + 1];
           });
           return { courses: results, serialized: data };
-        })
-        .do(() => console.log('shipping result'));
+        });
     },
     schedules(id, term, serialized = undefined) {
       const year = UCHICAGO.converters.termToYear(term);
@@ -608,6 +589,55 @@ const UCHICAGO = {
     },
     serverTimeOffset() {
       return val('.info/serverTimeOffset');
+    },
+    programs: memoize(() => {
+      return val('/programs')
+        .combineLatest(val('/sequences'), (programs, sequences) => {
+          // Resolve the programs into their respective sequences, copying when necessary.
+          return Object.keys(programs).reduce((state, key) => {
+            const resolve = (state, path, i) =>
+              i == path.length ? state : resolve(state[path[i]], path, i + 1);
+            const parse = node => {
+              if (typeof node == 'object') {
+                if (Array.isArray(node.requirements)) {
+                  return {
+                    ...node,
+                    requirements: node.requirements.map(parse),
+                  };
+                }
+              } else if (node.startsWith('/sequences')) {
+                return parse(resolve(sequences, node.split('/'), 2));
+              }
+              return node;
+            };
+            return {
+              ...state,
+              // Copy the program's requirements node to resolve any references.
+              [key]: parse(programs[key]),
+            };
+          }, {});
+        })
+        .map(Object.freeze)
+        .publishReplay(1)
+        .refCount();
+    }),
+    majors() {
+      return this.programs().map(programs => {
+        return Object.entries(programs).reduce((state, [key, value]) => {
+          return !key.endsWith('Minor')
+            ? Object.assign(state, { [key]: value })
+            : state;
+        }, {});
+      });
+    },
+    minors() {
+      return this.programs().map(programs => {
+        return Object.entries(programs).reduce((state, [key, value]) => {
+          return key.endsWith('Minor')
+            ? Object.assign(state, { [key]: value })
+            : state;
+        }, {});
+      });
     },
     watches: {
       create(value) {

@@ -43,7 +43,7 @@
           </v-tabs-content>
           <v-tabs-content id="schedule" class="px-3 content">
             <v-select :items="allTerms" :value="scheduleTerm" label="Term" bottom @change="setActiveTerm"
-              :disabled="temporaryTerm != null"></v-select>
+              :disabled="temporaryTerm != null" auto></v-select>
             <calendar :records="transcript.filter(record => record.term == scheduleTerm)" :term="scheduleTerm"
             />
           </v-tabs-content>
@@ -115,7 +115,7 @@ export default {
 }
 
 .content {
-  max-height: calc(100vh - 200px);
+  max-height: calc(100vh - 150px);
   overflow-y: auto;
 }
 </style>
