@@ -16,16 +16,12 @@
             <strong>Can I Graduate?</strong> works better if you're signed in. Enter your UChicago
             CNetID and password to import your data from AIS.
           </p>
-          <v-layout row>
-            <v-flex xs6>
-              <v-text-field name="username" label="CNetID" v-model.lazy="students.username" :suffix="emailDomain"
-                :rules="[() => rejected ? '' : true]"></v-text-field>
-            </v-flex>
-            <v-flex xs6>
-              <v-text-field name="password" label="Password" v-model.lazy="students.password" type="password"
-                :rules="[() => rejected ? '' : true]"></v-text-field>
-            </v-flex>
-          </v-layout>
+          <div class="display-flex">
+            <v-text-field class="mr-2 flex-grow" name="username" label="CNetID" v-model.lazy="students.username"
+              :suffix="emailDomain" :rules="[() => rejected ? '' : true]"></v-text-field>
+            <v-text-field class="ml-2 flex-grow" name="password" label="Password" v-model.lazy="students.password"
+              type="password" :rules="[() => rejected ? '' : true]"></v-text-field>
+          </div>
           <p class="red--text caption auth-error">
             {{ message }}
           </p>
