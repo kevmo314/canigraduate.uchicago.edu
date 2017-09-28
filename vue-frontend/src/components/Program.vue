@@ -3,12 +3,14 @@
     <v-card-title class="body-1">
       <slot />
     </v-card-title>
-    <v-slide-y-transition>
-      <div>
-        <requirement v-for="(requirement, index) of program.requirements" :requirement="requirement"
-          :key="index"></requirement>
-      </div>
-    </v-slide-y-transition>
+    <v-card-text>
+      <v-slide-y-transition>
+        <div>
+          <requirement v-for="(requirement, index) of program.requirements" :requirement="requirement"
+            :key="index"></requirement>
+        </div>
+      </v-slide-y-transition>
+    </v-card-text>
   </v-card>
 </template>
 

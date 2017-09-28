@@ -591,6 +591,26 @@ const UCHICAGO = {
       return val('.info/serverTimeOffset');
     },
     programs: memoize(() => {
+      function displayName(node) {
+        if (node.min && node.max) {
+          if (node.min == node.max) {
+            return 'Exactly ' + node.min + ' of the following';
+          } else {
+            return (
+              'At least ' +
+              node.min +
+              ' and at most ' +
+              node.max +
+              ' of the following'
+            );
+          }
+        } else if (node.min) {
+          return 'At least ' + node.min + ' of the following';
+        } else {
+          return 'All of the following';
+        }
+      }
+
       return val('/programs')
         .combineLatest(val('/sequences'), (programs, sequences) => {
           // Resolve the programs into their respective sequences, copying when necessary.
@@ -602,6 +622,7 @@ const UCHICAGO = {
                 if (Array.isArray(node.requirements)) {
                   return {
                     ...node,
+                    display: displayName(node),
                     requirements: node.requirements.map(parse),
                   };
                 }
@@ -614,6 +635,44 @@ const UCHICAGO = {
               ...state,
               // Copy the program's requirements node to resolve any references.
               [key]: parse(programs[key]),
+            };
+          }, {});
+        })
+        .map(programs => {
+          // Add a resolver to each of the programs.
+          return Object.keys(programs).reduce((state, key) => {
+            const matchesRequirement = (course, requirement) => {};
+            const getResolver = node => {
+              // Returns a generator that yields a completion state.
+              if (typeof node == 'object') {
+                // Find a solution and yield descendants.
+                return function*(state) {
+                  // Return an array of the same length as the number of children.
+                  yield []; // Yield nothing for now.
+                };
+              } else if (node.indexOf(':') == -1) {
+                return function*(state) {
+                  // Unity states are wrapped in an array to avoid dealing with null.
+                  if (state.has(node)) {
+                    yield Object.assign([node], { remaining: 0 });
+                  }
+                };
+              } else {
+                const requirements = node.split(':')[1].split(',');
+                return function*(state) {
+                  yield* state
+                    .filter(course =>
+                      requirements.every(requirement =>
+                        matchesRequirement(course, matchesRequirement),
+                      ),
+                    )
+                    .map(course => Object.assign([course], { remaining: 0 }));
+                };
+              }
+            };
+            return {
+              ...state,
+              [key]: { ...programs[key], resolver: getResolver(programs[key]) },
             };
           }, {});
         })
