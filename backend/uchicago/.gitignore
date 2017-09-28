@@ -11,5 +11,5 @@ service_account_key.json
 [Ss]cripts
 pyvenv.cfg
 .venv
-pip-selfcheck.jsonsendgrid.env
+pip-selfcheck.json
 sendgrid.env

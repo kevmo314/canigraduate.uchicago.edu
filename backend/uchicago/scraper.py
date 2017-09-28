@@ -30,7 +30,7 @@ FIREBASE = pyrebase.initialize_app({
     'storageBucket':
     'canigraduate-43286.appspot.com',
     'serviceAccount':
-    './service_account_key.json'
+    'backend/uchicago/service_account_key.json'
 })
 MIDNIGHT = datetime.datetime.strptime('12:00AM', '%I:%M%p')
 
