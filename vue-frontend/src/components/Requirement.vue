@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isLeaf" class="display-flex mx-3 my-2">
+  <div v-if="isLeaf" class="display-flex my-2">
     <div class="id">
       {{requirement.split(':')[0]}}
     </div>
@@ -8,7 +8,7 @@
   </div>
   <div v-else>
     {{requirement.display}}
-    <div class="ml-2">
+    <div class="ml-2 mt-2">
       <requirement v-for="(child, index) of requirement.requirements" :key="index" :requirement="child"
       />
     </div>
