@@ -7,8 +7,8 @@
     <div class="ml-2" v-else>Elective</div>
   </div>
   <div v-else>
-    {{requirement.display}}
-    <div class="ml-2 mt-2">
+    <span @click="collapse = !collapse">{{requirement.display}}</span>
+    <div class="ml-2 mt-2" v-if="!collapse">
       <requirement v-for="(child, index) of requirement.requirements" :key="index" :requirement="child"
       />
     </div>
@@ -24,6 +24,9 @@ export default {
   name: 'requirement',
   components: { CourseName },
   props: ['requirement'],
+  data() {
+    return { collapse: !this.isLeaf && this.requirement.collapse };
+  },
   computed: {
     ...mapState('institution', { catalogSequence: state => state.endpoints.catalogSequence }),
     isLeaf() {
@@ -31,11 +34,7 @@ export default {
     },
     isExact() {
       return this.requirement.indexOf(':') == -1;
-    }
+    },
   },
 }
 </script>
-
-<style scoped>
-
-</style>

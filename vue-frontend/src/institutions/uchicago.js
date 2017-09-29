@@ -627,7 +627,11 @@ const UCHICAGO = {
                   };
                 }
               } else if (node.startsWith('/sequences')) {
-                return parse(resolve(sequences, node.split('/'), 2));
+                return {
+                  ...parse(resolve(sequences, node.split('/'), 2)),
+                  collapse: true,
+                  display: node,
+                };
               }
               return node;
             };
