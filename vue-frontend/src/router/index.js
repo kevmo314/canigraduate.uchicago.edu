@@ -1,39 +1,36 @@
 import Vue from 'vue';
-import Router from 'vue-router';
+import VueRouter from 'vue-router';
 import About from '@/components/About';
 import Catalog from '@/components/Catalog';
 import Search from '@/components/Search';
 import Watches from '@/components/Watches';
 import Analytics from '@/components/Analytics';
 
-Vue.use(Router);
+Vue.use(VueRouter);
 
-export default new Router({
+export default new VueRouter({
   mode: 'history',
   routes: [
     {
-      path: '/catalog',
-      name: 'Catalog',
+      path: '/catalog/:activeProgram?',
+      name: 'catalog',
       component: Catalog,
+      props: true,
     },
     {
       path: '/search',
-      name: 'Search',
       component: Search,
     },
     {
       path: '/watches',
-      name: 'Watches',
       component: Watches,
     },
     {
       path: '/about',
-      name: 'About',
       component: About,
     },
     {
       path: '/analytics',
-      name: 'Analytics',
       component: Analytics,
     },
   ],
