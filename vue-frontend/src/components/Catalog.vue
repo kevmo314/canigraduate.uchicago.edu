@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-subheader>Majors</v-subheader>
-    <v-card v-for="(program, name) of majors" :key="name">
+    <v-card v-for="(program, name) of majors" :key="name" v-scroll="kebabCase(name) == activeProgram">
       <v-card-title class="body-1" @click="navigateTo(name)">
         {{name}}
       </v-card-title>
@@ -18,10 +18,12 @@
 <script>
 import { mapState } from 'vuex';
 import Program from '@/components/Program';
+import Scroll from '@/directives/Scroll';
 
 export default {
   props: { activeProgram: String },
   components: { Program },
+  directives: { Scroll },
   computed: mapState('institution', { endpoints: state => state.endpoints }),
   methods: {
     kebabCase(string) {
