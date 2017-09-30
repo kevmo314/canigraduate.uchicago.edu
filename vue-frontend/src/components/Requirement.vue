@@ -6,7 +6,7 @@
     <course-name class="ml-2" v-if="isExact">{{requirement}}</course-name>
     <div class="ml-2" v-else>Elective</div>
   </div>
-  <div v-else-if="!isShortenedOr">
+  <div v-else-if="!isShortened">
     <div @click="collapse = !collapse" class="summary body-2 py-1" :class="{'collapsed': collapse}">
       <v-icon class="icon">expand_more</v-icon>
       {{requirement.display}}
@@ -18,7 +18,7 @@
       </div>
     </v-slide-x-transition>
   </div>
-  <div v-else class="display-flex">
+  <div v-else-if="isShortenedOr" class="display-flex">
     <div class="or grey grey--text lighten-1">
       <div class="caption label white">OR</div>
     </div>
@@ -26,6 +26,10 @@
       <requirement v-for="(child, index) of requirement.requirements" :key="index" :requirement="child"
       />
     </div>
+  </div>
+  <div v-else-if="isShortenedAll">
+    <requirement v-for="(child, index) of requirement.requirements" :key="index" :requirement="child"
+    />
   </div>
 </template>
 
@@ -48,6 +52,12 @@ export default {
     },
     isExact() {
       return this.requirement.indexOf(':') == -1;
+    },
+    isShortened() {
+      return this.isShortenedOr || this.isShortenedAll;
+    },
+    isShortenedAll() {
+      return !this.isLeaf && this.requirement.display == 'ALL';
     },
     isShortenedOr() {
       return !this.isLeaf && this.requirement.display == 'OR';

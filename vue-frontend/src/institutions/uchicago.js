@@ -594,7 +594,9 @@ const UCHICAGO = {
       function displayName(node) {
         if (node.min && node.max) {
           if (node.min == node.max) {
-            return 'Exactly ' + node.min + ' of the following';
+            return node.min != 1
+              ? 'Exactly ' + node.min + ' of the following'
+              : 'OR';
           } else {
             return (
               'At least ' +
@@ -609,7 +611,7 @@ const UCHICAGO = {
             ? 'At least ' + node.min + ' of the following'
             : 'OR';
         } else {
-          return 'All of the following';
+          return 'ALL';
         }
       }
 
