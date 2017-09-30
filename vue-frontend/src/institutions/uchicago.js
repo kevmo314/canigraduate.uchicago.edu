@@ -605,7 +605,9 @@ const UCHICAGO = {
             );
           }
         } else if (node.min) {
-          return 'At least ' + node.min + ' of the following';
+          return node.min != 1
+            ? 'At least ' + node.min + ' of the following'
+            : 'OR';
         } else {
           return 'All of the following';
         }
