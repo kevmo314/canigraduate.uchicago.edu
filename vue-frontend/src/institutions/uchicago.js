@@ -621,8 +621,8 @@ const UCHICAGO = {
               if (typeof node == 'object') {
                 if (Array.isArray(node.requirements)) {
                   return {
-                    ...node,
                     display: displayName(node),
+                    ...node,
                     requirements: node.requirements.map(parse),
                   };
                 }
@@ -630,7 +630,6 @@ const UCHICAGO = {
                 return {
                   ...parse(resolve(sequences, node.split('/'), 2)),
                   collapse: true,
-                  display: node,
                 };
               }
               return node;

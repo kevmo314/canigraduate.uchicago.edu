@@ -7,8 +7,11 @@
     <div class="ml-2" v-else>Elective</div>
   </div>
   <div v-else>
-    <span @click="collapse = !collapse">{{requirement.display}}</span>
-    <div class="ml-2 mt-2" v-if="!collapse">
+    <div @click="collapse = !collapse" class="pointer mb-2" :class="{'collapsed': collapse}">
+      <v-icon class="icon">expand_more</v-icon>
+      {{requirement.display}}
+    </div>
+    <div class="ml-4" v-if="!collapse">
       <requirement v-for="(child, index) of requirement.requirements" :key="index" :requirement="child"
       />
     </div>
@@ -38,3 +41,13 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.collapsed .icon {
+  transform: rotateZ(-90deg);
+}
+
+.icon {
+  transition: transform 0.2s ease-in-out;
+}
+</style>

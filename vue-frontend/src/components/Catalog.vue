@@ -5,10 +5,19 @@
       <v-card-title class="body-1" @click="navigateTo(name)">
         {{name}}
       </v-card-title>
-      <v-card-text v-if="kebabCase(name) == activeProgram">
-        <v-slide-y-transition>
-          <program :program="program" />
-        </v-slide-y-transition>
+      <v-card-text v-if="kebabCase(name) == activeProgram" transition="slide-y-transition"
+        class="display-flex">
+        <div class="flex-grow">
+          <div class="subheading">Program requirements</div>
+          <program :program="program"></program>
+        </div>
+        <div class="metadata">
+          <div class="subheading">Meta</div>
+          <p v-if="program.metadata.catalog">
+            View the
+            <a :href="program.metadata.catalog">college catalog page</a>.
+          </p>
+        </div>
       </v-card-text>
     </v-card>
     <v-subheader>Minors</v-subheader>
@@ -43,5 +52,7 @@ export default {
 </script>
 
 <style scoped>
-
+.metadata {
+  flex: 0 0 240px;
+}
 </style>
