@@ -81,7 +81,7 @@ export default {
 
 .or {
   flex: 0 0 1px;
-  margin: 12px 16px 12px 7px;
+  margin: 12px 12px 12px 11px;
   align-self: stretch;
   display: flex;
   align-items: center;
@@ -90,5 +90,6 @@ export default {
 
 .or .label {
   padding: 2px;
+  text-transform: lowercase;
 }
 </style>
