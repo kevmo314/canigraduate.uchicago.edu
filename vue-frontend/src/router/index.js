@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import About from '@/components/About';
-import Catalog from '@/components/Catalog';
 import Search from '@/components/Search';
+import Program from '@/components/Program';
 import Watches from '@/components/Watches';
 import Analytics from '@/components/Analytics';
 
@@ -12,9 +12,9 @@ export default new VueRouter({
   mode: 'history',
   routes: [
     {
-      path: '/catalog/:activeProgram?',
+      path: '/catalog/:id/:extension?',
       name: 'catalog',
-      component: Catalog,
+      component: Program,
       props: true,
     },
     {

@@ -1,7 +1,7 @@
 <template>
   <v-app toolbar v-resize="onResize">
     <v-navigation-drawer fixed :temporary="deviceWidth < 1600" :persistent="deviceWidth >= 1600"
-      light v-model="drawer">
+      light v-model="drawer" dense>
       <v-toolbar flat class="transparent">
         <v-list class="pa-0">
           <v-list-tile avatar tag="div">
@@ -23,14 +23,24 @@
           <v-subheader class="body-1 user-subheader mb-2">{{user.email}} </v-subheader>
         </template>
         <v-divider></v-divider>
-        <v-list-tile router to="/catalog">
-          <v-list-tile-action>
-            <v-icon>library_books</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-content>
-            <v-list-tile-title>College Catalog</v-list-tile-title>
-          </v-list-tile-content>
-        </v-list-tile>
+        <v-list-group>
+          <v-list-tile slot="item">
+            <v-list-tile-action>
+              <v-icon>library_books</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Degree Programs</v-list-tile-title>
+            </v-list-tile-content>
+            <v-list-tile-action>
+              <v-icon>keyboard_arrow_down</v-icon>
+            </v-list-tile-action>
+          </v-list-tile>
+          <v-list-tile v-for="(program, id) in programs" :key="id" router :to="{name: 'catalog', params: {id}}">
+            <v-list-tile-content>
+              <v-list-tile-title>{{program.name}}</v-list-tile-title>
+            </v-list-tile-content>
+          </v-list-tile>
+        </v-list-group>
         <v-list-tile router to="/search">
           <v-list-tile-action>
             <v-icon>search</v-icon>
@@ -125,6 +135,7 @@ export default {
     }),
     ...mapState('institution', {
       institutionName: state => state.name,
+      endpoints: state => state.endpoints,
     }),
   },
   data() {
@@ -139,6 +150,9 @@ export default {
     signOut() {
       this.$store.dispatch('authentication/reset', AuthenticationStatus.LOGGED_OUT);
     }
+  },
+  subscriptions() {
+    return { programs: this.endpoints.programs() }
   }
 }
 </script>

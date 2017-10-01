@@ -616,6 +616,22 @@ const UCHICAGO = {
       }
 
       return val('/programs')
+        .map(programs => {
+          // Fold all the extensions into the parent.
+          return Object.keys(programs).reduce((state, key) => {
+            const extensions = programs[key].extensions || {};
+            programs[key].extensions = {};
+            return {
+              ...state,
+              [key]: programs[key],
+              ...Object.entries(
+                extensions,
+              ).reduce((state, [childKey, program]) => {
+                return { ...state, [`${key}/${childKey}`]: program };
+              }, {}),
+            };
+          }, {});
+        })
         .combineLatest(val('/sequences'), (programs, sequences) => {
           // Resolve the programs into their respective sequences, copying when necessary.
           return Object.keys(programs).reduce((state, key) => {
@@ -679,32 +695,41 @@ const UCHICAGO = {
             };
             return {
               ...state,
-              [key]: { ...programs[key], resolver: getResolver(programs[key]) },
+              [key]: {
+                ...programs[key],
+                resolver: getResolver(programs[key]),
+              },
             };
+          }, {});
+        })
+        .map(programs => {
+          // Key the programs by their kebab-case string.
+          return Object.keys(programs).reduce((state, key) => {
+            return {
+              ...state,
+              [key.replace(/\s+/g, '-').toLowerCase()]: {
+                ...programs[key],
+                name: key.split('/').pop(),
+              },
+            };
+          }, {});
+        })
+        .map(programs => {
+          // Reattach any extensions to their parent program.
+          return Object.keys(programs).reduce((state, key) => {
+            if (key.indexOf('/') > -1) {
+              const tokens = key.split('/');
+              state[tokens[0]].extensions[tokens[1]] = programs[key];
+            } else {
+              state[key] = programs[key];
+            }
+            return state;
           }, {});
         })
         .map(Object.freeze)
         .publishReplay(1)
         .refCount();
     }),
-    majors() {
-      return this.programs().map(programs => {
-        return Object.entries(programs).reduce((state, [key, value]) => {
-          return !key.endsWith('Minor')
-            ? Object.assign(state, { [key]: value })
-            : state;
-        }, {});
-      });
-    },
-    minors() {
-      return this.programs().map(programs => {
-        return Object.entries(programs).reduce((state, [key, value]) => {
-          return key.endsWith('Minor')
-            ? Object.assign(state, { [key]: value })
-            : state;
-        }, {});
-      });
-    },
     watches: {
       create(value) {
         db
