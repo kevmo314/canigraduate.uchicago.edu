@@ -1,6 +1,6 @@
 <template>
-  <v-app toolbar v-resize="onResize">
-    <v-navigation-drawer fixed :temporary="deviceWidth < 1600" :persistent="deviceWidth >= 1600"
+  <v-app toolbar>
+    <v-navigation-drawer fixed :temporary="$vuetify.breakpoint.mdAndDown" :persistent="!$vuetify.breakpoint.mdAndDown"
       light v-model="drawer" dense>
       <v-toolbar flat class="transparent">
         <v-list class="pa-0">
@@ -95,8 +95,8 @@
       </v-list>
     </v-navigation-drawer>
     <v-toolbar fixed class="indigo darken-4" dark>
-      <v-toolbar-side-icon @click.stop="drawer = !drawer" v-if="deviceWidth < 1600"></v-toolbar-side-icon>
-      <v-toolbar-title>Can I Graduate?</v-toolbar-title>
+      <v-toolbar-side-icon @click.stop="drawer = !drawer" v-if="$vuetify.breakpoint.mdAndDown"></v-toolbar-side-icon>
+      <v-toolbar-title>{{title || 'Can I Graduate?'}}</v-toolbar-title>
     </v-toolbar>
     <main>
       <v-container fluid class="display-flex">
@@ -122,6 +122,7 @@ import Authentication from '@/components/Authentication.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import { AuthenticationStatus } from '@/store/modules/authentication'
 import { mapState, mapActions } from 'vuex'
+import EventBus from '@/EventBus';
 import Sticky from '@/directives/Sticky';
 
 export default {
@@ -139,14 +140,12 @@ export default {
     }),
   },
   data() {
-    const deviceWidth = document.documentElement.clientWidth;
-    return { drawer: deviceWidth >= 1600, deviceWidth }
+    return { drawer: !this.$vuetify.breakpoint.mdAndDown, title: null }
+  },
+  mounted() {
+    EventBus.$on('set-title', title => this.title = title);
   },
   methods: {
-    onResize() {
-      this.deviceWidth = document.documentElement.clientWidth
-      this.drawer = this.deviceWidth >= 1600;
-    },
     signOut() {
       this.$store.dispatch('authentication/reset', AuthenticationStatus.LOGGED_OUT);
     }

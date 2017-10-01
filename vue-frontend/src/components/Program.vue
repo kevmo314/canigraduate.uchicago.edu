@@ -28,6 +28,7 @@
 
 <script>
 import Requirement from '@/components/Requirement';
+import EventBus from '@/EventBus';
 import { mapState } from 'vuex';
 
 export default {
@@ -40,15 +41,21 @@ export default {
     ...mapState('transcript', { transcript: state => state }),
     ...mapState('institution', { endpoints: state => state.endpoints }),
   },
+  beforeRouteLeave(to, from, next) {
+    EventBus.$emit('set-title', null);
+    next();
+  },
   subscriptions() {
     this.$watchAsObservable(() => this.transcript, { immediate: true }).map(x => x.newValue);
     const id = this.$watchAsObservable(() => this.id, { immediate: true }).map(x => x.newValue);
     const extension = this.$watchAsObservable(() => this.extension, { immediate: true }).map(x => x.newValue);
     const root = this.endpoints.programs().combineLatest(id, (programs, id) => programs[id]);
     return {
-      root,
+      root: root.do(program => {
+        EventBus.$emit('set-title', program.name);
+      }),
       program: root.combineLatest(extension, (root, extension) => {
-        return extension ? root.extensions[extension] : root;
+        return root && extension ? root.extensions[extension] : root;
       }),
     };
   }
