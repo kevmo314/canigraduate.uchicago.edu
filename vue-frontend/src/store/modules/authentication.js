@@ -5,6 +5,7 @@ export const AuthenticationStatus = {
   REJECTED: 'rejected',
   PENDING: 'pending',
   AUTHENTICATED: 'authenticated',
+  EDUCATOR_AUTHENTICATED: 'educator authenticated',
 };
 
 const DEFAULT_STATE = {
@@ -12,7 +13,10 @@ const DEFAULT_STATE = {
   password: '',
   token: null,
   status: AuthenticationStatus.UNAUTHENTICATED,
-  message: '',
+  studentMessage: '',
+  educatorSignInMessage: '',
+  educatorRegisterMessage: '',
+  educatorRegisterSuccessMessage: '',
   data: {},
 };
 
@@ -29,7 +33,7 @@ export default {
       context.commit('update', {
         ...data,
         status: AuthenticationStatus.PENDING,
-        message: '',
+        studentMessage: '',
       });
       await context.rootState.institution.endpoints
         .transcript(context.state)
@@ -46,12 +50,62 @@ export default {
           },
           error => {
             context.commit('update', {
-              message: error.response
+              studentMessage: error.response
                 ? error.response.data.error
                 : error.message,
               status: AuthenticationStatus.REJECTED,
             });
           },
+        );
+    },
+    async authenticateEducators(context, data = {}) {
+      context.commit('update', {
+        ...data,
+        status: AuthenticationStatus.PENDING,
+        educatorSignInMessage: '',
+      });
+      await context.rootState.institution.endpoints
+        .educatorSignIn(data.username, data.password)
+        .subscribe(
+          response => {
+            context.commit('update', {
+              status: AuthenticationStatus.EDUCATOR_AUTHENTICATED,
+              educatorSignInMessage: response.data.success,
+            });
+          },
+          error => {
+            context.commit('update', {
+              educatorSignInMessage: error.response
+                ? error.response.data.error
+                : error.message,
+              status: AuthenticationStatus.REJECTED,
+            });
+          }
+        );
+    },
+    async createEducatorAccount(context, data = {}) {
+      context.commit('update', {
+        ...data,
+        status: AuthenticationStatus.PENDING,
+        educatorRegisterMessage: '',
+      });
+      await context.rootState.institution.endpoints
+        .createEducatorAccount(data.username, data.password)
+        .subscribe(
+          response => {
+            context.commit('update', {
+              status: AuthenticationStatus.UNAUTHENTICATED,
+              educatorRegisterMessage: "A verification email has been sent.",
+            });
+          },
+          error => {
+            context.commit('update', {
+              educatorRegisterMessage: error.response
+                ? error.response.data.error
+                : error.message,
+              status: AuthenticationStatus.REJECTED,
+            });
+          }
         );
     },
     reset(context, status = AuthenticationStatus.UNAUTHENTICATED) {

@@ -22,10 +22,10 @@
             <v-text-field class="ml-2 flex-grow" name="password" label="Password" v-model.lazy="students.password"
               type="password" :rules="[() => rejected ? '' : true]"></v-text-field>
           </div>
-          <p class="red--text caption auth-error">
-            {{ message }}
-          </p>
           </v-layout>
+          <p class="red--text auth-error">
+            {{ studentMessage }}
+          </p>
         </v-card-text>
         <v-card-media>
           <v-alert warning value="true">
@@ -36,7 +36,7 @@
         </v-card-media>
         <v-card-actions>
           <v-spacer />
-          <v-btn flat class="orange--text" :loading="pending" type="submit">Sign In</v-btn>
+          <v-btn flat class="orange--text" :rules="[students.username!=''&& students.password!='' ? true : false]" :loading="studentLoading" type="submit">Sign In</v-btn>
         </v-card-actions>
       </v-card>
     </form>
@@ -52,28 +52,46 @@
             </v-tabs-bar>
             <v-tabs-items>
               <v-tabs-content id="sign-in">
-                <v-card flat>
-                  <v-card-text>
-                    Manage your students' progress with
-                    <strong>Can I Graduate?</strong> with ease!
-                    <v-text-field name="username" label="Email address" v-model.lazy="educators.username"
-                      required :rules="[() => rejected ? '' : true]"></v-text-field>
-                    <v-text-field name="password" label="Password" v-model.lazy="educators.password"
-                      type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
-                  </v-card-text>
-                </v-card>
+                <form @submit.prevent="authenticateEducators">
+                  <v-card flat>
+                    <v-card-text>
+                      Manage your students' progress with
+                      <strong>Can I Graduate?</strong> with ease!
+                      <v-text-field name="username" label="Email address" v-model.lazy="educators.username"
+                        required :rules="[() => rejected ? '' : true]"></v-text-field>
+                      <v-text-field name="password" label="Password" v-model.lazy="educators.password"
+                        type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
+                      <p class="red--text auth-error">
+                        {{ educatorSignInMessage }}
+                      </p>
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-spacer />
+                      <v-btn flat class="orange--text" :loading="educatorLoading" type="submit">Sign In</v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </form>
               </v-tabs-content>
               <v-tabs-content id="create-an-account">
-                <v-card flat>
-                  <v-card-text>
-                    <v-text-field name="username" label="Email address" v-model.lazy="educators.username"
-                      type="email" required :rules="[() => rejected ? '' : true]"></v-text-field>
-                    <v-text-field name="password" label="Password" v-model.lazy="educators.password"
-                      type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
-                    <v-text-field name="password" label="Confirm password" type="password" required v-model.lazy="educators.confirmPassword"
-                      :rules="[validateConfirmPassword]"></v-text-field>
-                  </v-card-text>
-                </v-card>
+                <form @submit.prevent="createEducatorAccount">
+                  <v-card flat>
+                    <v-card-text>
+                      <v-text-field name="username" label="Email address (please use your school email)" v-model.lazy="educators.username"
+                        type="email" required :rules="[validateEmail]"></v-text-field>
+                      <v-text-field name="password" label="Password" v-model.lazy="educators.password"
+                        type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
+                      <v-text-field name="password" label="Confirm password" type="password" required v-model.lazy="educators.confirmPassword"
+                        :rules="[validateConfirmPassword]"></v-text-field>
+                      <p :class="displayEducatorMessage">
+                        {{ educatorRegisterMessage }}
+                      </p>
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-spacer />
+                      <v-btn flat class="orange--text" :loading="educatorLoading" type="submit">Create an Account</v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </form>
               </v-tabs-content>
             </v-tabs-items>
           </v-tabs>
@@ -108,13 +126,36 @@ export default {
       expired: state => state.status == AuthenticationStatus.EXPIRED,
       rejected: state => state.status == AuthenticationStatus.REJECTED,
       loggedOut: state => state.status == AuthenticationStatus.LOGGED_OUT,
-      message: state => state.message,
+      unauthenticated: state => state.status == AuthenticationStatus.UNAUTHENTICATED,
+      studentMessage: state => state.studentMessage,
+      educatorSignInMessage: state => state.educatorSignInMessage,
+      educatorRegisterMessage: state => state.educatorRegisterMessage,
     }),
     ...mapState('institution', {
       emailDomain: state => state.emailDomain
     }),
+    validateEmail() {
+      return this.educators.username.indexOf(this.emailDomain) !== -1 || 'Must use your'+this.emailDomain+'email.';
+    },
     validateConfirmPassword() {
       return this.educators.confirmPassword == this.educators.password || 'Must be the same as your password.';
+    },
+    studentLoading() {
+      if (this.students.username != '' && this.students.password != '') {
+        return this.pending
+      }
+    },
+    educatorLoading() {
+      if (this.educators.username != '' && this.educators.password != '') {
+        return this.pending
+      }
+    },
+    displayEducatorMessage() {
+      if (this.unauthenticated) {
+        return "green--text auth-error";
+      } else {
+        return "red--text auth-error";
+      }
     }
   },
   methods: {
@@ -123,7 +164,10 @@ export default {
       this.$store.dispatch('authentication/authenticate', this.students);
     },
     authenticateEducators() {
-      this.$store.dispatch('authentication/authenticate', this.educators);
+      this.$store.dispatch('authentication/authenticateEducators', this.educators);
+    },
+    createEducatorAccount() {
+      this.$store.dispatch('authentication/createEducatorAccount', this.educators);
     },
   },
 }
@@ -131,6 +175,6 @@ export default {
 
 <style scoped>
 .auth-error {
-  margin-top: -36px;
+  margin-top: -6px;
 }
 </style>
