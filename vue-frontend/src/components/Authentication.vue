@@ -22,10 +22,10 @@
             <v-text-field class="ml-2 flex-grow" name="password" label="Password" v-model.lazy="students.password"
               type="password" :rules="[() => rejected ? '' : true]"></v-text-field>
           </div>
-          </v-layout>
           <p class="red--text auth-error" v-if="this.studentType">
             {{ message }}
           </p>
+          </v-layout>
         </v-card-text>
         <v-card-media>
           <v-alert warning value="true">
@@ -36,7 +36,7 @@
         </v-card-media>
         <v-card-actions>
           <v-spacer />
-          <v-btn flat class="orange--text" :rules="[students.username!=''&& students.password!='' ? true : false]" :loading="studentType ? pending : false" type="submit">Sign In</v-btn>
+          <v-btn flat class="orange--text" :rules="[students.username!=''&& students.password!='' ? true : false]" :loading="studentType&&pending" :disabled="educatorType&&pending" type="submit">Sign In</v-btn>
         </v-card-actions>
       </v-card>
     </form>
@@ -67,7 +67,7 @@
                     </v-card-text>
                     <v-card-actions>
                       <v-spacer />
-                      <v-btn flat class="orange--text" :loading="educatorType ? pending : false" type="submit">Sign In</v-btn>
+                      <v-btn flat class="orange--text" :loading="educatorType&&pending" :disabled="studentType&&pending" type="submit">Sign In</v-btn>
                     </v-card-actions>
                   </v-card>
                 </form>
@@ -88,7 +88,7 @@
                     </v-card-text>
                     <v-card-actions>
                       <v-spacer />
-                      <v-btn flat class="orange--text" :loading="educatorType ? pending : false" type="submit">Create an Account</v-btn>
+                      <v-btn flat class="orange--text" :loading="educatorType&&pending" :disabled="studentType&&pending" type="submit">Create an Account</v-btn>
                     </v-card-actions>
                   </v-card>
                 </form>
