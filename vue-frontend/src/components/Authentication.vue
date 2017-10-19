@@ -36,7 +36,7 @@
         </v-card-media>
         <v-card-actions>
           <v-spacer />
-          <v-btn flat class="orange--text" :rules="[students.username!=''&& students.password!='' ? true : false]" :loading="this.studentType ? pending : false" type="submit">Sign In</v-btn>
+          <v-btn flat class="orange--text" :rules="[students.username!=''&& students.password!='' ? true : false]" :loading="studentType ? pending : false" type="submit">Sign In</v-btn>
         </v-card-actions>
       </v-card>
     </form>
@@ -67,7 +67,7 @@
                     </v-card-text>
                     <v-card-actions>
                       <v-spacer />
-                      <v-btn flat class="orange--text" :loading="this.educatorType ? pending : false" type="submit">Sign In</v-btn>
+                      <v-btn flat class="orange--text" :loading="educatorType ? pending : false" type="submit">Sign In</v-btn>
                     </v-card-actions>
                   </v-card>
                 </form>
@@ -88,7 +88,7 @@
                     </v-card-text>
                     <v-card-actions>
                       <v-spacer />
-                      <v-btn flat class="orange--text" :loading="this.educatorType ? pending : false" type="submit">Create an Account</v-btn>
+                      <v-btn flat class="orange--text" :loading="educatorType ? pending : false" type="submit">Create an Account</v-btn>
                     </v-card-actions>
                   </v-card>
                 </form>

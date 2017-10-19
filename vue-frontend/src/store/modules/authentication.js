@@ -32,14 +32,14 @@ export default {
     },
   },
   actions: {
-    async authenticate(context, data = {}) {
+    authenticate(context, data = {}) {
       context.commit('update', {
         ...data,
         type: AuthenticationType.STUDENT,
         status: AuthenticationStatus.PENDING,
         message: '',
       });
-      await context.rootState.institution.endpoints
+      context.rootState.institution.endpoints
         .transcript(context.state)
         .subscribe(
           response => {
@@ -62,14 +62,14 @@ export default {
           },
         );
     },
-    async authenticateEducators(context, data = {}) {
+    authenticateEducators(context, data = {}) {
       context.commit('update', {
         ...data,
         type: AuthenticationType.EDUCATOR,
         status: AuthenticationStatus.PENDING,
         message: '',
       });
-      await context.rootState.institution.endpoints
+      context.rootState.institution.endpoints
         .educatorSignIn(data.username, data.password)
         .subscribe(
           response => {
@@ -88,14 +88,14 @@ export default {
           }
         );
     },
-    async createEducatorAccount(context, data = {}) {
+    createEducatorAccount(context, data = {}) {
       context.commit('update', {
         ...data,
         type: AuthenticationType.EDUCATOR_REGISTER,
         status: AuthenticationStatus.PENDING,
         message: '',
       });
-      await context.rootState.institution.endpoints
+      context.rootState.institution.endpoints
         .createEducatorAccount(data.username, data.password)
         .subscribe(
           response => {
