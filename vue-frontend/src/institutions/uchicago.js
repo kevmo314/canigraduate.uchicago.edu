@@ -323,7 +323,7 @@ const UCHICAGO = {
     // TODO: check if using @edu address
     createEducatorAccount(username, password) {
       return Observable.fromPromise(
-        firebaseAuth.createUserWithEmailAndPassword(username, password).then(function(user) {
+        firebaseAuth.createUserWithEmailAndPassword(username, password).then(user => {
           user.sendEmailVerification()
         }),
       );

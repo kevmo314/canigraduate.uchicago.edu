@@ -23,8 +23,8 @@
               type="password" :rules="[() => rejected ? '' : true]"></v-text-field>
           </div>
           </v-layout>
-          <p class="red--text auth-error">
-            {{ studentMessage }}
+          <p class="red--text auth-error" v-if="this.studentType">
+            {{ message }}
           </p>
         </v-card-text>
         <v-card-media>
@@ -36,7 +36,7 @@
         </v-card-media>
         <v-card-actions>
           <v-spacer />
-          <v-btn flat class="orange--text" :rules="[students.username!=''&& students.password!='' ? true : false]" :loading="studentLoading" type="submit">Sign In</v-btn>
+          <v-btn flat class="orange--text" :rules="[students.username!=''&& students.password!='' ? true : false]" :loading="this.studentType ? pending : false" type="submit">Sign In</v-btn>
         </v-card-actions>
       </v-card>
     </form>
@@ -61,13 +61,13 @@
                         required :rules="[() => rejected ? '' : true]"></v-text-field>
                       <v-text-field name="password" label="Password" v-model.lazy="educators.password"
                         type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
-                      <p class="red--text auth-error">
-                        {{ educatorSignInMessage }}
+                      <p class="red--text auth-error" v-if="this.educatorType">
+                        {{ message }}
                       </p>
                     </v-card-text>
                     <v-card-actions>
                       <v-spacer />
-                      <v-btn flat class="orange--text" :loading="educatorLoading" type="submit">Sign In</v-btn>
+                      <v-btn flat class="orange--text" :loading="this.educatorType ? pending : false" type="submit">Sign In</v-btn>
                     </v-card-actions>
                   </v-card>
                 </form>
@@ -82,13 +82,13 @@
                         type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
                       <v-text-field name="password" label="Confirm password" type="password" required v-model.lazy="educators.confirmPassword"
                         :rules="[validateConfirmPassword]"></v-text-field>
-                      <p :class="displayEducatorMessage">
-                        {{ educatorRegisterMessage }}
+                      <p :class="{'auth-error green--text': unauthenticated, 'auth-error red--text': !unauthenticated}" v-if="this.educatorRegisterType">
+                        {{ message }}
                       </p>
                     </v-card-text>
                     <v-card-actions>
                       <v-spacer />
-                      <v-btn flat class="orange--text" :loading="educatorLoading" type="submit">Create an Account</v-btn>
+                      <v-btn flat class="orange--text" :loading="this.educatorType ? pending : false" type="submit">Create an Account</v-btn>
                     </v-card-actions>
                   </v-card>
                 </form>
@@ -102,7 +102,7 @@
 </template>
 
 <script>
-import { AuthenticationStatus } from '@/store/modules/authentication';
+import { AuthenticationStatus, AuthenticationType } from '@/store/modules/authentication';
 import { mapState, mapActions } from 'vuex';
 export default {
   name: 'authentication',
@@ -127,9 +127,10 @@ export default {
       rejected: state => state.status == AuthenticationStatus.REJECTED,
       loggedOut: state => state.status == AuthenticationStatus.LOGGED_OUT,
       unauthenticated: state => state.status == AuthenticationStatus.UNAUTHENTICATED,
-      studentMessage: state => state.studentMessage,
-      educatorSignInMessage: state => state.educatorSignInMessage,
-      educatorRegisterMessage: state => state.educatorRegisterMessage,
+      studentType: state => state.type == AuthenticationType.STUDENT,
+      educatorType: state => state.type == AuthenticationType.EDUCATOR,
+      educatorRegisterType: state => state.type == AuthenticationType.EDUCATOR_REGISTER,
+      message: state => state.message,
     }),
     ...mapState('institution', {
       emailDomain: state => state.emailDomain
@@ -140,23 +141,6 @@ export default {
     validateConfirmPassword() {
       return this.educators.confirmPassword == this.educators.password || 'Must be the same as your password.';
     },
-    studentLoading() {
-      if (this.students.username != '' && this.students.password != '') {
-        return this.pending
-      }
-    },
-    educatorLoading() {
-      if (this.educators.username != '' && this.educators.password != '') {
-        return this.pending
-      }
-    },
-    displayEducatorMessage() {
-      if (this.unauthenticated) {
-        return "green--text auth-error";
-      } else {
-        return "red--text auth-error";
-      }
-    }
   },
   methods: {
     ...mapActions('authentication', ['reset']),

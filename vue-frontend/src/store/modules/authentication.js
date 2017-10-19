@@ -8,15 +8,18 @@ export const AuthenticationStatus = {
   EDUCATOR_AUTHENTICATED: 'educator authenticated',
 };
 
+export const AuthenticationType = {
+  STUDENT: 'student',
+  EDUCATOR: 'educator',
+  EDUCATOR_REGISTER: 'educator register',
+}
+
 const DEFAULT_STATE = {
   username: '',
   password: '',
   token: null,
   status: AuthenticationStatus.UNAUTHENTICATED,
-  studentMessage: '',
-  educatorSignInMessage: '',
-  educatorRegisterMessage: '',
-  educatorRegisterSuccessMessage: '',
+  message: '',
   data: {},
 };
 
@@ -32,8 +35,9 @@ export default {
     async authenticate(context, data = {}) {
       context.commit('update', {
         ...data,
+        type: AuthenticationType.STUDENT,
         status: AuthenticationStatus.PENDING,
-        studentMessage: '',
+        message: '',
       });
       await context.rootState.institution.endpoints
         .transcript(context.state)
@@ -50,7 +54,7 @@ export default {
           },
           error => {
             context.commit('update', {
-              studentMessage: error.response
+              message: error.response
                 ? error.response.data.error
                 : error.message,
               status: AuthenticationStatus.REJECTED,
@@ -61,8 +65,9 @@ export default {
     async authenticateEducators(context, data = {}) {
       context.commit('update', {
         ...data,
+        type: AuthenticationType.EDUCATOR,
         status: AuthenticationStatus.PENDING,
-        educatorSignInMessage: '',
+        message: '',
       });
       await context.rootState.institution.endpoints
         .educatorSignIn(data.username, data.password)
@@ -70,12 +75,12 @@ export default {
           response => {
             context.commit('update', {
               status: AuthenticationStatus.EDUCATOR_AUTHENTICATED,
-              educatorSignInMessage: response.data.success,
+              message: response.data.success,
             });
           },
           error => {
             context.commit('update', {
-              educatorSignInMessage: error.response
+              message: error.response
                 ? error.response.data.error
                 : error.message,
               status: AuthenticationStatus.REJECTED,
@@ -86,8 +91,9 @@ export default {
     async createEducatorAccount(context, data = {}) {
       context.commit('update', {
         ...data,
+        type: AuthenticationType.EDUCATOR_REGISTER,
         status: AuthenticationStatus.PENDING,
-        educatorRegisterMessage: '',
+        message: '',
       });
       await context.rootState.institution.endpoints
         .createEducatorAccount(data.username, data.password)
@@ -95,12 +101,12 @@ export default {
           response => {
             context.commit('update', {
               status: AuthenticationStatus.UNAUTHENTICATED,
-              educatorRegisterMessage: "A verification email has been sent.",
+              message: "A verification email has been sent.",
             });
           },
           error => {
             context.commit('update', {
-              educatorRegisterMessage: error.response
+              message: error.response
                 ? error.response.data.error
                 : error.message,
               status: AuthenticationStatus.REJECTED,
