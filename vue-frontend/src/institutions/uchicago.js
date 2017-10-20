@@ -309,6 +309,25 @@ const UCHICAGO = {
         }),
       );
     },
+    educatorSignIn(username, password) {
+      return Observable.fromPromise(
+        firebaseAuth.signInWithEmailAndPassword(username, password),
+      ).map(response => {
+        response.data = {
+          success: "you're logged in",
+        };
+        return response;
+      });
+    },
+    // TODO: add checking if email is verified
+    // TODO: check if using @edu address
+    createEducatorAccount(username, password) {
+      return Observable.fromPromise(
+        firebaseAuth.createUserWithEmailAndPassword(username, password).then(user => {
+          user.sendEmailVerification()
+        }),
+      );
+    },
     signOut() {
       firebaseAuth.signOut();
     },

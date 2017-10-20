@@ -83,8 +83,8 @@
             <v-list-tile-title>About</v-list-tile-title>
           </v-list-tile-content>
         </v-list-tile>
-        <v-divider v-if="authenticated"></v-divider>
-        <v-list-tile v-if="authenticated" @click="signOut">
+        <v-divider v-if="authenticated || educatorAuthenticated"></v-divider>
+        <v-list-tile v-if="authenticated || educatorAuthenticated" @click="signOut">
           <v-list-tile-action>
             <v-icon>exit_to_app</v-icon>
           </v-list-tile-action>
@@ -105,7 +105,7 @@
             <router-view></router-view>
           </v-slide-y-reverse-transition>
         </div>
-        <div class="sidebar ml-3">
+        <div class="sidebar ml-3" v-if="!educatorAuthenticated">
           <div v-sticky>
             <authentication v-if="!authenticated">
             </authentication>
@@ -132,6 +132,7 @@ export default {
   computed: {
     ...mapState('authentication', {
       authenticated: state => state.status == AuthenticationStatus.AUTHENTICATED,
+      educatorAuthenticated: state => state.status == AuthenticationStatus.EDUCATOR_AUTHENTICATED,
       user: state => state.data,
     }),
     ...mapState('institution', {
