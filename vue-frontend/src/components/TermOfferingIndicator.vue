@@ -1,6 +1,14 @@
 <template>
-  <v-chip :outline="outline" label small class="ma-0 ml-1 elevation-0" v-tooltip:bottom="tooltip && {html:tooltip}"
-    :style="{backgroundColor: !suppressed && backgroundColor, borderColor: backgroundColor}"
+  <v-tooltip top v-if="tooltip">
+    <v-chip :outline="outline" label small class="ma-0 ml-1 elevation-0 pointer" slot="activator"
+      :style="{backgroundColor, borderColor: backgroundColor}"
+      :class="{'grey--text': outline, 'white--text': !outline}">
+      {{period.shorthand}}
+    </v-chip>
+    {{tooltip}}
+  </v-tooltip>
+  <v-chip v-else :outline="outline" label small class="ma-0 ml-1 elevation-0 pointer" slot="activator"
+    :style="{backgroundColor, borderColor: backgroundColor}"
     :class="{'grey--text': outline, 'white--text': !outline}">
     {{period.shorthand}}
   </v-chip>
@@ -29,15 +37,14 @@ export default {
       terms: state => state.endpoints.terms,
       offerings: state => state.endpoints.offerings,
       periods: state => state.periods,
-    }), ...mapState('filter', {
-      suppressed(state) {
-        return state.periods.filter(i => i < this.periods.length)
-          .find(i => this.periods[i].name == this.period.name) == null;
-      },
-    })
+    }),
   },
   subscriptions() {
-    const lastPeriod = this.$watchAsObservable(() => this.serialized, { immediate: true }).filter(Boolean).map(x => x.newValue)
+    const lastPeriod = this.$watchAsObservable(() => this.serialized, {
+      immediate: true,
+    })
+      .filter(Boolean)
+      .map(x => x.newValue)
       .flatMap(serialized => this.offerings(this.course, this.serialized))
       .map(terms => {
         // Find the most recent relevant offering.
@@ -49,9 +56,18 @@ export default {
       });
     return {
       tooltip: lastPeriod,
-      outline: this.terms().combineLatest(lastPeriod, (terms, last) => terms.indexOf(last) > 32),
-      backgroundColor: lastPeriod.map(x => x && this.period.color)
-    }
-  }
-}
+      outline: this.terms().combineLatest(
+        lastPeriod,
+        (terms, last) => terms.indexOf(last) > 32,
+      ),
+      backgroundColor: lastPeriod.map(x => x && this.period.color),
+    };
+  },
+};
 </script>
+
+<style scoped>
+.pointer {
+  cursor: pointer;
+}
+</style>
