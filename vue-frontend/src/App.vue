@@ -1,7 +1,6 @@
 <template>
-  <v-app toolbar>
-    <v-navigation-drawer fixed :temporary="$vuetify.breakpoint.mdAndDown" :persistent="!$vuetify.breakpoint.mdAndDown"
-      light v-model="drawer" dense>
+  <v-app>
+    <v-navigation-drawer app fixed :temporary="$vuetify.breakpoint.mdAndDown" :permanent="!$vuetify.breakpoint.mdAndDown" v-model="drawer">
       <v-toolbar flat class="transparent">
         <v-list class="pa-0">
           <v-list-tile avatar tag="div">
@@ -94,34 +93,36 @@
         </v-list-tile>
       </v-list>
     </v-navigation-drawer>
-    <v-toolbar fixed class="indigo darken-4" dark>
+    <v-toolbar fixed class="indigo darken-4" dark app>
       <v-toolbar-side-icon @click.stop="drawer = !drawer" v-if="$vuetify.breakpoint.mdAndDown"></v-toolbar-side-icon>
       <v-toolbar-title>{{title || 'Can I Graduate?'}}</v-toolbar-title>
     </v-toolbar>
     <main>
-      <v-container fluid class="display-flex">
-        <div class="flex-grow">
-          <v-slide-y-reverse-transition>
-            <router-view></router-view>
-          </v-slide-y-reverse-transition>
-        </div>
-        <div class="sidebar ml-3" v-if="!educatorAuthenticated">
-          <div v-sticky>
-            <authentication v-if="!authenticated">
-            </authentication>
-            <sidebar v-else></sidebar>
+      <v-content>
+        <v-container fluid class="display-flex">
+          <div class="flex-grow">
+            <v-slide-y-reverse-transition>
+              <router-view></router-view>
+            </v-slide-y-reverse-transition>
           </div>
-        </div>
-      </v-container>
+          <div class="sidebar ml-3" v-if="!educatorAuthenticated">
+            <div v-sticky>
+              <authentication v-if="!authenticated">
+              </authentication>
+              <sidebar v-else></sidebar>
+            </div>
+          </div>
+        </v-container>
+      </v-content>
     </main>
   </v-app>
 </template>
 
 <script>
-import Authentication from '@/components/Authentication.vue'
-import Sidebar from '@/components/Sidebar.vue'
-import { AuthenticationStatus } from '@/store/modules/authentication'
-import { mapState, mapActions } from 'vuex'
+import Authentication from '@/components/Authentication.vue';
+import Sidebar from '@/components/Sidebar.vue';
+import { AuthenticationStatus } from '@/store/modules/authentication';
+import { mapState, mapActions } from 'vuex';
 import EventBus from '@/EventBus';
 import Sticky from '@/directives/Sticky';
 
@@ -131,8 +132,10 @@ export default {
   directives: { Sticky },
   computed: {
     ...mapState('authentication', {
-      authenticated: state => state.status == AuthenticationStatus.AUTHENTICATED,
-      educatorAuthenticated: state => state.status == AuthenticationStatus.EDUCATOR_AUTHENTICATED,
+      authenticated: state =>
+        state.status == AuthenticationStatus.AUTHENTICATED,
+      educatorAuthenticated: state =>
+        state.status == AuthenticationStatus.EDUCATOR_AUTHENTICATED,
       user: state => state.data,
     }),
     ...mapState('institution', {
@@ -141,20 +144,23 @@ export default {
     }),
   },
   data() {
-    return { drawer: !this.$vuetify.breakpoint.mdAndDown, title: null }
+    return { drawer: !this.$vuetify.breakpoint.mdAndDown, title: null };
   },
   mounted() {
-    EventBus.$on('set-title', title => this.title = title);
+    EventBus.$on('set-title', title => (this.title = title));
   },
   methods: {
     signOut() {
-      this.$store.dispatch('authentication/reset', AuthenticationStatus.LOGGED_OUT);
-    }
+      this.$store.dispatch(
+        'authentication/reset',
+        AuthenticationStatus.LOGGED_OUT,
+      );
+    },
   },
   subscriptions() {
-    return { programs: this.endpoints.programs() }
-  }
-}
+    return { programs: this.endpoints.programs() };
+  },
+};
 </script>
 
 <style scoped>
@@ -183,7 +189,7 @@ export default {
   display: flex;
 }
 
-.display-flex>* {
+.display-flex > * {
   min-width: 0;
 }
 
@@ -192,26 +198,26 @@ export default {
 }
 
 .morning {
-  background-color: #8BC34A !important;
-  fill: #8BC34A;
+  background-color: #8bc34a !important;
+  fill: #8bc34a;
 }
 
 .noon {
-  background-color: #03A9F4 !important;
-  fill: #03A9F4;
+  background-color: #03a9f4 !important;
+  fill: #03a9f4;
 }
 
 .afternoon {
-  background-color: #FFEB3B !important;
-  fill: #FFEB3B;
+  background-color: #ffeb3b !important;
+  fill: #ffeb3b;
 }
 
 .evening {
-  background-color: #FF9800 !important;
-  fill: #FF9800;
+  background-color: #ff9800 !important;
+  fill: #ff9800;
 }
 </style>
 
 <style lang="stylus">
-@require './main'
+@require './main';
 </style>
