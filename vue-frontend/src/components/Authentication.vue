@@ -28,7 +28,7 @@
           </v-layout>
         </v-card-text>
         <v-card-media>
-          <v-alert warning value="true">
+          <v-alert color="warning" icon="priority_high" value="true">
             By signing in, you agree to let
             <strong>Can I Graduate?</strong> pull your transcript from AIS and store your anonymized
             grades.
@@ -102,7 +102,10 @@
 </template>
 
 <script>
-import { AuthenticationStatus, AuthenticationType } from '@/store/modules/authentication';
+import {
+  AuthenticationStatus,
+  AuthenticationType,
+} from '@/store/modules/authentication';
 import { mapState, mapActions } from 'vuex';
 export default {
   name: 'authentication',
@@ -110,7 +113,9 @@ export default {
     return {
       students: { username: '', password: '' },
       educators: {
-        username: '', password: '', confirmPassword: ''
+        username: '',
+        password: '',
+        confirmPassword: '',
       },
     };
   },
@@ -126,20 +131,28 @@ export default {
       expired: state => state.status == AuthenticationStatus.EXPIRED,
       rejected: state => state.status == AuthenticationStatus.REJECTED,
       loggedOut: state => state.status == AuthenticationStatus.LOGGED_OUT,
-      unauthenticated: state => state.status == AuthenticationStatus.UNAUTHENTICATED,
+      unauthenticated: state =>
+        state.status == AuthenticationStatus.UNAUTHENTICATED,
       studentType: state => state.type == AuthenticationType.STUDENT,
       educatorType: state => state.type == AuthenticationType.EDUCATOR,
-      educatorRegisterType: state => state.type == AuthenticationType.EDUCATOR_REGISTER,
+      educatorRegisterType: state =>
+        state.type == AuthenticationType.EDUCATOR_REGISTER,
       message: state => state.message,
     }),
     ...mapState('institution', {
-      emailDomain: state => state.emailDomain
+      emailDomain: state => state.emailDomain,
     }),
     validateEmail() {
-      return this.educators.username.indexOf(this.emailDomain) !== -1 || 'Must use your'+this.emailDomain+'email.';
+      return (
+        this.educators.username.indexOf(this.emailDomain) !== -1 ||
+        'Must use your' + this.emailDomain + 'email.'
+      );
     },
     validateConfirmPassword() {
-      return this.educators.confirmPassword == this.educators.password || 'Must be the same as your password.';
+      return (
+        this.educators.confirmPassword == this.educators.password ||
+        'Must be the same as your password.'
+      );
     },
   },
   methods: {
@@ -148,13 +161,19 @@ export default {
       this.$store.dispatch('authentication/authenticate', this.students);
     },
     authenticateEducators() {
-      this.$store.dispatch('authentication/authenticateEducators', this.educators);
+      this.$store.dispatch(
+        'authentication/authenticateEducators',
+        this.educators,
+      );
     },
     createEducatorAccount() {
-      this.$store.dispatch('authentication/createEducatorAccount', this.educators);
+      this.$store.dispatch(
+        'authentication/createEducatorAccount',
+        this.educators,
+      );
     },
   },
-}
+};
 </script>
 
 <style scoped>
