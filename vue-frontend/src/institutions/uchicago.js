@@ -323,9 +323,11 @@ const UCHICAGO = {
     // TODO: check if using @edu address
     createEducatorAccount(username, password) {
       return Observable.fromPromise(
-        firebaseAuth.createUserWithEmailAndPassword(username, password).then(user => {
-          user.sendEmailVerification()
-        }),
+        firebaseAuth
+          .createUserWithEmailAndPassword(username, password)
+          .then(user => {
+            user.sendEmailVerification();
+          }),
       );
     },
     signOut() {
@@ -610,12 +612,12 @@ const UCHICAGO = {
       return val('.info/serverTimeOffset');
     },
     programs: memoize(() => {
-      function displayName(node) {
+      function display(node) {
         if (node.min && node.max) {
           if (node.min == node.max) {
-            return node.min != 1
-              ? 'Exactly ' + node.min + ' of the following'
-              : 'OR';
+            if (node.min > 1) {
+              return 'Exactly ' + node.min + ' of the following';
+            }
           } else {
             return (
               'At least ' +
@@ -625,10 +627,16 @@ const UCHICAGO = {
               ' of the following'
             );
           }
-        } else if (node.min) {
-          return node.min != 1
-            ? 'At least ' + node.min + ' of the following'
-            : 'OR';
+        } else if (node.min && node.min > 1) {
+          return 'At least ' + node.min + ' of the following';
+        }
+      }
+
+      function grouping(node) {
+        if (node.min == node.max && node.min == 1) {
+          return 'OR';
+        } else if (node.min && node.min == 1) {
+          return 'OR';
         } else {
           return 'ALL';
         }
@@ -660,7 +668,8 @@ const UCHICAGO = {
               if (typeof node == 'object') {
                 if (Array.isArray(node.requirements)) {
                   return {
-                    display: displayName(node),
+                    display: display(node),
+                    grouping: grouping(node),
                     ...node,
                     requirements: node.requirements.map(parse),
                   };
