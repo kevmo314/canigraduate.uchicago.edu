@@ -660,20 +660,22 @@ const UCHICAGO = {
           }, {});
         })
         .combineLatest(val('/sequences'), (programs, sequences) => {
+          console.log(sequences);
           // Resolve the programs into their respective sequences, copying when necessary.
           return Object.keys(programs).reduce((state, key) => {
             const resolve = (state, path, i) =>
               i == path.length ? state : resolve(state[path[i]], path, i + 1);
             const parse = node => {
               if (typeof node == 'object') {
-                if (Array.isArray(node.requirements)) {
-                  return {
-                    display: display(node),
-                    grouping: grouping(node),
-                    ...node,
-                    requirements: node.requirements.map(parse),
-                  };
-                }
+                const requirements = Array.isArray(node.requirements)
+                  ? node.requirements
+                  : resolve(sequences, node.requirements.split('/'), 2);
+                return {
+                  display: display(node),
+                  grouping: grouping(node),
+                  ...node,
+                  requirements: requirements.map(parse),
+                };
               } else if (node.startsWith('/sequences')) {
                 return {
                   ...parse(resolve(sequences, node.split('/'), 2)),
