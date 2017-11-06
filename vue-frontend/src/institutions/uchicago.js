@@ -660,13 +660,16 @@ const UCHICAGO = {
           }, {});
         })
         .combineLatest(val('/sequences'), (programs, sequences) => {
-          console.log(sequences);
           // Resolve the programs into their respective sequences, copying when necessary.
           return Object.keys(programs).reduce((state, key) => {
             const resolve = (state, path, i) =>
               i == path.length ? state : resolve(state[path[i]], path, i + 1);
             const parse = node => {
               if (typeof node == 'object') {
+                if (!node.requirements) {
+                  // Dangling node, just render it as-is.
+                  return { ...node };
+                }
                 const requirements = Array.isArray(node.requirements)
                   ? node.requirements
                   : resolve(sequences, node.requirements.split('/'), 2);
@@ -692,42 +695,54 @@ const UCHICAGO = {
           }, {});
         })
         .map(programs => {
+          const matchesRequirement = (course, requirement) => {};
+          function* resolver(node, courses) {
+            // Returns a generator that yields a completion state.
+            if (typeof node == 'object') {
+              // Find a solution and yield descendants.
+              if (!node.requirements) {
+                yield [];
+              } else {
+                console.log(courses);
+                yield* (function* dfs(index, state) {
+                  if (index == node.requirements.length) {
+                    yield [];
+                  }
+                  const results = resolver(node.requirements[index], state);
+                  let result;
+                  while (!(result = results.next()).done) {
+                    const futures = dfs(index + 1, state);
+                    let future;
+                    while (!(future = futures.next()).done) {
+                      yield [result.value].concat(future.value);
+                    }
+                  }
+                })(0, courses);
+              }
+            } else if (node.indexOf(':') == -1) {
+              // Unity states are wrapped in an array to avoid dealing with null.
+              if (courses.has(node)) {
+                yield Object.assign([node], { remaining: 0 });
+              }
+            } else {
+              const requirements = node.split(':')[1].split(',');
+              yield* courses
+                .filter(course =>
+                  requirements.every(requirement =>
+                    matchesRequirement(course, matchesRequirement),
+                  ),
+                )
+                .map(course => Object.assign([course], { remaining: 0 }));
+            }
+          }
           // Add a resolver to each of the programs.
           return Object.keys(programs).reduce((state, key) => {
-            const matchesRequirement = (course, requirement) => {};
-            const getResolver = node => {
-              // Returns a generator that yields a completion state.
-              if (typeof node == 'object') {
-                // Find a solution and yield descendants.
-                return function*(state) {
-                  // Return an array of the same length as the number of children.
-                  yield []; // Yield nothing for now.
-                };
-              } else if (node.indexOf(':') == -1) {
-                return function*(state) {
-                  // Unity states are wrapped in an array to avoid dealing with null.
-                  if (state.has(node)) {
-                    yield Object.assign([node], { remaining: 0 });
-                  }
-                };
-              } else {
-                const requirements = node.split(':')[1].split(',');
-                return function*(state) {
-                  yield* state
-                    .filter(course =>
-                      requirements.every(requirement =>
-                        matchesRequirement(course, matchesRequirement),
-                      ),
-                    )
-                    .map(course => Object.assign([course], { remaining: 0 }));
-                };
-              }
-            };
             return {
               ...state,
               [key]: {
                 ...programs[key],
-                resolver: getResolver(programs[key]),
+                // Create a generator that iterates over the solutions for the given courses list.
+                resolver: courses => resolver(programs[key], new Set(courses)),
               },
             };
           }, {});

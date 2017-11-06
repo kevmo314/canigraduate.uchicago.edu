@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card v-if="program">
     <v-card-media>
       <v-tabs centered v-if="root.extensions">
         <v-tabs-bar class="white">
@@ -13,8 +13,7 @@
     </v-card-media>
     <v-card-text>
       <div class="subheading">Program requirements</div>
-      <requirement v-for="(requirement, index) of program.requirements" :requirement="requirement"
-        :key="index"></requirement>
+      <requirement :requirement="program"></requirement>
       <div class="metadata">
         <div class="subheading">Meta</div>
         <p v-if="program.metadata.catalog">
@@ -35,7 +34,7 @@ export default {
   components: { Requirement },
   props: {
     id: { type: String, required: true },
-    extension: { type: String, required: false }
+    extension: { type: String, required: false },
   },
   computed: {
     ...mapState('transcript', { transcript: state => state }),
@@ -46,10 +45,18 @@ export default {
     next();
   },
   subscriptions() {
-    this.$watchAsObservable(() => this.transcript, { immediate: true }).map(x => x.newValue);
-    const id = this.$watchAsObservable(() => this.id, { immediate: true }).map(x => x.newValue);
-    const extension = this.$watchAsObservable(() => this.extension, { immediate: true }).map(x => x.newValue);
-    const root = this.endpoints.programs().combineLatest(id, (programs, id) => programs[id]);
+    this.$watchAsObservable(() => this.transcript, { immediate: true }).map(
+      x => x.newValue,
+    );
+    const id = this.$watchAsObservable(() => this.id, { immediate: true }).map(
+      x => x.newValue,
+    );
+    const extension = this.$watchAsObservable(() => this.extension, {
+      immediate: true,
+    }).map(x => x.newValue);
+    const root = this.endpoints
+      .programs()
+      .combineLatest(id, (programs, id) => programs[id]);
     return {
       root: root.do(program => {
         EventBus.$emit('set-title', program.name);
@@ -58,6 +65,6 @@ export default {
         return root && extension ? root.extensions[extension] : root;
       }),
     };
-  }
-}
+  },
+};
 </script>
