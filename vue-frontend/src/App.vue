@@ -218,6 +218,3 @@ export default {
 }
 </style>
 
-<style lang="stylus">
-@require './main';
-</style>
