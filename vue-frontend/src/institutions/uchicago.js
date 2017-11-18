@@ -1,6 +1,7 @@
 import firebase from 'firebase';
 import axios from 'axios';
 import pako from 'pako';
+import Munkres from 'munkres-js';
 import TypedFastBitSet from 'fastbitset';
 import withLatestFromBlocking from '@/lib/with-latest-from-blocking';
 import binarySearch from '@/lib/binary-search';
@@ -695,45 +696,52 @@ const UCHICAGO = {
           }, {});
         })
         .map(programs => {
-          const matchesRequirement = (course, requirement) => {};
-          function* resolver(node, courses) {
-            // Returns a generator that yields a completion state.
-            if (typeof node == 'object') {
-              // Find a solution and yield descendants.
-              if (!node.requirements) {
-                yield [];
+          function resolver(node, courses) {
+            // First, flatten the requirements tree into the individual leaves.
+            const requirements = (function dfs(node) {
+              if (typeof node == 'object') {
+                return node.requirements.reduce(
+                  (state, requirement) => [...state, ...dfs(requirement)],
+                  [],
+                );
               } else {
-                console.log(courses);
-                yield* (function* dfs(index, state) {
-                  if (index == node.requirements.length) {
-                    yield [];
-                  }
-                  const results = resolver(node.requirements[index], state);
-                  let result;
-                  while (!(result = results.next()).done) {
-                    const futures = dfs(index + 1, state);
-                    let future;
-                    while (!(future = futures.next()).done) {
-                      yield [result.value].concat(future.value);
-                    }
-                  }
-                })(0, courses);
+                return [node];
               }
-            } else if (node.indexOf(':') == -1) {
-              // Unity states are wrapped in an array to avoid dealing with null.
-              if (courses.has(node)) {
-                yield Object.assign([node], { remaining: 0 });
+            })(node);
+            // Second, given N courses and M flattened requirements, generate
+            // an (N+M)x(M+N) square matrix.
+            const matrix = [];
+            for (let i = 0; i < courses.length + requirements.length; i++) {
+              const row = [];
+              for (let j = 0; j < courses.length + requirements.length; j++) {
+                if (i < courses.length && j < requirements.length) {
+                  if (courses[i] == requirements[j]) {
+                    // Exact match, unpenalized assignment.
+                    row.push(0);
+                  } else {
+                    // Ban this assignment.
+                    row.push(Number.POSITIVE_INFINITY);
+                  }
+                } else if (i >= courses.length && j >= requirements.length) {
+                  // Mutual unassignment is unpenalized.
+                  row.push(0);
+                } else {
+                  // Unassigning a course or requirement penalizes by 1.
+                  row.push(1);
+                }
               }
-            } else {
-              const requirements = node.split(':')[1].split(',');
-              yield* courses
-                .filter(course =>
-                  requirements.every(requirement =>
-                    matchesRequirement(course, matchesRequirement),
-                  ),
-                )
-                .map(course => Object.assign([course], { remaining: 0 }));
+              matrix.push(row);
             }
+            // Third, apply the Hungarian algorithm to determine course assignments.
+            const assignments = Munkres(matrix)
+              .filter(([i, j]) => i < courses.length || j < requirements.length)
+              .map(([i, j]) => {
+                return [
+                  i < courses.length ? courses[i] : 'Unassigned',
+                  j < requirements.length ? requirements[j] : 'Unassigned',
+                ];
+              });
+            console.log(assignments);
           }
           // Add a resolver to each of the programs.
           return Object.keys(programs).reduce((state, key) => {
@@ -742,7 +750,7 @@ const UCHICAGO = {
               [key]: {
                 ...programs[key],
                 // Create a generator that iterates over the solutions for the given courses list.
-                resolver: courses => resolver(programs[key], new Set(courses)),
+                resolver: courses => resolver(programs[key], courses),
               },
             };
           }, {});

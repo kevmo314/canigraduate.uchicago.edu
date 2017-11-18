@@ -20,6 +20,7 @@
     "firebase": "^4.6.0",
     "logrocket": "^0.5.5",
     "logrocket-vuex": "0.0.3",
+    "munkres-js": "^1.2.2",
     "pako": "^1.0.6",
     "promise-polyfill": "^6.0.2",
     "rxjs": "^5.5.0",
