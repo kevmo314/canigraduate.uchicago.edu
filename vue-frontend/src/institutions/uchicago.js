@@ -691,57 +691,99 @@ const UCHICAGO = {
             return {
               ...state,
               // Copy the program's requirements node to resolve any references.
-              [key]: parse(programs[key]),
+              [key]: Object.freeze(parse(programs[key])),
             };
           }, {});
         })
         .map(programs => {
-          function resolver(node, courses) {
-            // First, flatten the requirements tree into the individual leaves.
-            const requirements = (function dfs(node) {
-              if (typeof node == 'object') {
-                return node.requirements.reduce(
-                  (state, requirement) => [...state, ...dfs(requirement)],
-                  [],
-                );
-              } else {
-                return [node];
-              }
-            })(node);
-            // Second, given N courses and M flattened requirements, generate
-            // an (N+M)x(M+N) square matrix.
-            const matrix = [];
-            for (let i = 0; i < courses.length + requirements.length; i++) {
-              const row = [];
-              for (let j = 0; j < courses.length + requirements.length; j++) {
-                if (i < courses.length && j < requirements.length) {
-                  if (courses[i] == requirements[j]) {
-                    // Exact match, unpenalized assignment.
-                    row.push(0);
-                  } else {
-                    // Ban this assignment.
-                    row.push(Number.POSITIVE_INFINITY);
-                  }
-                } else if (i >= courses.length && j >= requirements.length) {
-                  // Mutual unassignment is unpenalized.
-                  row.push(0);
-                } else {
-                  // Unassigning a course or requirement penalizes by 1.
-                  row.push(1);
+          function hammingWeight(i) {
+            i = i - ((i >> 1) & 0x55555555);
+            i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+            return (((i + (i >> 4)) & 0x0f0f0f0f) * 0x01010101) >> 24;
+          }
+          function* cartesianProduct(generators) {
+            const values = [...generators[0]];
+            if (generators.length == 1) {
+              yield* values.map(x => [x]);
+            } else {
+              for (const second of cartesianProduct(generators.slice(1))) {
+                for (const first of values) {
+                  yield [first, ...second];
                 }
               }
-              matrix.push(row);
             }
-            // Third, apply the Hungarian algorithm to determine course assignments.
-            const assignments = Munkres(matrix)
-              .filter(([i, j]) => i < courses.length || j < requirements.length)
-              .map(([i, j]) => {
-                return [
-                  i < courses.length ? courses[i] : 'Unassigned',
-                  j < requirements.length ? requirements[j] : 'Unassigned',
-                ];
+          }
+          function* subgraphs(node) {
+            const children = ((node && node.requirements) || []).filter(
+              child => typeof child == 'object',
+            );
+            if (children.length == 0) {
+              yield Boolean(node);
+            }
+            for (let i = 1; i < 1 << children.length; i++) {
+              const generators = children.map((child, index) => {
+                return subgraphs((1 << index) & i && child);
               });
-            console.log(assignments);
+              for (const children of cartesianProduct(generators)) {
+                yield children;
+              }
+            }
+          }
+          function resolver(node, courses) {
+            return;
+            for (const subgraph of subgraphs(node)) {
+              // First, flatten the requirements tree into the individual leaves.
+              const requirements = (function dfs(node, subgraph) {
+                const leaves = [];
+                let j = -1;
+                for (let i = 0; i < node.requirements.length; i++) {
+                  const child = node.requirements[i];
+                  if (typeof child != 'object') {
+                    // Add all leaves.
+                    leaves.push(child);
+                  } else if (subgraph[++j]) {
+                    // Add valid subtrees.
+                    leaves.push(...dfs(child, subgraph[j]));
+                  }
+                }
+                return leaves;
+              })(node, subgraph);
+              // Second, given N courses and M flattened requirements, generate
+              // an (N+M)x(M+N) square matrix.
+              const matrix = [];
+              for (let i = 0; i < courses.length + requirements.length; i++) {
+                const row = [];
+                for (let j = 0; j < courses.length + requirements.length; j++) {
+                  if (i < courses.length && j < requirements.length) {
+                    if (courses[i] == requirements[j]) {
+                      // Exact match, unpenalized assignment.
+                      row.push(0);
+                    } else {
+                      // Ban this assignment.
+                      row.push(Number.POSITIVE_INFINITY);
+                    }
+                  } else if (i >= courses.length && j >= requirements.length) {
+                    // Mutual unassignment is unpenalized.
+                    row.push(0);
+                  } else {
+                    // Unassigning a course or requirement penalizes by 1.
+                    row.push(1);
+                  }
+                }
+                matrix.push(row);
+              }
+              // Third, apply the Hungarian algorithm to determine course assignments.
+              const assignments = Munkres(matrix)
+                .filter(
+                  ([i, j]) => i < courses.length || j < requirements.length,
+                )
+                .map(([i, j]) => {
+                  return [
+                    i < courses.length ? courses[i] : 'Unassigned',
+                    j < requirements.length ? requirements[j] : 'Unassigned',
+                  ];
+                });
+            }
           }
           // Add a resolver to each of the programs.
           return Object.keys(programs).reduce((state, key) => {
