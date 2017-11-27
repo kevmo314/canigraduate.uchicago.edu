@@ -677,13 +677,15 @@ const UCHICAGO = {
                 return {
                   display: display(node),
                   grouping: grouping(node),
+                  // Default min and max.
+                  min: requirements.length,
+                  max: requirements.length,
                   ...node,
                   requirements: requirements.map(parse),
                 };
               } else if (node.startsWith('/sequences')) {
                 return {
                   collapse: true,
-                  sequence: true,
                   ...parse(resolve(sequences, node.split('/'), 2)),
                 };
               }
@@ -697,10 +699,10 @@ const UCHICAGO = {
           }, {});
         })
         .map(programs => {
-          function hammingWeight(i) {
-            i = i - ((i >> 1) & 0x55555555);
-            i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
-            return (((i + (i >> 4)) & 0x0f0f0f0f) * 0x01010101) >> 24;
+          // Finds the next lexicographic bit string of n bits set.
+          function next(v) {
+            const t = (v | (v - 1)) + 1;
+            return t | ((((t & -t) / (v & -v)) >> 1) - 1);
           }
           // Generators performance still isn't great, we see a 4x speedup by using
           // output array buffers. Since the entire space needs to be computed anyways,
@@ -718,35 +720,37 @@ const UCHICAGO = {
           }
           function subgraphs(node) {
             const children = ((node && node.requirements) || []).filter(
+              // Iterate over all children.
               child => typeof child == 'object',
             );
             if (children.length == 0) {
               return [Boolean(node)];
             }
             const output = [];
-            for (let i = 1; i < 1 << children.length; i++) {
-              output.push(
-                ...cartesianProduct(
-                  children.map((child, j) => subgraphs((1 << j) & i && child)),
-                ),
-              );
+            for (let n = node.min; n <= node.max; n++) {
+              for (
+                let mask = (1 << n) - 1;
+                mask < 1 << children.length;
+                mask = next(mask)
+              ) {
+                output.push(
+                  ...cartesianProduct(
+                    children.map((child, j) =>
+                      subgraphs((1 << j) & mask && child),
+                    ),
+                  ),
+                );
+              }
             }
             return output;
           }
           function resolver(node, courses) {
-            return;
-            let i = 0;
-            console.log(performance.now());
-            const space = subgraphs(node);
-            console.log(performance.now());
-            for (const subgraph of space) {
-              i++;
+            for (const subgraph of subgraphs(node)) {
               // First, flatten the requirements tree into the individual leaves.
               const requirements = (function dfs(node, subgraph) {
                 const leaves = [];
                 let j = -1;
-                for (let i = 0; i < node.requirements.length; i++) {
-                  const child = node.requirements[i];
+                node.requirements.forEach(child => {
                   if (typeof child != 'object') {
                     // Add all leaves.
                     leaves.push(child);
@@ -754,7 +758,7 @@ const UCHICAGO = {
                     // Add valid subtrees.
                     leaves.push(...dfs(child, subgraph[j]));
                   }
-                }
+                });
                 return leaves;
               })(node, subgraph);
               // Second, generate a cost matrix.
@@ -781,11 +785,7 @@ const UCHICAGO = {
                 )
                 .filter(([i, j]) => courses[i] == requirements[j])
                 .map(([i, j]) => [courses[i], requirements[j]]);
-              if (i == space.length - 1) {
-                console.log(assignments);
-              }
             }
-            console.log(performance.now());
           }
           // Add a resolver to each of the programs.
           return Object.keys(programs).reduce((state, key) => {
