@@ -1,7 +1,7 @@
 import firebase from 'firebase';
 import axios from 'axios';
 import pako from 'pako';
-import Munkres from 'munkres-js';
+import munkres from '@/lib/munkres';
 import TypedFastBitSet from 'fastbitset';
 import withLatestFromBlocking from '@/lib/with-latest-from-blocking';
 import binarySearch from '@/lib/binary-search';
@@ -701,37 +701,44 @@ const UCHICAGO = {
             i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
             return (((i + (i >> 4)) & 0x0f0f0f0f) * 0x01010101) >> 24;
           }
-          function* cartesianProduct(generators) {
-            const values = [...generators[0]];
+          // Generators performance still isn't great, we see a 4x speedup by using
+          // output array buffers. Since the entire space needs to be computed anyways,
+          // it doesn't actually matter that much functionality-wise.
+          function cartesianProduct(generators) {
             if (generators.length == 1) {
-              yield* values.map(x => [x]);
+              return generators[0].map(x => [x]);
             } else {
+              const output = [];
               for (const second of cartesianProduct(generators.slice(1))) {
-                for (const first of values) {
-                  yield [first, ...second];
-                }
+                output.push(...generators[0].map(first => [first, ...second]));
               }
+              return output;
             }
           }
-          function* subgraphs(node) {
+          function subgraphs(node) {
             const children = ((node && node.requirements) || []).filter(
               child => typeof child == 'object',
             );
             if (children.length == 0) {
-              yield Boolean(node);
+              return [Boolean(node)];
             }
+            const output = [];
             for (let i = 1; i < 1 << children.length; i++) {
-              const generators = children.map((child, index) => {
-                return subgraphs((1 << index) & i && child);
-              });
-              for (const children of cartesianProduct(generators)) {
-                yield children;
-              }
+              output.push(
+                ...cartesianProduct(
+                  children.map((child, j) => subgraphs((1 << j) & i && child)),
+                ),
+              );
             }
+            return output;
           }
           function resolver(node, courses) {
-            return;
-            for (const subgraph of subgraphs(node)) {
+            let i = 0;
+            console.log(performance.now());
+            const space = subgraphs(node);
+            console.log(performance.now());
+            for (const subgraph of space) {
+              i++;
               // First, flatten the requirements tree into the individual leaves.
               const requirements = (function dfs(node, subgraph) {
                 const leaves = [];
@@ -748,6 +755,7 @@ const UCHICAGO = {
                 }
                 return leaves;
               })(node, subgraph);
+              console.log(performance.now());
               // Second, given N courses and M flattened requirements, generate
               // an (N+M)x(M+N) square matrix.
               const matrix = [];
@@ -772,8 +780,9 @@ const UCHICAGO = {
                 }
                 matrix.push(row);
               }
+              console.log(performance.now());
               // Third, apply the Hungarian algorithm to determine course assignments.
-              const assignments = Munkres(matrix)
+              const assignments = munkres(matrix)
                 .filter(
                   ([i, j]) => i < courses.length || j < requirements.length,
                 )
@@ -783,7 +792,10 @@ const UCHICAGO = {
                     j < requirements.length ? requirements[j] : 'Unassigned',
                   ];
                 });
+              console.log(performance.now());
             }
+            console.log(performance.now());
+            console.log(i);
           }
           // Add a resolver to each of the programs.
           return Object.keys(programs).reduce((state, key) => {
