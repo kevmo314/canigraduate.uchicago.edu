@@ -683,6 +683,7 @@ const UCHICAGO = {
               } else if (node.startsWith('/sequences')) {
                 return {
                   collapse: true,
+                  sequence: true,
                   ...parse(resolve(sequences, node.split('/'), 2)),
                 };
               }
@@ -733,6 +734,7 @@ const UCHICAGO = {
             return output;
           }
           function resolver(node, courses) {
+            return;
             let i = 0;
             console.log(performance.now());
             const space = subgraphs(node);
@@ -755,47 +757,35 @@ const UCHICAGO = {
                 }
                 return leaves;
               })(node, subgraph);
-              console.log(performance.now());
-              // Second, given N courses and M flattened requirements, generate
-              // an (N+M)x(M+N) square matrix.
+              // Second, generate a cost matrix.
               const matrix = [];
-              for (let i = 0; i < courses.length + requirements.length; i++) {
+              const N = Math.max(courses.length, requirements.length);
+              for (let i = 0; i < N; i++) {
                 const row = [];
-                for (let j = 0; j < courses.length + requirements.length; j++) {
-                  if (i < courses.length && j < requirements.length) {
-                    if (courses[i] == requirements[j]) {
-                      // Exact match, unpenalized assignment.
-                      row.push(0);
-                    } else {
-                      // Ban this assignment.
-                      row.push(Number.POSITIVE_INFINITY);
-                    }
-                  } else if (i >= courses.length && j >= requirements.length) {
-                    // Mutual unassignment is unpenalized.
-                    row.push(0);
-                  } else {
-                    // Unassigning a course or requirement penalizes by 1.
-                    row.push(1);
-                  }
+                for (let j = 0; j < N; j++) {
+                  row.push(
+                    i < courses.length &&
+                    j < requirements.length &&
+                    courses[i] == requirements[j]
+                      ? 0 // Exact match, unpenalized assignment.
+                      : 1, // Penalize by 1, this counts as unmatched.
+                  );
                 }
                 matrix.push(row);
               }
-              console.log(performance.now());
               // Third, apply the Hungarian algorithm to determine course assignments.
               const assignments = munkres(matrix)
+                .map((j, i) => [i, j])
                 .filter(
-                  ([i, j]) => i < courses.length || j < requirements.length,
+                  ([i, j]) => i < courses.length && j < requirements.length,
                 )
-                .map(([i, j]) => {
-                  return [
-                    i < courses.length ? courses[i] : 'Unassigned',
-                    j < requirements.length ? requirements[j] : 'Unassigned',
-                  ];
-                });
-              console.log(performance.now());
+                .filter(([i, j]) => courses[i] == requirements[j])
+                .map(([i, j]) => [courses[i], requirements[j]]);
+              if (i == space.length - 1) {
+                console.log(assignments);
+              }
             }
             console.log(performance.now());
-            console.log(i);
           }
           // Add a resolver to each of the programs.
           return Object.keys(programs).reduce((state, key) => {

@@ -17,9 +17,7 @@ export default function munkres(A) {
   const N = A.length;
   const forward = new Array(N).fill(-1);
   const reverse = new Array(N).fill(-1);
-  const forwardLabels = A.map(row => {
-    return row.reduce((a, b) => (a > b ? a : b), Number.NEGATIVE_INFINITY);
-  });
+  const forwardLabels = A.map(row => row.reduce((a, b) => (a > b ? a : b)));
   const reverseLabels = new Array(N).fill(0);
   for (let matched = 0; matched < N; matched++) {
     const queue = [];
