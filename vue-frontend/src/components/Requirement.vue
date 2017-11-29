@@ -26,7 +26,7 @@
       {{requirement.display}}
     </div>
     <v-slide-x-transition>
-      <div v-if="!collapse" :class="{'ml-4': requirement.display}">
+      <div v-if="!collapse || !requirement.display" :class="{'ml-4': requirement.display}">
         <div v-if="isShortenedOr" class="display-flex">
           <div class="or grey grey--text lighten-1">
             <div class="caption label white">OR</div>

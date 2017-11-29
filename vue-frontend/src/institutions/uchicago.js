@@ -772,7 +772,10 @@ const UCHICAGO = {
               [key]: {
                 ...programs[key],
                 // Create a generator that iterates over the solutions for the given courses list.
-                resolve: courses => resolve(programs[key], new Set(courses)),
+                bindTranscript: transcript => {
+                  const courses = transcript.map(record => record.course);
+                  resolve(programs[key], new Set(courses));
+                },
               },
             };
           }, {});

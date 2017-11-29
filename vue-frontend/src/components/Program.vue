@@ -67,7 +67,7 @@ export default {
         })
         .combineLatest(transcript, (program, transcript) => {
           if (transcript) {
-            program.resolve(transcript.map(record => record.course));
+            program.bindTranscript(transcript);
           }
           return program;
         }),
