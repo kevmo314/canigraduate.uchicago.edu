@@ -45,9 +45,9 @@ export default {
     next();
   },
   subscriptions() {
-    this.$watchAsObservable(() => this.transcript, { immediate: true }).map(
-      x => x.newValue,
-    );
+    const transcript = this.$watchAsObservable(() => this.transcript, {
+      immediate: true,
+    }).map(x => x.newValue);
     const id = this.$watchAsObservable(() => this.id, { immediate: true }).map(
       x => x.newValue,
     );
@@ -61,9 +61,16 @@ export default {
       root: root.do(program => {
         EventBus.$emit('set-title', program.name);
       }),
-      program: root.combineLatest(extension, (root, extension) => {
-        return root && extension ? root.extensions[extension] : root;
-      }),
+      program: root
+        .combineLatest(extension, (root, extension) => {
+          return root && extension ? root.extensions[extension] : root;
+        })
+        .combineLatest(transcript, (program, transcript) => {
+          if (transcript) {
+            program.resolve(transcript.map(record => record.course));
+          }
+          return program;
+        }),
     };
   },
 };

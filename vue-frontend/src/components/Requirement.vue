@@ -1,17 +1,29 @@
 <template>
-  <div v-if="isLeaf" class="display-flex py-1">
-    <div class="id">
-      {{requirement.split(':')[0]}}
-    </div>
-    <course-name class="ml-2" v-if="isExact">{{requirement}}</course-name>
-    <div class="ml-2" v-else>Elective</div>
+  <div v-if="isMetadata">
+    Some unknown notes node atm.
+  </div>
+  <div v-else-if="isLeaf" class="display-flex py-1">
+    <template v-if="requirement.progress.remaining == 1">
+      <div class="id">
+        {{requirement.requirement.split(':')[0]}}
+      </div>
+      <course-name class="ml-2" v-if="isExact">{{requirement.requirement}}</course-name>
+      <div class="ml-2" v-else>Elective</div>
+    </template>
+    <template v-else>
+      <div class="id green--text">
+        {{requirement.progress.satisfier}}
+      </div>
+      <course-name class="ml-2 green--text">{{requirement.progress.satisfier}}</course-name>
+    </template>
   </div>
   <div v-else>
-    <div v-if="requirement.display">
-      <div @click="collapse = !collapse" class="summary body-2 py-1" :class="{'collapsed': collapse}">
-        <v-icon class="icon">expand_more</v-icon>
-        {{requirement.display}}
-      </div>
+    <div @click="collapse = !collapse"
+      class="summary body-2 py-1"
+      :class="{'collapsed': collapse, 'green--text': requirement.progress.remaining == 0}"
+      v-if="requirement.display">
+      <v-icon class="icon">expand_more</v-icon>
+      {{requirement.display}}
     </div>
     <v-slide-x-transition>
       <div v-if="!collapse" :class="{'ml-4': requirement.display}">
@@ -54,10 +66,13 @@ export default {
       catalogSequence: state => state.endpoints.catalogSequence,
     }),
     isLeaf() {
-      return typeof this.requirement != 'object';
+      return !this.requirement.requirements;
     },
     isExact() {
-      return this.requirement.indexOf(':') == -1;
+      return this.isLeaf && this.requirement.requirement.indexOf(':') == -1;
+    },
+    isMetadata() {
+      return this.isLeaf && !this.requirement.requirement;
     },
     isShortened() {
       return this.isShortenedOr || this.isShortenedAll;

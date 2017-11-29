@@ -666,7 +666,7 @@ const UCHICAGO = {
             const resolve = (state, path, i) =>
               i == path.length ? state : resolve(state[path[i]], path, i + 1);
             const parse = node => {
-              if (typeof node == 'object') {
+              if (typeof node == 'object' && !node.requirement) {
                 if (!node.requirements) {
                   // Dangling node, just render it as-is.
                   return { ...node };
@@ -688,103 +688,81 @@ const UCHICAGO = {
                   collapse: true,
                   ...parse(resolve(sequences, node.split('/'), 2)),
                 };
+              } else if (!node.requirement) {
+                // node is a non-sequence string, so evaluate explicitly.
+                return { requirement: node };
               }
               return node;
             };
             return {
               ...state,
               // Copy the program's requirements node to resolve any references.
-              [key]: Object.freeze(parse(programs[key])),
+              [key]: parse(programs[key]),
             };
           }, {});
         })
         .map(programs => {
-          // Finds the next lexicographic bit string of n bits set.
-          function next(v) {
-            const t = (v | (v - 1)) + 1;
-            return t | ((((t & -t) / (v & -v)) >> 1) - 1);
-          }
-          // Generators performance still isn't great, we see a 4x speedup by using
-          // output array buffers. Since the entire space needs to be computed anyways,
-          // it doesn't actually matter that much functionality-wise.
-          function cartesianProduct(generators) {
-            if (generators.length == 1) {
-              return generators[0].map(x => [x]);
-            } else {
-              const output = [];
-              for (const second of cartesianProduct(generators.slice(1))) {
-                output.push(...generators[0].map(first => [first, ...second]));
-              }
-              return output;
-            }
-          }
-          function subgraphs(node) {
-            const children = ((node && node.requirements) || []).filter(
-              // Iterate over all children.
-              child => typeof child == 'object',
-            );
-            if (children.length == 0) {
-              return [Boolean(node)];
-            }
-            const output = [];
-            for (let n = node.min; n <= node.max; n++) {
-              for (
-                let mask = (1 << n) - 1;
-                mask < 1 << children.length;
-                mask = next(mask)
-              ) {
-                output.push(
-                  ...cartesianProduct(
-                    children.map((child, j) =>
-                      subgraphs((1 << j) & mask && child),
-                    ),
-                  ),
-                );
-              }
-            }
-            return output;
-          }
-          function resolver(node, courses) {
-            for (const subgraph of subgraphs(node)) {
-              // First, flatten the requirements tree into the individual leaves.
-              const requirements = (function dfs(node, subgraph) {
-                const leaves = [];
-                let j = -1;
-                node.requirements.forEach(child => {
-                  if (typeof child != 'object') {
-                    // Add all leaves.
-                    leaves.push(child);
-                  } else if (subgraph[++j]) {
-                    // Add valid subtrees.
-                    leaves.push(...dfs(child, subgraph[j]));
-                  }
+          function leafResolver(node, courses) {
+            for (const course of courses) {
+              if (course == node.requirement) {
+                courses.delete(course);
+                return (node.progress = {
+                  completed: 1,
+                  remaining: 0,
+                  satisfier: course,
                 });
-                return leaves;
-              })(node, subgraph);
-              // Second, generate a cost matrix.
-              const matrix = [];
-              const N = Math.max(courses.length, requirements.length);
-              for (let i = 0; i < N; i++) {
-                const row = [];
-                for (let j = 0; j < N; j++) {
-                  row.push(
-                    i < courses.length &&
-                    j < requirements.length &&
-                    courses[i] == requirements[j]
-                      ? 0 // Exact match, unpenalized assignment.
-                      : 1, // Penalize by 1, this counts as unmatched.
-                  );
-                }
-                matrix.push(row);
               }
-              // Third, apply the Hungarian algorithm to determine course assignments.
-              const assignments = munkres(matrix)
-                .map((j, i) => [i, j])
-                .filter(
-                  ([i, j]) => i < courses.length && j < requirements.length,
-                )
-                .filter(([i, j]) => courses[i] == requirements[j])
-                .map(([i, j]) => [courses[i], requirements[j]]);
+            }
+            // TODO: Check for crosslistings.
+            return (node.progress = { completed: 0, remaining: 1 });
+          }
+          function nodeResolver(node, courses) {
+            // The list of child progress objects.
+            const progressions = [];
+            let completedChildren = 0;
+            for (let i = 0; i < node.requirements.length; i++) {
+              const child = (progressions[i] = resolve(
+                node.requirements[i],
+                courses,
+              ));
+              if (child.remaining == 0 && child.completed == 0) {
+                // Remove any degenerate nodes that cannot count towards progress.
+                continue;
+              } else if (
+                child.remaining == child.completed &&
+                ++completedChildren == node.max
+              ) {
+                // This child is completed, so stop iterating to prevent pulling unnecessary courses.
+                // Technically future subtrees could cause unnecessarily taken courses to be marked,
+                // but we'll just ignore that for now...
+                break;
+              }
+            }
+            // Sort by number of courses remaining ascending to catch the edge case of future subtrees being completed.
+            const minimumRequirements = progressions
+              .sort((a, b) => a.remaining - b.remaining)
+              .slice(0, node.min);
+            const remaining = minimumRequirements
+              .map(progress => progress.remaining)
+              .reduce((a, b) => a + b, 0);
+            const completed = minimumRequirements
+              .map(progress => progress.completed)
+              .reduce((a, b) => a + b, 0);
+            if (remaining == 0) {
+              node.hide = true;
+            }
+            return (node.progress = {
+              completed,
+              remaining: node.force ? 0 : remaining,
+            });
+          }
+          function resolve(node, courses) {
+            if (node.requirements) {
+              return nodeResolver(node, courses);
+            } else if (node.requirement) {
+              return leafResolver(node, courses);
+            } else {
+              return (node.progress = { completed: 0, remaining: 0 });
             }
           }
           // Add a resolver to each of the programs.
@@ -794,7 +772,7 @@ const UCHICAGO = {
               [key]: {
                 ...programs[key],
                 // Create a generator that iterates over the solutions for the given courses list.
-                resolver: courses => resolver(programs[key], courses),
+                resolve: courses => resolve(programs[key], new Set(courses)),
               },
             };
           }, {});
