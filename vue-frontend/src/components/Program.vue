@@ -4,9 +4,12 @@
       <v-tabs centered v-if="root.extensions">
         <v-tabs-bar class="white">
           <v-tabs-slider></v-tabs-slider>
-          <v-tabs-item router exact :to="{name: 'catalog', params: {id, extension: null}}">Major</v-tabs-item>
+          <v-tabs-item router exact :to="{name: 'catalog', params: {id, extension: null}}">Major
+            ({{progress.completed}}/{{progress.remaining+progress.completed}})
+          </v-tabs-item>
           <v-tabs-item v-for="(extension, name) in root.extensions" :key="name" router :to="{name: 'catalog', params: {id, extension: name}}">
             {{extension.name}}
+            ({{progress.extensions[name].completed}}/{{progress.extensions[name].remaining+progress.extensions[name].completed}})
           </v-tabs-item>
         </v-tabs-bar>
       </v-tabs>
@@ -61,16 +64,22 @@ export default {
       root: root.do(program => {
         EventBus.$emit('set-title', program.name);
       }),
-      program: root
-        .combineLatest(extension, (root, extension) => {
-          return root && extension ? root.extensions[extension] : root;
-        })
-        .combineLatest(transcript, (program, transcript) => {
-          if (transcript) {
-            program.bindTranscript(transcript);
-          }
-          return program;
-        }),
+      progress: root.combineLatest(transcript, (root, transcript) => {
+        return {
+          ...root.bindTranscript(transcript),
+          extensions: Object.keys(
+            root.extensions || {},
+          ).reduce((state, key) => {
+            return {
+              ...state,
+              [key]: root.extensions[key].bindTranscript(transcript),
+            };
+          }, {}),
+        };
+      }),
+      program: root.combineLatest(extension, (root, extension) => {
+        return root && extension ? root.extensions[extension] : root;
+      }),
     };
   },
 };

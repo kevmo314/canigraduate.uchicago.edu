@@ -706,15 +706,15 @@ const UCHICAGO = {
             for (const course of courses) {
               if (course == node.requirement) {
                 courses.delete(course);
-                return (node.progress = {
+                return {
                   completed: 1,
                   remaining: 0,
                   satisfier: course,
-                });
+                };
               }
             }
             // TODO: Check for crosslistings.
-            return (node.progress = { completed: 0, remaining: 1 });
+            return { completed: 0, remaining: 1 };
           }
           function nodeResolver(node, courses) {
             // The list of child progress objects.
@@ -751,30 +751,36 @@ const UCHICAGO = {
             if (remaining == 0) {
               node.hide = true;
             }
-            return (node.progress = {
+            return {
               completed,
               remaining: node.force ? 0 : remaining,
-            });
+            };
           }
           function resolve(node, courses) {
             if (node.requirements) {
-              return nodeResolver(node, courses);
+              return (node.progress = nodeResolver(node, courses));
             } else if (node.requirement) {
-              return leafResolver(node, courses);
-            } else {
-              return (node.progress = { completed: 0, remaining: 0 });
+              return (node.progress = leafResolver(node, courses));
             }
+            return (node.progress = { completed: 0, remaining: 0 });
           }
           // Add a resolver to each of the programs.
           return Object.keys(programs).reduce((state, key) => {
+            // Cache resolutions
+            let resolutionTranscript = null;
+            let result = null;
             return {
               ...state,
               [key]: {
                 ...programs[key],
                 // Create a generator that iterates over the solutions for the given courses list.
                 bindTranscript: transcript => {
+                  if (resolutionTranscript == transcript) {
+                    return result;
+                  }
+                  resolutionTranscript = transcript;
                   const courses = transcript.map(record => record.course);
-                  resolve(programs[key], new Set(courses));
+                  return (result = resolve(programs[key], new Set(courses)));
                 },
               },
             };
@@ -804,7 +810,6 @@ const UCHICAGO = {
             return state;
           }, {});
         })
-        .map(Object.freeze)
         .publishReplay(1)
         .refCount();
     }),
