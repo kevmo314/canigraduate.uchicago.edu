@@ -2,25 +2,23 @@
   <div v-if="isMetadata">
     Some unknown notes node atm.
   </div>
-  <div v-else-if="isLeaf" class="display-flex py-1">
-    <template v-if="requirement.progress.remaining == 1">
-      <div class="id">
-        {{requirement.requirement.split(':')[0]}}
-      </div>
-      <course-name class="ml-2" v-if="isExact">{{requirement.requirement}}</course-name>
-      <div class="ml-2" v-else>Elective</div>
-    </template>
-    <template v-else>
-      <div class="id green--text">
-        {{requirement.progress.satisfier}}
-      </div>
-      <course-name class="ml-2 green--text">{{requirement.progress.satisfier}}</course-name>
-    </template>
+  <div v-else-if="isLeaf && requirement.progress.remaining == 1" class="display-flex py-1" :class="{'red--text': !prune}">
+    <div class="id">
+      {{requirement.requirement.split(':')[0]}}
+    </div>
+    <course-name class="ml-2" v-if="isExact">{{requirement.requirement}}</course-name>
+    <div class="ml-2" v-else>Elective</div>
+  </div>
+  <div v-else-if="isLeaf" class="display-flex py-1 green--text">
+    <div class="id">
+      {{requirement.progress.satisfier}}
+    </div>
+    <course-name class="ml-2">{{requirement.progress.satisfier}}</course-name>
   </div>
   <div v-else>
     <div @click="collapse = !collapse"
       class="summary body-2 py-1"
-      :class="{'collapsed': collapse, 'green--text': requirement.progress.remaining == 0}"
+      :class="{'collapsed': collapse, 'green--text': isComplete}"
       v-if="requirement.display">
       <v-icon class="icon">expand_more</v-icon>
       {{requirement.display}}
@@ -33,16 +31,16 @@
           </div>
           <div class="flex-grow">
             <requirement v-for="(child, index) of requirement.requirements" :key="index" :requirement="child"
-            />
+            :prune="isComplete" />
           </div>
         </div>
         <div v-else-if="isShortenedAll">
           <requirement v-for="(child, index) of requirement.requirements" :key="index" :requirement="child"
-          />
+          :prune="isComplete" />
         </div>
         <div v-else>
           <requirement v-for="(child, index) of requirement.requirements" :key="index" :requirement="child"
-          />
+          :prune="isComplete" />
         </div>
       </div>
     </v-slide-x-transition>
@@ -57,14 +55,34 @@ import { Observable } from 'rxjs/Observable';
 export default {
   name: 'requirement',
   components: { CourseName },
-  props: ['requirement'],
+  props: {
+    requirement: {
+      type: Object,
+      required: true,
+    },
+    // A node is pruned if completing a class in it would not work
+    // towards degree completion.
+    prune: {
+      type: Boolean,
+      required: true,
+    },
+  },
   data() {
-    return { collapse: !this.isLeaf && this.requirement.collapse };
+    return {
+      collapse: !this.isLeaf && this.requirement.collapse,
+    };
   },
   computed: {
     ...mapState('institution', {
       catalogSequence: state => state.endpoints.catalogSequence,
     }),
+    isComplete() {
+      return (
+        this.prune ||
+        (Boolean(this.requirement.progress) &&
+          this.requirement.progress.remaining == 0)
+      );
+    },
     isLeaf() {
       return !this.requirement.requirements;
     },

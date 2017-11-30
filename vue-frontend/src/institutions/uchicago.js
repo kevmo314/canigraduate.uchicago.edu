@@ -702,9 +702,50 @@ const UCHICAGO = {
           }, {});
         })
         .map(programs => {
+          function satisfiesRequirement(specification, course) {
+            if (specification.indexOf(':') === -1) {
+              return course == specification;
+            }
+            // Just for convenience
+            const parse = UCHICAGO.converters.courseToDepartmentAndOrdinal;
+            return specification
+              .split(':')[1]
+              .split(',')
+              .every(expression => {
+                const [courseDepartment, courseOrdinal] = parse(course);
+                if (expression.startsWith('>=')) {
+                  const [department, ordinal] = parse(expression.substring(2));
+                  return (
+                    courseDepartment == department && courseOrdinal >= ordinal
+                  );
+                }
+                if (expression.startsWith('>')) {
+                  const [department, ordinal] = parse(expression.substring(1));
+                  return (
+                    courseDepartment == department && courseOrdinal > ordinal
+                  );
+                }
+                if (expression.startsWith('<=')) {
+                  const [department, ordinal] = parse(expression.substring(2));
+                  return (
+                    courseDepartment == department && courseOrdinal <= ordinal
+                  );
+                }
+                if (expression.startsWith('<')) {
+                  const [department, ordinal] = parse(expression.substring(1));
+                  return (
+                    courseDepartment == department && courseOrdinal < ordinal
+                  );
+                }
+                if (expression.startsWith('!')) {
+                  return expression.substring(1) != course;
+                }
+                throw new Error('Invalid expression "' + expression + '".');
+              });
+          }
           function leafResolver(node, courses) {
             for (const course of courses) {
-              if (course == node.requirement) {
+              if (satisfiesRequirement(node.requirement, course)) {
                 courses.delete(course);
                 return {
                   completed: 1,
@@ -749,7 +790,7 @@ const UCHICAGO = {
               .map(progress => progress.completed)
               .reduce((a, b) => a + b, 0);
             if (remaining == 0) {
-              node.hide = true;
+              node.collapse = true;
             }
             return {
               completed,
@@ -853,6 +894,12 @@ const UCHICAGO = {
       );
       const year = parseInt(term.substring(term.length - 4), 10) * 4;
       return (index + 3) % 4 + year;
+    },
+    courseToDepartmentAndOrdinal(course) {
+      if (course.length != 10 || course.charAt(4) != ' ') {
+        throw new Error('Invalid course string ' + course);
+      }
+      return [course.substring(0, 4), parseInt(course.substring(5), 10)];
     },
   },
 };

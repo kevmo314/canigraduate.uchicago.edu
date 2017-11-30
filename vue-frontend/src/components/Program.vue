@@ -16,7 +16,7 @@
     </v-card-media>
     <v-card-text>
       <div class="subheading">Program requirements</div>
-      <requirement :requirement="program"></requirement>
+      <requirement :requirement="program" :prune="programProgress.remaining == 0"></requirement>
       <div class="metadata">
         <div class="subheading">Meta</div>
         <p v-if="program.metadata.catalog">
@@ -60,26 +60,33 @@ export default {
     const root = this.endpoints
       .programs()
       .combineLatest(id, (programs, id) => programs[id]);
+    const progress = root.combineLatest(transcript, (root, transcript) => {
+      return {
+        ...root.bindTranscript(transcript),
+        extensions: Object.keys(root.extensions || {}).reduce((state, key) => {
+          return {
+            ...state,
+            [key]: root.extensions[key].bindTranscript(transcript),
+          };
+        }, {}),
+      };
+    });
     return {
       root: root.do(program => {
         EventBus.$emit('set-title', program.name);
       }),
-      progress: root.combineLatest(transcript, (root, transcript) => {
-        return {
-          ...root.bindTranscript(transcript),
-          extensions: Object.keys(
-            root.extensions || {},
-          ).reduce((state, key) => {
-            return {
-              ...state,
-              [key]: root.extensions[key].bindTranscript(transcript),
-            };
-          }, {}),
-        };
-      }),
+      progress,
       program: root.combineLatest(extension, (root, extension) => {
         return root && extension ? root.extensions[extension] : root;
       }),
+      programProgress: progress.combineLatest(
+        extension,
+        (progress, extension) => {
+          return progress && extension
+            ? progress.extensions[extension]
+            : progress;
+        },
+      ),
     };
   },
 };

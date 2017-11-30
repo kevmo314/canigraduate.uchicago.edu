@@ -12,7 +12,7 @@ import Rx from 'rxjs/Rx';
 require('../node_modules/vuetify/dist/vuetify.min.css');
 
 Vue.use(Vuetify, {
-  theme : {
+  theme: {
     primary: '#1976D2',
     accent: '#448AFF',
     secondary: '#424242',
@@ -20,7 +20,7 @@ Vue.use(Vuetify, {
     warning: '#ffc107',
     error: '#F44336',
     success: '#4CAF50',
-  }
+  },
 });
 Vue.use(VueRx, Rx);
 Vue.use(VueTimeago, {
