@@ -2,7 +2,7 @@
   <div v-if="isMetadata">
     Some unknown notes node atm.
   </div>
-  <div v-else-if="isLeaf && progress.remaining == 1" class="display-flex py-1" :class="{'red--text': !prune}">
+  <div v-else-if="isLeaf && progress.remaining > 0" class="display-flex py-1" :class="{'red--text': !prune}">
     <div class="id">
       {{requirement.requirement.split(':')[0]}}
     </div>
@@ -61,7 +61,8 @@ export default {
       type: [Object, Array],
       required: false,
       default() {
-        return { completed: 0, remaining: 0 };
+        // Return an unsatisfiable node.
+        return { completed: 0, remaining: 1 };
       },
     },
     prune: { type: Boolean, required: true },
