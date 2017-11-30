@@ -1,5 +1,8 @@
 <template>
-  <span v-if="progress">({{progress.completed}}/{{progress.remaining+progress.completed}})</span>
+  <div v-if="progress"
+    class="ml-2 caption" :class="{'green--text': progress.remaining == 0, 'grey--text': progress.remaining > 0}">
+    {{progress.completed}}/{{progress.remaining+progress.completed}}
+  </div>
 </template>
 
 <script>
