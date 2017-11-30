@@ -702,7 +702,7 @@ const UCHICAGO = {
           }, {});
         })
         .map(programs => {
-          function satisfiesRequirement(specification, course) {
+          function satisfies(specification, course) {
             if (specification.indexOf(':') === -1) {
               return course == specification;
             }
@@ -744,17 +744,30 @@ const UCHICAGO = {
               });
           }
           async function leafResolver(node, courses) {
-            for (const course of courses) {
-              if (satisfiesRequirement(node.requirement, course)) {
-                courses.delete(course);
+            const i = courses.findIndex(c => satisfies(node.requirement, c));
+            if (i > -1) {
+              return {
+                completed: 1,
+                remaining: 0,
+                satisfier: courses.splice(i, 1)[0],
+              };
+            }
+            for (let i = 0; i < courses.length; i++) {
+              const crosslists = await UCHICAGO.endpoints
+                .crosslists(courses[i])
+                .first()
+                .toPromise();
+              const success = crosslists.some(course =>
+                satisfies(node.requirement, course),
+              );
+              if (success) {
                 return {
                   completed: 1,
                   remaining: 0,
-                  satisfier: course,
+                  satisfier: courses.splice(i, 1)[0],
                 };
               }
             }
-            // TODO: Check for crosslistings.
             return { completed: 0, remaining: 1 };
           }
           async function nodeResolver(node, courses) {
@@ -821,7 +834,7 @@ const UCHICAGO = {
                   }
                   resolutionTranscript = transcript;
                   const courses = transcript.map(record => record.course);
-                  return (result = resolve(programs[key], new Set(courses)));
+                  return (result = resolve(programs[key], courses.slice()));
                 },
               },
             };
