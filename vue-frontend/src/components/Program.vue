@@ -5,18 +5,18 @@
         <v-tabs-bar class="white">
           <v-tabs-slider></v-tabs-slider>
           <v-tabs-item router exact :to="{name: 'catalog', params: {id, extension: null}}">Major
-            ({{progress.completed}}/{{progress.remaining+progress.completed}})
+            <program-progress :program="root"></program-progress>
           </v-tabs-item>
           <v-tabs-item v-for="(extension, name) in root.extensions" :key="name" router :to="{name: 'catalog', params: {id, extension: name}}">
             {{extension.name}}
-            ({{progress.extensions[name].completed}}/{{progress.extensions[name].remaining+progress.extensions[name].completed}})
+            <program-progress :program="extension"></program-progress>
           </v-tabs-item>
         </v-tabs-bar>
       </v-tabs>
     </v-card-media>
     <v-card-text>
       <div class="subheading">Program requirements</div>
-      <requirement :requirement="program" :prune="programProgress.remaining == 0"></requirement>
+      <requirement :requirement="program" :progress="progress" :prune="!progress || progress.remaining == 0"></requirement>
       <div class="metadata">
         <div class="subheading">Meta</div>
         <p v-if="program.metadata.catalog">
@@ -30,11 +30,14 @@
 
 <script>
 import Requirement from '@/components/Requirement';
+import ProgramProgress from '@/components/ProgramProgress';
 import EventBus from '@/EventBus';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/combineLatest';
 import { mapState } from 'vuex';
 
 export default {
-  components: { Requirement },
+  components: { Requirement, ProgramProgress },
   props: {
     id: { type: String, required: true },
     extension: { type: String, required: false },
@@ -60,33 +63,22 @@ export default {
     const root = this.endpoints
       .programs()
       .combineLatest(id, (programs, id) => programs[id]);
-    const progress = root.combineLatest(transcript, (root, transcript) => {
-      return {
-        ...root.bindTranscript(transcript),
-        extensions: Object.keys(root.extensions || {}).reduce((state, key) => {
-          return {
-            ...state,
-            [key]: root.extensions[key].bindTranscript(transcript),
-          };
-        }, {}),
-      };
+    const program = root.combineLatest(extension, (root, extension) => {
+      return root && extension ? root.extensions[extension] : root;
     });
     return {
       root: root.do(program => {
         EventBus.$emit('set-title', program.name);
       }),
-      progress,
-      program: root.combineLatest(extension, (root, extension) => {
-        return root && extension ? root.extensions[extension] : root;
+      progress: Observable.combineLatest(
+        program,
+        transcript,
+      ).flatMap(([program, transcript]) => {
+        return transcript.length > 0
+          ? program.bindTranscript(transcript)
+          : Promise.resolve(false);
       }),
-      programProgress: progress.combineLatest(
-        extension,
-        (progress, extension) => {
-          return progress && extension
-            ? progress.extensions[extension]
-            : progress;
-        },
-      ),
+      program,
     };
   },
 };

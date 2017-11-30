@@ -743,7 +743,7 @@ const UCHICAGO = {
                 throw new Error('Invalid expression "' + expression + '".');
               });
           }
-          function leafResolver(node, courses) {
+          async function leafResolver(node, courses) {
             for (const course of courses) {
               if (satisfiesRequirement(node.requirement, course)) {
                 courses.delete(course);
@@ -757,12 +757,12 @@ const UCHICAGO = {
             // TODO: Check for crosslistings.
             return { completed: 0, remaining: 1 };
           }
-          function nodeResolver(node, courses) {
+          async function nodeResolver(node, courses) {
             // The list of child progress objects.
             const progressions = [];
             let completedChildren = 0;
             for (let i = 0; i < node.requirements.length; i++) {
-              const child = (progressions[i] = resolve(
+              const child = (progressions[i] = await resolve(
                 node.requirements[i],
                 courses,
               ));
@@ -781,31 +781,31 @@ const UCHICAGO = {
             }
             // Sort by number of courses remaining ascending to catch the edge case of future subtrees being completed.
             const minimumRequirements = progressions
+              .slice()
               .sort((a, b) => a.remaining - b.remaining)
               .slice(0, node.min);
-            const remaining = minimumRequirements
-              .map(progress => progress.remaining)
-              .reduce((a, b) => a + b, 0);
-            const completed = minimumRequirements
+            if (node.force) {
+              progressions.remaining = 0;
+            } else {
+              progressions.remaining = minimumRequirements
+                .map(progress => progress.remaining)
+                .reduce((a, b) => a + b, 0);
+            }
+            progressions.completed = minimumRequirements
               .map(progress => progress.completed)
               .reduce((a, b) => a + b, 0);
-            if (remaining == 0) {
-              node.collapse = true;
-            }
-            return {
-              completed,
-              remaining: node.force ? 0 : remaining,
-            };
+            return progressions;
           }
-          function resolve(node, courses) {
+          async function resolve(node, courses) {
             if (node.requirements) {
-              return (node.progress = nodeResolver(node, courses));
+              return nodeResolver(node, courses);
             } else if (node.requirement) {
-              return (node.progress = leafResolver(node, courses));
+              return leafResolver(node, courses);
             }
-            return (node.progress = { completed: 0, remaining: 0 });
+            return { completed: 0, remaining: 0 };
           }
-          // Add a resolver to each of the programs.
+          // Add a resolver to each of the programs. Unfortunately, this has to happen outside the
+          // requirement tree renderer because the order of evaluation matters.
           return Object.keys(programs).reduce((state, key) => {
             // Cache resolutions
             let resolutionTranscript = null;
@@ -815,7 +815,7 @@ const UCHICAGO = {
               [key]: {
                 ...programs[key],
                 // Create a generator that iterates over the solutions for the given courses list.
-                bindTranscript: transcript => {
+                async bindTranscript(transcript) {
                   if (resolutionTranscript == transcript) {
                     return result;
                   }

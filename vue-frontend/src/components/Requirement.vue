@@ -2,7 +2,7 @@
   <div v-if="isMetadata">
     Some unknown notes node atm.
   </div>
-  <div v-else-if="isLeaf && requirement.progress.remaining == 1" class="display-flex py-1" :class="{'red--text': !prune}">
+  <div v-else-if="isLeaf && progress.remaining == 1" class="display-flex py-1" :class="{'red--text': !prune}">
     <div class="id">
       {{requirement.requirement.split(':')[0]}}
     </div>
@@ -11,9 +11,9 @@
   </div>
   <div v-else-if="isLeaf" class="display-flex py-1 green--text">
     <div class="id">
-      {{requirement.progress.satisfier}}
+      {{progress.satisfier}}
     </div>
-    <course-name class="ml-2">{{requirement.progress.satisfier}}</course-name>
+    <course-name class="ml-2">{{progress.satisfier}}</course-name>
   </div>
   <div v-else>
     <div @click="collapse = !collapse"
@@ -31,16 +31,16 @@
           </div>
           <div class="flex-grow">
             <requirement v-for="(child, index) of requirement.requirements" :key="index" :requirement="child"
-            :prune="isComplete" />
+            :progress="progress[index]" :prune="prune || isComplete" />
           </div>
         </div>
         <div v-else-if="isShortenedAll">
           <requirement v-for="(child, index) of requirement.requirements" :key="index" :requirement="child"
-          :prune="isComplete" />
+          :progress="progress[index]" :prune="prune || isComplete" />
         </div>
         <div v-else>
           <requirement v-for="(child, index) of requirement.requirements" :key="index" :requirement="child"
-          :prune="isComplete" />
+          :progress="progress[index]" :prune="prune || isComplete" />
         </div>
       </div>
     </v-slide-x-transition>
@@ -56,16 +56,15 @@ export default {
   name: 'requirement',
   components: { CourseName },
   props: {
-    requirement: {
-      type: Object,
-      required: true,
+    requirement: { type: Object, required: true },
+    progress: {
+      type: [Object, Array],
+      required: false,
+      default() {
+        return { completed: 0, remaining: 0 };
+      },
     },
-    // A node is pruned if completing a class in it would not work
-    // towards degree completion.
-    prune: {
-      type: Boolean,
-      required: true,
-    },
+    prune: { type: Boolean, required: true },
   },
   data() {
     return {
@@ -77,11 +76,7 @@ export default {
       catalogSequence: state => state.endpoints.catalogSequence,
     }),
     isComplete() {
-      return (
-        this.prune ||
-        (Boolean(this.requirement.progress) &&
-          this.requirement.progress.remaining == 0)
-      );
+      return Boolean(this.progress) && this.progress.remaining == 0;
     },
     isLeaf() {
       return !this.requirement.requirements;
