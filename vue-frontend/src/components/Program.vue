@@ -76,7 +76,7 @@ export default {
       ).flatMap(([program, transcript]) => {
         return transcript.length > 0
           ? program.bindTranscript(transcript)
-          : Promise.resolve(false);
+          : Promise.resolve();
       }),
       program,
     };

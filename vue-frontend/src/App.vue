@@ -97,24 +97,22 @@
       <v-toolbar-side-icon @click.stop="drawer = !drawer" v-if="$vuetify.breakpoint.mdAndDown"></v-toolbar-side-icon>
       <v-toolbar-title>{{title || 'Can I Graduate?'}}</v-toolbar-title>
     </v-toolbar>
-    <main>
-      <v-content>
-        <v-container fluid class="display-flex">
-          <div class="flex-grow">
-            <v-slide-y-reverse-transition>
-              <router-view></router-view>
-            </v-slide-y-reverse-transition>
+    <v-content>
+      <v-container fluid class="display-flex">
+        <div class="flex-grow">
+          <v-slide-y-reverse-transition>
+            <router-view></router-view>
+          </v-slide-y-reverse-transition>
+        </div>
+        <div class="sidebar ml-3" v-if="!educatorAuthenticated">
+          <div v-sticky>
+            <authentication v-if="!authenticated">
+            </authentication>
+            <sidebar v-else></sidebar>
           </div>
-          <div class="sidebar ml-3" v-if="!educatorAuthenticated">
-            <div v-sticky>
-              <authentication v-if="!authenticated">
-              </authentication>
-              <sidebar v-else></sidebar>
-            </div>
-          </div>
-        </v-container>
-      </v-content>
-    </main>
+        </div>
+      </v-container>
+    </v-content>
   </v-app>
 </template>
 

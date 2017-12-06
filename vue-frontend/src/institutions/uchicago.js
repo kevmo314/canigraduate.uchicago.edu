@@ -652,11 +652,12 @@ const UCHICAGO = {
             return {
               ...state,
               [key]: programs[key],
-              ...Object.entries(
-                extensions,
-              ).reduce((state, [childKey, program]) => {
-                return { ...state, [`${key}/${childKey}`]: program };
-              }, {}),
+              ...Object.entries(extensions).reduce(
+                (state, [childKey, program]) => {
+                  return { ...state, [`${key}/${childKey}`]: program };
+                },
+                {},
+              ),
             };
           }, {});
         })
@@ -773,19 +774,16 @@ const UCHICAGO = {
           async function nodeResolver(node, courses) {
             // The list of child progress objects.
             const progressions = [];
-            let completedChildren = 0;
+            let complete = 0;
             for (let i = 0; i < node.requirements.length; i++) {
               const child = (progressions[i] = await resolve(
                 node.requirements[i],
                 courses,
               ));
-              if (child.remaining == 0 && child.completed == 0) {
+              if (!child.remaining && !child.completed) {
                 // Remove any degenerate nodes that cannot count towards progress.
                 continue;
-              } else if (
-                child.remaining == child.completed &&
-                ++completedChildren == node.max
-              ) {
+              } else if (!child.remaining && ++complete == node.max) {
                 // This child is completed, so stop iterating to prevent pulling unnecessary courses.
                 // Technically future subtrees could cause unnecessarily taken courses to be marked,
                 // but we'll just ignore that for now...
@@ -888,7 +886,9 @@ const UCHICAGO = {
       },
       read: memoize(() => {
         return Observable.create(obs => firebaseAuth.onAuthStateChanged(obs))
-          .switchMap(user => user && val('watches/' + user.uid))
+          .switchMap(
+            user => (user ? val('watches/' + user.uid) : Promise.resolve()),
+          )
           .map(val => (val ? Object.values(val) : []))
           .map(Object.freeze);
       }),

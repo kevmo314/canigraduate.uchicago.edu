@@ -10,7 +10,7 @@
         <v-tabs-items>
           <v-tabs-content id="transcript" class="content">
             <div class="caption text-xs-center px-3 py-2">
-              <strong class="grey--text text--darken-2">Your GPA is bold.</strong> <span class="grey--text">The average GPA is in grey.</span>
+              <strong class="grey--text text--darken-2">Your GPA is bold.</strong> <span class="grey--text">Average GPA is in grey.</span>
             </div>
             <v-expansion-panel focusable>
               <v-expansion-panel-content v-for="(term, index) in terms" :key="term" :value="index === terms.length - 1">
@@ -41,7 +41,7 @@
                     </v-list-tile-content>
                     <v-list-tile-avatar v-if="record.complete" class="display-flex mr-2 py-3">
                       <span class="grey--text text--darken-4">{{record.quality ? record.gpa.toFixed(1) : record.grade}}</span>
-                      <span v-if="record.quality" class="grey--text ml-2">{{egpa[record.course].toFixed(1)}}</span>
+                      <span v-if="record.quality && egpa" class="grey--text ml-2">{{egpa[record.course].toFixed(1)}}</span>
                     </v-list-tile-avatar>
                   </v-list-tile>
                 </v-list>

@@ -7,7 +7,7 @@
           <v-progress-circular indeterminate class="primary--text"></v-progress-circular>
         </div>
         <div class="text-xs-center" v-else-if="watches.length == 0">
-          <img src="../assets/shore.png" alt>
+          <img src="../assets/lighthouse.png" alt class="lighthouse">
           <p class="mt-3 body-2">You don't have any watches. Add one below!</p>
         </div>
         <v-data-table v-else :headers="headers" :items="watches" hide-actions>
@@ -98,5 +98,10 @@ export default {
 </script>
 
 <style scoped>
-
+.lighthouse {
+  width: 60%;
+  margin: 0;
+  padding: 0;
+  background-color: #800000;
+}
 </style>
