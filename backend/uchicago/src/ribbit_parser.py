@@ -38,7 +38,7 @@ def fetch_ribbit_data(course):
 def RibbitParser(courses):
     pool = multiprocessing.Pool(16)
     results = {}
-    for i, record in enumerate(pool.imap(fetch_ribbit_data, courses, 20), 1):
+    for i, record in enumerate(pool.imap(fetch_ribbit_data, courses, 20)):
         if i % 100 == 0:
             print('Ribbit: {0:%}'.format(i / len(courses)))
         if record:

@@ -1,4 +1,5 @@
 import collections
+import datetime
 import itertools
 import multiprocessing
 import re
@@ -18,6 +19,7 @@ DESCRIPTOR_REGEX = re.compile(
 SECTION_REGEX = re.compile(
     r'Section (?P<section>[0-9A-Za-z]+) \[(?P<section_id>[0-9]+)\] - (?P<type>[A-Z]+).+'
 )
+MIDNIGHT = datetime.datetime.strptime('12:00 AM', '%I:%M %p')
 
 
 class CourseSearch(object):

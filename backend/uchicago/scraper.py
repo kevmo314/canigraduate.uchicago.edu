@@ -125,9 +125,11 @@ def rebuild_indexes(db):
         term = Term('%s %s' % (period, year))
         terms.add(term)
         cardinality = sum(
-            max(1, len(section.get('secondaries', {})))
+            max(1, len(transform(section.get('secondaries', {}))))
             for section in course.values())
+        assert (term, course_id) not in cardinalities
         cardinalities[(term, course_id)] = cardinality
+    total_cardinality = sum(cardinalities.values())
 
     def init(size):
         b = bitarray.bitarray(size)
@@ -140,8 +142,8 @@ def rebuild_indexes(db):
     inverted = collections.defaultdict(lambda: init(len(schedules)))
     sequences = collections.defaultdict(lambda: init(len(schedules)))
     instructors = collections.defaultdict(
-        lambda: init(sum(cardinalities.values())))
-    times = collections.defaultdict(lambda: init(sum(cardinalities.values())))
+        lambda: init(total_cardinality))
+    times = collections.defaultdict(lambda: init(total_cardinality))
 
     # Construct the coarse indices.
     for index, term in enumerate(sorted(terms)):
@@ -166,7 +168,6 @@ def rebuild_indexes(db):
 
     index = 0
     for course_id in sorted(schedules.keys()):
-        print(course_id)
         for term in sorted(terms):
             if (term, course_id) not in cardinalities:
                 continue
@@ -174,6 +175,10 @@ def rebuild_indexes(db):
             period = term.id[:6]
             course = transform(schedules[course_id][year][period])
 
+            if len(course.keys()) == 0:
+                # A course with no primary... strange...
+                print('Empty primary', term, course_id)
+                index += 1
             for primary_id in sorted(course.keys()):
                 primary_instructors = []
                 primary_schedules = []
@@ -192,14 +197,14 @@ def rebuild_indexes(db):
                                              secondary_schedules)
                           or 'unknown'][index] = True
                     index += 1
-                if not course[primary_id].get('secondaries', {}):
+                if not secondaries:
                     for instructor in primary_instructors:
                         instructors[instructor.replace('.', '')][index] = True
                     times[serialize_schedule(primary_schedules)
                           or 'unknown'][index] = True
                     index += 1
     # Quick sanity check.
-    assert index == sum(cardinalities.values())
+    assert index == sum(cardinalities.values()), {(a, b) for a, b in cardinalities.items() if b > 0}
 
     if os.path.isfile('cache.db'):
         records = []
@@ -277,21 +282,20 @@ def scrape_descriptions(db):
         }
         updates['sequence-info/' + sequence + '/name'] = data['name']
     db.update(updates)
-    if False:  # Ribbit updates.
-        updates = {}
-        course_descriptions = db.child('course-descriptions').get().val()
-        find = [
-            course for course in course_info.keys()
-            if course not in course_descriptions
-        ]
-        print('Found', len(find), 'dangling courses')
-        for course, data in RibbitParser(find).items():
-            updates['course-info/' + course + '/name'] = data.name
-            if data.description:
-                updates['course-descriptions/'
-                        + course + '/description'] = data.description
-        if updates:
-            db.update(updates)
+    updates = {}
+    course_descriptions = db.child('course-descriptions').get().val()
+    find = [
+        course for course in course_info.keys()
+        if course not in course_descriptions
+    ]
+    print('Found', len(find), 'dangling courses')
+    for course, data in RibbitParser(find).items():
+        updates['course-info/' + course + '/name'] = data.name
+        if data.description:
+            updates['course-descriptions/'
+                    + course + '/description'] = data.description
+    if updates:
+        db.update(updates)
 
 
 def scrape_data(db):
@@ -300,13 +304,18 @@ def scrape_data(db):
     known_course_info = db.child('course-info').get().val()
     course_descriptions = db.child('course-descriptions').get().val()
     while terms:
-        term = terms.pop()
-        if term.id != 'Autumn 2016':
-            print('Skipping ', term.id)
-            continue
+        term = terms.pop(0)
         index += 1
         updates = {}
-        for course, sections in term.courses.items():
+        for i in range(3):
+            try:
+                courses = term.courses
+                break
+            except:
+                if i == 2:
+                    raise
+                continue
+        for course, sections in courses.items():
             data = known_course_info.get(course.id, {'crosslists': []})
             for id, section in sections.items():
                 if data.get('name', section.name) != section.name:
@@ -362,7 +371,7 @@ def scrape_data(db):
 
 if __name__ == '__main__':
     db = FIREBASE.database()
-    # db.child('schedules').set({})
-    # scrape_data(db)
-    # scrape_descriptions(db)
+    db.child('schedules').set({})
+    scrape_data(db)
+    scrape_descriptions(db)
     rebuild_indexes(db)
