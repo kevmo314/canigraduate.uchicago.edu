@@ -2,7 +2,7 @@ import unittest
 import re
 import requests
 
-from .timeschedules_parser import FSM
+from .timeschedules_fsm import FSM
 
 
 class TestTimeschedulesParser(unittest.TestCase):

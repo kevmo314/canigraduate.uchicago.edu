@@ -149,32 +149,3 @@ class FSM(object):
                 else:
                     self.index += 1
         return self.results
-
-
-def parse_page(url):
-    page = bs4.BeautifulSoup(
-        requests.get('http://timeschedules.uchicago.edu/' + url).text, 'lxml')
-    results = {}
-    for table in page.find_all('tbody'):
-        results.update(FSM(table.find_all('td')).execute())
-    return results
-
-
-class TimeSchedules(object):
-    def __init__(self, id):
-        self.id = id
-
-    @property
-    def courses(self):
-        department_page = requests.get(
-            'http://timeschedules.uchicago.edu/browse.php?term=%s&submit=Submit'
-            % self.id).text
-        results = {}
-        p = multiprocessing.Pool(25)
-        for page in p.imap_unordered(
-                parse_page,
-                re.findall(r'view\.php\?dept=.+?&term=' + self.id,
-                           department_page)):
-            results.update(page)
-        p.close()
-        return results

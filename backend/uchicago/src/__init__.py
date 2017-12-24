@@ -1,5 +1,4 @@
-from .timeschedules_parser import TimeSchedules
-from .coursesearch_parser import CourseSearch
+import timeschedules
 from .term import Term
 from .collegecatalog_parser import CollegeCatalogParser
 from .ribbit_parser import RibbitParser
