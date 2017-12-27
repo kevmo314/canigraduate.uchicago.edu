@@ -49,5 +49,6 @@ app.use((err, req, res, next) => {
 });
 
 exports.api = functions.https.onRequest(app);
-exports.watches = require('./watches');
+exports.watches = require('./watches.js');
 exports.grades = require('./aggregate-grades.js');
+exports.indexes = require('./indexes.js');
