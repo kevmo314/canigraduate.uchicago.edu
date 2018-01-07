@@ -14,22 +14,37 @@ module.exports = functions.firestore
     return db.runTransaction(transaction => {
       transaction.get(cardinalityTableRef).then(doc => {
         const { courses, periods, years } = doc.data();
-        let table = reshape(doc.data().data, [courses.length, periods.length, years.length]);
-        function findOrInsert(arr, value) {
-          let index = binarySearch(arr, value);
+        function findOrAppend(arr, value) {
+          const index = arr.indexOf(value);
           if (index < 0) {
-            index = ~index;
-            arr.splice(index, 0, value);
+            arr.push(value);
+            return arr.length - 1;
           }
           return index;
         }
-        // TODO: Splice in the inserted blocks.
-        const coursesIndex = findOrInsert(courses, course);
-        const periodsIndex = findOrInsert(periods, period);
-        const yearsIndex = findOrInsert(years, year);
+        const courseIndex = findOrAppend(courses, course);
+        const periodIndex = findOrAppend(periods, period);
+        const yearIndex = findOrAppend(years, year);
+        let inserted = false;
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i] == courseIndex && data[i + 1] == periodIndex && data[i + 2] == yearIndex) {
+            data[i + 3] = cardinality;
+            inserted = true;
+            break;
+          }
+        }
+        if (!inserted) {
+          data.push(courseIndex, periodIndex, yearIndex, cardinality);
+        }
         doc.update(cardinalityTableRef, {
-          courses, periods, years, data: reshape(table),
+          courses, periods, years, data,
         });
-      })
+      });
     });
   });
+
+function insert(arr, index, axis) {
+  if (axis == 0) {
+    arr.splice(index, 0, zeros)
+  }
+}
