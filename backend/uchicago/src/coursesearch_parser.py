@@ -67,6 +67,13 @@ class CourseSearch(object):
                 }), department))
 
     @property
+    def departments(self):
+        self.parse(self.session.get('https://coursesearch.uchicago.edu/'))
+        # Get the departments
+        page = self.action('UC_CLSRCH_WRK2_STRM')
+        return set(x['value'] for x in page.select('#UC_CLSRCH_WRK2_SUBJECT option') if len(x['value']) > 0)
+
+    @property
     def courses(self):
         self.parse(self.session.get('https://coursesearch.uchicago.edu/'))
         # Get the departments

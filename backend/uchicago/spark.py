@@ -38,8 +38,8 @@ def upload(x):
     batch.commit()
 
 
-sc = SparkContext("local", "My App")
-timeschedules = sc.parallelize(timeschedules.get_terms()) \
+sc = SparkContext("local", "Can I Graduate? - Scraper")
+sc.parallelize(timeschedules.get_terms()) \
     .flatMap(lambda x: [(x[0], dept, uri) for dept, uri in timeschedules.get_department_urls(x[1])]) \
     .flatMap(lambda x: [(x[0], x[1], course, data) for course, data in timeschedules.parse_department(x[2])]) \
     .foreach(upload)
