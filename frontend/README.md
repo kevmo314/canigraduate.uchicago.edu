@@ -1,15 +1,30 @@
-# canigraduate.uchicago.edu Frontend
+# canigraduate
 
-Frontend runs on an [Angular 2](http://angular.io/) stack.
+> Can I Graduate?
 
-## Development server
+## Build Setup
 
-Run `npm start` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+``` bash
+# install dependencies
+npm install
 
-## New institutions
+# serve with hot reload at localhost:8080
+npm run dev
 
-Every institution is represented as a separate runtime environment. It is not possible to run multiple institutions off the same server by design.
-To add a new institution, create the appropriate environment configuration file under `environments` and create a new institution under `institutions`
-that satisfies the `Base` institution interface. See the requirements in the parent directory under `Data specifications` for more details.
+# build for production with minification
+npm run build
 
-Ensure that a corresponding theme exists in `styles.scss` that is referenced in the institution definition.
+# build for production and view the bundle analyzer report
+npm run build --report
+
+# run unit tests
+npm run unit
+
+# run e2e tests
+npm run e2e
+
+# run all tests
+npm test
+```
+
+For detailed explanation on how things work, checkout the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).

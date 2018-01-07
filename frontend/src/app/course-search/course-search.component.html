@@ -1,8 +1,0 @@
-<div class="course-search">
-  <cig-filters></cig-filters>
-  <div class="results" [ngClass]="{'loading': loading}">
-    <cig-search-results [filters]="filters | async" [start]="((resultsPerPage | async) * (page | async))" [end]="((resultsPerPage | async) * ((page | async) + 1))"
-      (countChange)="count.next($event)"></cig-search-results>
-  </div>
-  <cig-pagination [items]="count | async" [pageSize]="resultsPerPage | async" [page]="page | async" (pageChange)="setPage($event)"></cig-pagination>
-</div>

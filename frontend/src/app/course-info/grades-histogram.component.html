@@ -1,9 +1,0 @@
-<div *ngIf="!total" class="no-data">(no data)</div>
-<div *ngIf="total">
-  <div class="grade" *ngFor="let grade of grades">
-    <div class="label">{{grade.grade}}</div>
-    <div class="bar" [ngStyle]="{'width': (80 * grade.count / max) + '%'}"></div>
-    <div class="count">{{grade.count}}</div>
-  </div>
-  <p>n = {{total}}, x̃ = {{median}}</p>
-</div>
