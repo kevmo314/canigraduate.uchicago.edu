@@ -12,6 +12,16 @@ class Section(object):
         self.primaries = []
         self.secondaries = []
 
+    def to_dict(self):
+        return {
+            'prerequisites': self.prerequisites,
+            'notes': self.notes,
+            'enrollment': self.enrollment,
+            'primaries': [p.to_dict() for p in self.primaries],
+            'secondaries': {s.id: s.to_dict()
+                            for s in self.secondaries}
+        }
+
     def __str__(self):
         return '%s %s %s %s' % (self.course.id, self.id, self.primaries,
                                 self.secondaries)

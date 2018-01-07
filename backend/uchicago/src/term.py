@@ -8,9 +8,16 @@ class Term(object):
 
     @property
     def ordinal(self):
-        return 4 * int(self.term[-4:]) + [
-            'Winter', 'Spring', 'Summer', 'Autumn'
-        ].index(self.term[:6])
+        return 4 * self.year \
+            + ['Winter', 'Spring', 'Summer', 'Autumn'].index(self.period)
+
+    @property
+    def year(self):
+        return int(self.term[-4:])
+
+    @property
+    def period(self):
+        return self.term[:6]
 
     def __eq__(self, other):
         return self.term == other.term
@@ -28,4 +35,4 @@ class Term(object):
         return '<%s>' % str(self)
 
 
-MINIMUM_TERM = Term('Autumn 2002').ordinal
+MINIMUM_TERM = Term('Autumn 2002')

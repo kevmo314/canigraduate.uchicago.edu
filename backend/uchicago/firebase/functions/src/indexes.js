@@ -6,11 +6,13 @@ const functions = require('firebase-functions');
 module.exports = functions.firestore
   .document('institutions/uchicago/offerings/{id}')
   .onWrite(event => {
-    const { course, period, year, sections} = data;
+    const { course, period, year, sections } = data;
     const cardinality = Object.keys(sections).length;
     // Update the cardinality tables.
     const uchicago = db.collection('institutions').doc('uchicago');
-    const cardinalityTableRef = uchicago.collection('indexes').doc('cardinality');
+    const cardinalityTableRef = uchicago
+      .collection('indexes')
+      .doc('cardinality');
     return db.runTransaction(transaction => {
       transaction.get(cardinalityTableRef).then(doc => {
         const { courses, periods, years } = doc.data();
@@ -27,7 +29,11 @@ module.exports = functions.firestore
         const yearIndex = findOrAppend(years, year);
         let inserted = false;
         for (let i = 0; i < data.length; i += 4) {
-          if (data[i] == courseIndex && data[i + 1] == periodIndex && data[i + 2] == yearIndex) {
+          if (
+            data[i] == courseIndex &&
+            data[i + 1] == periodIndex &&
+            data[i + 2] == yearIndex
+          ) {
             data[i + 3] = cardinality;
             inserted = true;
             break;
@@ -37,14 +43,11 @@ module.exports = functions.firestore
           data.push(courseIndex, periodIndex, yearIndex, cardinality);
         }
         doc.update(cardinalityTableRef, {
-          courses, periods, years, data,
+          courses,
+          periods,
+          years,
+          data,
         });
       });
     });
   });
-
-function insert(arr, index, axis) {
-  if (axis == 0) {
-    arr.splice(index, 0, zeros)
-  }
-}

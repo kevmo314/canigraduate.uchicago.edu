@@ -134,10 +134,10 @@ class FSM(object):
                 self.results[course][section.id] = section
             except ValueError as e:
                 if self.section:
-                    if self.cells[self.index].has_attr(
-                            'colspan'
-                    ) and self.cells[self.index]['colspan'] == '24':
-                        self.course.notes.append(self.next_string())
+                    if self.cells[self.index].get('colspan') == '24':
+                        notes = self.next_string()
+                        if notes:
+                            self.course.notes.append(notes)
                     else:
                         self.index += 3
                         activity = self.next_activity()

@@ -15,15 +15,19 @@ def get_terms():
                                      {'id': 'term_name'}).find_all('option'):
         if option.has_attr('value'):
             term = Term(option.getText())
-            if term.ordinal >= MINIMUM_TERM:
+            if term >= MINIMUM_TERM:
                 yield (term, option['value'])
 
 
 def get_department_urls(id):
     uri = BASE_URL + 'browse.php?term=%s&submit=Submit' % id
-    matches = re.findall(r'view\.php\?dept=.+?&term=' + id,
-                         requests.get(uri).text)
-    return [BASE_URL + x for x in matches]
+    matches = re.finditer(r'view\.php\?dept=(.+?)&term=' + id,
+                          requests.get(uri).text)
+    visited = set()
+    for x in matches:
+        if x.group(1) not in visited:
+            visited.add(x.group(1))
+            yield (x.group(1), BASE_URL + x.group(0))
 
 
 def parse_department(uri):
@@ -31,4 +35,4 @@ def parse_department(uri):
     results = {}
     for table in page.find_all('tbody'):
         results.update(FSM(table.find_all('td')).execute())
-    return results
+    return list(results.items())
