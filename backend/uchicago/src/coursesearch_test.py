@@ -40,9 +40,9 @@ class TestCourseSearch(unittest.TestCase):
     def test_parse_department_graduate_and_undergraduate_MATH(self):
         results = coursesearch.parse_department(('2168', 'MATH', 0))
         results.sort()
-        self.assertEqual(len(results), 7)
+        self.assertEqual(len(results), 5)
         self.assertEqual(results[0][1]['20'].enrollment, ['5', '24'])
-        self.assertEqual(results[1][1]['20'].notes, ['Placements'])
+        self.assertEqual(results[0][1]['20'].notes, ['Placements'])
 
 
 if __name__ == '__main__':

@@ -122,10 +122,9 @@ class CourseSearch(object):
             return None
         course_id = match.group('id')
         section_id = match.group('section')
-        enrollment_element = page.find('span', {
-            'id': 'UC_CLS_DTL_WRK_DESCR3$0'
-        }) or page.find('span', {'id': 'UC_CLS_DTL_WRK_DESCR1$0'})
-        enrollment = enrollment_element.text.split()[-1].split('/')
+        enrollment = page.find('span', {'id': 'UC_CLS_DTL_WRK_DESCR3$0'}).text.strip() \
+            or page.find('span', {'id': 'UC_CLS_DTL_WRK_DESCR1$0'}).text.strip()
+        enrollment = enrollment.split()[-1].split('/')
         notes = page.find('span',
                           {'id': 'DERIVED_CLSRCH_SSR_CLASSNOTE_LONG$0'})
         if notes:
