@@ -148,4 +148,9 @@ class FSM(object):
                             self.section.secondaries.append(activity)
                 else:
                     self.index += 1
+        # Move the notes from the course to the individual sections.
+        for course, sections in self.results.items():
+            for id, section in sections.items():
+                section.notes = course.notes
+            course.notes = []
         return self.results

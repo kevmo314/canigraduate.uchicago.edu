@@ -3,7 +3,7 @@ import re
 import requests
 
 from .term import Term, MINIMUM_TERM
-from .timeschedules_fsm import FSM
+from .coursesearch_parser import CourseSearch
 
 BASE_URL = 'https://coursesearch.uchicago.edu/'
 
@@ -23,19 +23,11 @@ def get_terms():
 
 
 def get_department_urls(id):
-    uri = BASE_URL + 'browse.php?term=%s&submit=Submit' % id
-    matches = re.finditer(r'view\.php\?dept=(.+?)&term=' + id,
-                          requests.get(uri).text)
-    visited = set()
-    for x in matches:
-        if x.group(1) not in visited:
-            visited.add(x.group(1))
-            yield (x.group(1), BASE_URL + x.group(0))
+    for department in CourseSearch(id).departments:
+        for i in range(25):
+            yield (department, (id, department, i))
 
 
 def parse_department(uri):
-    page = bs4.BeautifulSoup(requests.get(uri).text, 'lxml')
-    results = {}
-    for table in page.find_all('tbody'):
-        results.update(FSM(table.find_all('td')).execute())
-    return list(results.items())
+    id, department, i = uri
+    return list(CourseSearch(id).courses(department, i).items())

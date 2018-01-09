@@ -36,7 +36,8 @@ class TestTimeschedules(unittest.TestCase):
         self.assertEqual(list(results[0][1].keys()), ['91'])
         self.assertEqual(list(results[1][1].keys()), ['91'])
         for key, value in results:
-            self.assertEqual(key.notes, ['Course meets 7/11-7-29 (3 weeks).'])
+            self.assertEqual(value['91'].notes,
+                             ['Course meets 7/11-7-29 (3 weeks).'])
 
 
 if __name__ == '__main__':

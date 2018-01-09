@@ -1,12 +1,13 @@
 from pyspark import SparkConf, SparkContext
-from src import timeschedules, Term, Course
+from src import timeschedules, coursesearch, Term, Course
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 
 
 def upload(x):
-    term, dept, course, data = x
+    key, data = x
+    term, dept, course = key
     try:
         firebase_admin.get_app()
     except ValueError:
@@ -39,8 +40,10 @@ def upload(x):
 
 
 sc = SparkContext("local", "Can I Graduate? - Scraper")
-sc.parallelize(timeschedules.get_terms()) \
-    .flatMap(lambda x: [(x[0], dept, uri) for dept, uri in timeschedules.get_department_urls(x[1])]) \
-    .flatMap(lambda x: [(x[0], x[1], course, data) for course, data in timeschedules.parse_department(x[2])]) \
-    .foreach(upload)
+for module in [timeschedules, coursesearch]:
+    sc.parallelize(module.get_terms()) \
+        .flatMap(lambda x: [(x[0], dept, uri) for dept, uri in module.get_department_urls(x[1])]) \
+        .flatMap(lambda x: [((x[0], x[1], course), data) for course, data in module.parse_department(x[2])]) \
+        .reduceByKey(lambda a, b: {**a, **b}) \
+        .foreach(upload)
 sc.stop()

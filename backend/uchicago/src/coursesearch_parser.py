@@ -23,8 +23,7 @@ MIDNIGHT = datetime.datetime.strptime('12:00 AM', '%I:%M %p')
 
 
 class CourseSearch(object):
-    def __init__(self, term, id):
-        self.term = term
+    def __init__(self, id):
         self.coursesearch_id = id
         self.session = requests.Session()
         self.session.headers = {
@@ -53,57 +52,40 @@ class CourseSearch(object):
         return self.parse(
             self.session.post(COURSE_SEARCH_URL, data=data, **kwargs))
 
-    def __call__(self, params):
-        department, index = params
+    def courses(self, department, index):
         self.index_shard = index
         self.parse(self.session.get('https://coursesearch.uchicago.edu/'))
         # Select the term.
         self.action('UC_CLSRCH_WRK2_STRM')
         # Then run the department search.
-        return list(
-            self.parse_results_page(
-                self.action('UC_CLSRCH_WRK2_SEARCH_BTN', {
-                    'UC_CLSRCH_WRK2_SUBJECT': department
-                }), department))
+        page = self.parse_results_page(
+            self.action('UC_CLSRCH_WRK2_SEARCH_BTN',
+                        {'UC_CLSRCH_WRK2_SUBJECT': department}), department)
+        results = collections.defaultdict(dict)
+        for section in page:
+            results[section.course][section.id] = section
+        return results
 
     @property
     def departments(self):
         self.parse(self.session.get('https://coursesearch.uchicago.edu/'))
         # Get the departments
         page = self.action('UC_CLSRCH_WRK2_STRM')
-        return set(x['value'] for x in page.select('#UC_CLSRCH_WRK2_SUBJECT option') if len(x['value']) > 0)
-
-    @property
-    def courses(self):
-        self.parse(self.session.get('https://coursesearch.uchicago.edu/'))
-        # Get the departments
-        page = self.action('UC_CLSRCH_WRK2_STRM')
-        results = collections.defaultdict(dict)
-        pool = multiprocessing.Pool(24)
-        departments = map(lambda x: x['value'],
-                          page.select('#UC_CLSRCH_WRK2_SUBJECT option'))
-        departments = set(filter(len, departments))
-        count = len(departments) * 5
-        departments = pool.imap_unordered(
-            # Create a new object so we get a new session.
-            CourseSearch(self.term, self.coursesearch_id),
-            itertools.product(departments, range(5)))
-        for index, department in enumerate(departments, 1):
-            print('{0:%}'.format(index / count))
-            for section in department:
-                results[section.course][section.id] = section
-        pool.close()
-        return results
+        page.select('#UC_CLSRCH_WRK2_SUBJECT option')
+        return set(x['value']
+                   for x in page.select('#UC_CLSRCH_WRK2_SUBJECT option')
+                   if len(x['value']) > 0)
 
     def parse_results_page(self, page, department):
         error = page.find('span', {'id':
                                    'DERIVED_CLSMSG_ERROR_TEXT'}).text.strip()
         if error and self.index_shard <= 0:
             # Only the first index shard should report page-level errors.
-            warnings.warn('[%s %s] %s' % (self.term, department, error))
+            warnings.warn('[%s %s] %s' % (self.cursesearch_id, department,
+                                          error))
         records = page.select('tr[id^="DESCR100"]')
         for index, row in enumerate(records):
-            if self.index_shard != -1 and index % 5 == self.index_shard:
+            if self.index_shard != -1 and index % 25 != self.index_shard:
                 # Ignore this course if we're not delegated to this index shard.
                 continue
             chip = row.find('span', {'class': 'label'})
@@ -136,17 +118,18 @@ class CourseSearch(object):
         match = DESCRIPTOR_REGEX.match(descriptor)
         if not match:
             warnings.warn('[%s %s] Could not match course descriptor: %s' %
-                          (self.term, course_name, descriptor))
+                          (self.coursesearch_id, course_name, descriptor))
             return None
         course_id = match.group('id')
         section_id = match.group('section')
-        enrollment = page.find(
-            'span', {'id':
-                     'UC_CLS_DTL_WRK_DESCR1$0'}).text.split()[-1].split('/')
+        enrollment_element = page.find('span', {
+            'id': 'UC_CLS_DTL_WRK_DESCR3$0'
+        }) or page.find('span', {'id': 'UC_CLS_DTL_WRK_DESCR1$0'})
+        enrollment = enrollment_element.text.split()[-1].split('/')
         notes = page.find('span',
                           {'id': 'DERIVED_CLSRCH_SSR_CLASSNOTE_LONG$0'})
         if notes:
-            notes = notes.text.split()
+            notes = notes.text
         units = int(
             page.find('span', {'id': 'UC_CLS_DTL_WRK_UNITS_RANGE$0'})
             .text.split()[0])
@@ -193,7 +176,8 @@ class CourseSearch(object):
             enrollment=enrollment,
             units=units)
         section.prerequisites = prerequisites
-        section.notes.append(notes)
+        if notes:
+            section.notes.append(notes)
         section.crosslists.update(crosslists)
         for index, row in enumerate(primary_rows):
             if len(primary_components) == 1:
@@ -221,13 +205,18 @@ class CourseSearch(object):
         times = [x.strip() for x in components[-1].split('-')]
         if not times[0] or not times[1]:
             return []
-        from_time = int((datetime.datetime.strptime(times[0], '%I:%M %p') - MIDNIGHT).total_seconds() / 60)
-        to_time = int((datetime.datetime.strptime(times[1], '%I:%M %p') - MIDNIGHT).total_seconds() / 60)
+        from_time = int(
+            (datetime.datetime.strptime(times[0], '%I:%M %p') - MIDNIGHT
+             ).total_seconds() / 60)
+        to_time = int(
+            (datetime.datetime.strptime(times[1], '%I:%M %p') - MIDNIGHT
+             ).total_seconds() / 60)
         days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
         result = []
         for offset, day in enumerate(days):
             if day in components[0]:
-                result.append([offset * 24 * 60 + from_time, offset * 24 * 60 + to_time])
+                result.append(
+                    [offset * 24 * 60 + from_time, offset * 24 * 60 + to_time])
         return result
 
     def parse_secondary(self, row, type):
@@ -245,9 +234,9 @@ class CourseSearch(object):
                           row.find('div', {
                               'id': re.compile(r'^win0divDISC_INSTR\$\d+')
                           }).text.split(','))
-        schedule = self.parse_schedule(row.find(
-            'div', {'id':
-                    re.compile(r'^win0divDISC_SCHED\$\d+')}).text.strip())
+        schedule = self.parse_schedule(
+            row.find('div', {'id': re.compile(r'^win0divDISC_SCHED\$\d+')})
+            .text.strip())
         location = row.find(
             'div', {'id': re.compile(r'^win0divDISC_ROOM\$\d+')}).text.strip()
         return SecondaryActivity(
@@ -262,8 +251,9 @@ class CourseSearch(object):
         instructors = map(
             lambda x: x.strip(),
             row.find('span', {'id': re.compile(r'^MTG\$\d+')}).text.split(','))
-        schedule = self.parse_schedule(row.find(
-            'span', {'id': re.compile(r'^MTG_SCHED\$\d+')}).text.strip())
+        schedule = self.parse_schedule(
+            row.find('span', {'id': re.compile(r'^MTG_SCHED\$\d+')})
+            .text.strip())
         location = row.find('span',
                             {'id': re.compile(r'^MTG_LOC\$\d+')}).text.strip()
         return PrimaryActivity(
