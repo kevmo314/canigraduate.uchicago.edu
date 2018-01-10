@@ -47,18 +47,23 @@ def upload(x):
     batch.commit()
 
 
-sc = SparkContext("local", "Can I Graduate? - Scraper")
-records = sc.union([
-    sc.parallelize(source.get_terms()) \
-        .repartition(250) \
-        .flatMap(lambda x: [(x[0], dept, uri) for dept, uri in source.get_department_urls(x[1])]) \
-        .repartition(1000) \
-        .flatMap(lambda x: [((x[0], x[1], course), data) for course, data in source.parse_department(x[2])]) \
-        .reduceByKey(lambda a, b: {**a, **b}) for source in [coursesearch, timeschedules]])
-records.foreach(upload)
-sc.parallelize([offering.id for offering in init().collection('institutions') \
-        .document('uchicago').collection('offerings')]) \
-    .subtract(records.map(doc_id)) \
-    .foreach(lambda key: init().collection('institutions').document('uchicago') \
-        .collection('offerings').document(key).delete())
-sc.stop()
+def main():
+    sc = SparkContext("local", "Can I Graduate? - Scraper")
+    records = sc.union([
+        sc.parallelize(source.get_terms()) \
+            .repartition(250) \
+            .flatMap(lambda x: [(x[0], dept, uri) for dept, uri in source.get_department_urls(x[1])]) \
+            .repartition(1000) \
+            .flatMap(lambda x: [((x[0], x[1], course), data) for course, data in source.parse_department(x[2])]) \
+            .reduceByKey(lambda a, b: {**a, **b}) for source in [coursesearch, timeschedules]])
+    records.foreach(upload)
+    sc.parallelize([offering.id for offering in init().collection('institutions') \
+            .document('uchicago').collection('offerings')]) \
+        .subtract(records.map(doc_id)) \
+        .foreach(lambda key: init().collection('institutions').document('uchicago') \
+            .collection('offerings').document(key).delete())
+    sc.stop()
+
+
+if __name__ == '__main__':
+    main()
