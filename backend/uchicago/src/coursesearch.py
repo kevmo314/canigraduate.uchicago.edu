@@ -2,6 +2,8 @@ import bs4
 import re
 import requests
 
+from requests.adapters import HTTPAdapter
+
 from .term import Term, MINIMUM_TERM
 from .coursesearch_parser import CourseSearch
 
@@ -9,7 +11,9 @@ BASE_URL = 'https://coursesearch.uchicago.edu/'
 
 
 def get_terms():
-    page = requests.get(
+    session = requests.Session()
+    session.mount('http://', HTTPAdapter(max_retries=3))
+    page = session.get(
         BASE_URL +
         'psc/prdguest/EMPLOYEE/HRMS/c/UC_STUDENT_RECORDS_FL.UC_CLASS_SEARCH_FL.GBL'
     )

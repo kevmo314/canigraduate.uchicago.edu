@@ -1,5 +1,11 @@
 service_account_key.json
 
+# Ignore built eggs.
+canigraduate_backend_uchicago.egg-info
+build
+dist
+
+
 # Virtualenv
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
 .Python

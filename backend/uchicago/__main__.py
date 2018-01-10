@@ -5,23 +5,31 @@ from firebase_admin import credentials
 from firebase_admin import firestore
 
 
-def upload(x):
+def doc_id(x):
     key, data = x
     term, dept, course = key
+    assert isinstance(term, Term)
+    assert isinstance(course, Course)
+    doc_id = '%s-%d-%s' % (term.period, term.year, course)
+
+
+def init():
     try:
         firebase_admin.get_app()
     except ValueError:
         firebase_admin.initialize_app(
             credentials.Certificate('service_account_key.json'))
-    db = firestore.client()
+    return firestore.client()
+
+
+def upload(x):
+    key, data = x
+    term, dept, course = key
+    db = init()
     offerings = db.collection('institutions').document('uchicago').collection(
         'offerings')
-
-    assert isinstance(term, Term)
-    assert isinstance(course, Course)
-    doc_id = '%s-%d-%s' % (term.period, term.year, course)
     batch = db.batch()
-    doc = offerings.document(doc_id)
+    doc = offerings.document(doc_id(x))
     # Clear all data, including section listings.
     batch.delete(doc)
     # Set the fields.
@@ -40,10 +48,17 @@ def upload(x):
 
 
 sc = SparkContext("local", "Can I Graduate? - Scraper")
-for module in [timeschedules, coursesearch]:
-    sc.parallelize(module.get_terms()) \
-        .flatMap(lambda x: [(x[0], dept, uri) for dept, uri in module.get_department_urls(x[1])]) \
-        .flatMap(lambda x: [((x[0], x[1], course), data) for course, data in module.parse_department(x[2])]) \
-        .reduceByKey(lambda a, b: {**a, **b}) \
-        .foreach(upload)
+records = sc.union([
+    sc.parallelize(source.get_terms()) \
+        .repartition(250) \
+        .flatMap(lambda x: [(x[0], dept, uri) for dept, uri in source.get_department_urls(x[1])]) \
+        .repartition(1000) \
+        .flatMap(lambda x: [((x[0], x[1], course), data) for course, data in source.parse_department(x[2])]) \
+        .reduceByKey(lambda a, b: {**a, **b}) for source in [coursesearch, timeschedules]])
+records.foreach(upload)
+sc.parallelize([offering.id for offering in init().collection('institutions') \
+        .document('uchicago').collection('offerings')]) \
+    .subtract(records.map(doc_id)) \
+    .foreach(lambda key: init().collection('institutions').document('uchicago') \
+        .collection('offerings').document(key).delete())
 sc.stop()

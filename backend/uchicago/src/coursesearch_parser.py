@@ -8,6 +8,8 @@ import warnings
 import bs4
 import requests
 
+from requests.adapters import HTTPAdapter
+
 from .course import Course
 from .section import Section
 from .activity import PrimaryActivity, SecondaryActivity
@@ -29,6 +31,7 @@ class CourseSearch(object):
         self.session.headers = {
             'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)'
         }
+        self.session.mount('https://', HTTPAdapter(max_retries=3))
         self.counter = 1
         self.data = {}
         self.index_shard = -1
@@ -50,11 +53,13 @@ class CourseSearch(object):
         }, **data}
         self.counter += 1
         return self.parse(
-            self.session.post(COURSE_SEARCH_URL, data=data, **kwargs))
+            self.session.post(
+                COURSE_SEARCH_URL, data=data, timeout=30, **kwargs))
 
     def courses(self, department, index):
         self.index_shard = index
-        self.parse(self.session.get('https://coursesearch.uchicago.edu/'))
+        self.parse(
+            self.session.get('https://coursesearch.uchicago.edu/', timeout=30))
         # Select the term.
         self.action('UC_CLSRCH_WRK2_STRM')
         # Then run the department search.
@@ -68,7 +73,8 @@ class CourseSearch(object):
 
     @property
     def departments(self):
-        self.parse(self.session.get('https://coursesearch.uchicago.edu/'))
+        self.parse(
+            self.session.get('https://coursesearch.uchicago.edu/', timeout=30))
         # Get the departments
         page = self.action('UC_CLSRCH_WRK2_STRM')
         page.select('#UC_CLSRCH_WRK2_SUBJECT option')
@@ -81,7 +87,7 @@ class CourseSearch(object):
                                    'DERIVED_CLSMSG_ERROR_TEXT'}).text.strip()
         if error and self.index_shard <= 0:
             # Only the first index shard should report page-level errors.
-            warnings.warn('[%s %s] %s' % (self.cursesearch_id, department,
+            warnings.warn('[%s %s] %s' % (self.coursesearch_id, department,
                                           error))
         records = page.select('tr[id^="DESCR100"]')
         for index, row in enumerate(records):
