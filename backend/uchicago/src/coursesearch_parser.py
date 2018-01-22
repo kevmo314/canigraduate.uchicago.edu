@@ -112,9 +112,11 @@ class CourseSearch(object):
         # Visit next page.
         if len(records) == 25 and page.find(
                 'a', {'id': 'UC_RSLT_NAV_WRK_SEARCH_CONDITION2$46$'}):
-            yield from self.parse_results_page(
+            results = self.parse_results_page(
                 self.action('UC_RSLT_NAV_WRK_SEARCH_CONDITION2$46$'),
                 department)
+            for result in results:
+                yield result
 
     def parse_section_page(self, page):
         course_name = page.find(

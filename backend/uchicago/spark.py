@@ -3,6 +3,7 @@ from src import timeschedules, coursesearch, Term, Course
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
+import google.cloud.exceptions
 
 
 def init():
@@ -28,12 +29,13 @@ def upload(x):
     # Clear all data, including section listings.
     batch.delete(doc)
     # Set the fields.
-    batch.set(doc, {
-        'period': term.period,
-        'year': term.year,
-        'department': dept.encode('ascii', 'ignore'),
-        'course': course.id
-    })
+    batch.set(
+        doc, {
+            'period': term.period,
+            'year': term.year,
+            'department': dept.encode('ascii', 'ignore'),
+            'course': course.id
+        })
     # Then set the sections.
     sections = doc.collection('sections')
     for section_id, section in data.items():
@@ -43,33 +45,21 @@ def upload(x):
 
 
 def main():
-    firebase_admin.initialize_app(
-        credentials.Certificate('service_account_key.json'))
-    courses = firestore.client().collection('institutions').get()
-    print(courses)
-    for course in courses:
-        print(course)
-    courses = [course.id for course in courses]
-    print(courses)
-    return
+    courses = [
+        course.id for course in init().collection('institutions') \
+            .document('uchicago').collection('courses').get()
+    ]
     sc = SparkContext(conf=SparkConf() \
-        .setMaster("local[48]") \
+        .setMaster("local[32]") \
         .setAppName("Can I Graduate? - Scraper"))
     sc.setLogLevel("WARN")
-    courses = init().collection('institutions').get()
-    print(courses)
-    for course in courses:
-        print(course)
-    courses = [course.id for course in courses]
-    print(courses)
-    return
     records = sc.union([
-        sc.parallelize(source.get_terms()) \
-            .repartition(250) \
+        sc.parallelize(list(source.get_terms())[:2]) \
+            .repartition(32) \
             .flatMap(lambda x: [(x[0], dept, uri) for dept, uri in source.get_department_urls(x[1])]) \
-            .repartition(1000) \
+            .repartition(32) \
             .flatMap(lambda x: [((x[0], x[1], course), data) for course, data in source.parse_department(x[2])]) \
-            .reduceByKey(lambda a, b: dict(a.items() + b.items())) for source in [coursesearch, timeschedules]])
+            .reduceByKey(lambda a, b: {**a, **b}) for source in [ timeschedules]])
     records.foreach(upload)
     sc.parallelize(courses) \
         .flatMap(lambda course: [(course, offering.id) for offering in init().collection('institutions').document('uchicago').collection('courses').document(course).collection('terms').get()]) \

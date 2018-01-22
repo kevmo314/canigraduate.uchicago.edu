@@ -8,18 +8,14 @@ name = "pypi"
 [dev-packages]
 
 setuptools = "*"
+psutil = "*"
 
 
 [packages]
 
 "beautifulsoup4" = "*"
 bitarray = "*"
-flask = "*"
-flask-cors = "*"
-"jinja2" = "*"
 lxml = "*"
-pyrebase = "*"
 requests = "*"
-uwsgi = "*"
 firebase-admin = "*"
 pyspark = "*"
