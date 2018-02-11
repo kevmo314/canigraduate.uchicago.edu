@@ -57,7 +57,7 @@ public abstract class Section {
             return this;
         }
 
-        Builder addAllNotes(Iterable<String> notes) {
+        public Builder addAllNotes(Iterable<String> notes) {
             this.notesBuilder().addAll(notes);
             return this;
         }
@@ -75,7 +75,7 @@ public abstract class Section {
             return this;
         }
 
-        Builder addAllPrimaryActivities(Iterable<PrimaryActivity> primaryActivities) {
+        public Builder addAllPrimaryActivities(Iterable<PrimaryActivity> primaryActivities) {
             this.primaryActivitiesBuilder().addAll(primaryActivities);
             return this;
         }
@@ -87,7 +87,7 @@ public abstract class Section {
             return this;
         }
 
-        Builder addAllSecondaryActivities(Iterable<SecondaryActivity> secondaryActivities) {
+        public Builder addAllSecondaryActivities(Iterable<SecondaryActivity> secondaryActivities) {
             this.secondaryActivitiesBuilder().addAll(secondaryActivities);
             return this;
         }

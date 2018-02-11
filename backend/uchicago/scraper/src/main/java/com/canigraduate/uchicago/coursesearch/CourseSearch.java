@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-class CourseSearch {
+public class CourseSearch {
     public static Map<Term, String> getTerms() throws IOException {
         Browser browser = new Browser();
         ImmutableMap.Builder<Term, String> builder = new ImmutableMap.Builder<>();

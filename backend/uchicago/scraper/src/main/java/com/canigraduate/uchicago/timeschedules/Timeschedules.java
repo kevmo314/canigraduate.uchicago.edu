@@ -14,7 +14,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-class Timeschedules {
+public class Timeschedules {
     private static final String BASE_URL = "http://timeschedules.uchicago.edu/";
 
     public static Map<Term, String> getTerms() throws IOException {

@@ -4,14 +4,13 @@ import com.canigraduate.uchicago.BrowsingSession;
 import com.canigraduate.uchicago.models.Course;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
 import java.text.Normalizer;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,14 +35,14 @@ public class CollegeCatalog {
         return builder.build();
     }
 
-    public static Map<String, Course> getCourses(String url) throws IOException {
+    public static Map<String, Course> getCoursesAndSequences(String url) throws IOException {
         Document doc = new BrowsingSession().get(url);
         Element courses = doc.selectFirst("div.courses");
         if (courses == null) {
             return ImmutableMap.of();
         }
         List<Element> courseBlocks = courses.select("div.courseblock");
-        ImmutableMap.Builder<String, Course> builder = new ImmutableMap.Builder<>();
+        Map<String, Course.Builder> courseMap = new HashMap<>();
         Optional<String> previousCourse = Optional.empty();
         for (Element block : courseBlocks) {
             Optional<CourseKey> course = Optional.ofNullable(block.selectFirst("p.courseblocktitle"))
@@ -55,19 +54,21 @@ public class CollegeCatalog {
                     .map(element -> Normalizer.normalize(element.text(), Normalizer.Form.NFKD));
             Optional<String> detail = Optional.ofNullable(block.selectFirst("p.courseblockdetail"))
                     .map(element -> Normalizer.normalize(element.text(), Normalizer.Form.NFKD));
-            boolean isSequence = block.hasClass("subsequence");
-            builder.put(course.get().getCourse(), Course.builder()
+            boolean isSubsequence = block.hasClass("subsequence");
+            courseMap.put(course.get().getCourse(), Course.builder()
                     .setDescription(description)
                     .addNote(detail)
-                    .setSequence(previousCourse)
+                    .setParent(previousCourse.filter(c -> isSubsequence))
                     .setName(course.get().getName())
-                    .setPriority(30000)
-                    .build());
-            if (!isSequence) {
+                    .setPriority(30000));
+            if (isSubsequence) {
+                previousCourse.map(courseMap::get).ifPresent(c -> c.setLeaf(false));
+            } else {
                 previousCourse = course.map(CourseKey::getCourse);
             }
         }
-        return builder.build();
+        return ImmutableMap.copyOf(Iterables.transform(courseMap.entrySet(),
+                entry -> new AbstractMap.SimpleEntry<>(entry.getKey(), entry.getValue().build())));
     }
 
     @AutoValue

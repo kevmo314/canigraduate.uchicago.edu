@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @AutoValue
-abstract class Grade {
+public abstract class Grade {
     private static final Map<String, Double> GPA_MAP = new HashMap<String, Double>() {{
         this.put("A+", 4.0);
         this.put("A", 4.0);

@@ -4,8 +4,10 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.primitives.Ints;
 
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
@@ -73,8 +75,19 @@ public abstract class Schedule {
 
     @AutoValue
     public static abstract class Block {
+        private static final long SECONDS_PER_DAY = Duration.ofDays(1).getSeconds();
+
         public static Block create(DayOfWeek newDay, LocalTime newFrom, LocalTime newTo) {
             return new AutoValue_Schedule_Block(newDay, newFrom, newTo);
+        }
+
+        public static Block fromLong(long value) {
+            long to = value % SECONDS_PER_DAY;
+            value /= SECONDS_PER_DAY;
+            long from = value % SECONDS_PER_DAY;
+            value /= SECONDS_PER_DAY;
+            return Block.create(DayOfWeek.of(Ints.checkedCast(value)), LocalTime.ofSecondOfDay(from),
+                    LocalTime.ofSecondOfDay(to));
         }
 
         public abstract DayOfWeek getDay();
@@ -82,6 +95,13 @@ public abstract class Schedule {
         public abstract LocalTime getFrom();
 
         public abstract LocalTime getTo();
+
+        public long toLong() {
+            this.getDay().getValue();
+            long from = this.getFrom().toSecondOfDay();
+            long to = this.getTo().toSecondOfDay();
+            return ((this.getDay().getValue() * SECONDS_PER_DAY) + from) * SECONDS_PER_DAY + to;
+        }
 
         public int compareTo(Block that) {
             return ComparisonChain.start()

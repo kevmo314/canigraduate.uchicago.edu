@@ -94,10 +94,10 @@ class Scanner {
                 .setPrerequisites(this.selectFirstText("span[id='UC_CLS_DTL_WRK_SSR_REQUISITE_LONG$0']"))
                 .addNote(this.selectFirstText("span[id='DERIVED_CLSRCH_SSR_CLASSNOTE_LONG$0']"))
                 .setEnrollment(this.nextEnrollment());
-        for (Element table : this.activePage.select("[id^='win0divUC_CLS_REL_WRK_RELATE_CLASS_NBR_1']")) {
+        this.activePage.select("[id^='win0divUC_CLS_REL_WRK_RELATE_CLASS_NBR_1']").forEach(table -> {
             if (table.parents().stream().anyMatch(element -> element.hasClass("psc_hidden"))) {
                 // AIS renders random shit sometimes.
-                continue;
+                return;
             }
             String component = table.selectFirst("h1").text().trim();
             if (!components.remove(component)) {
@@ -106,7 +106,7 @@ class Scanner {
             for (Element secondaryRow : table.getElementsByTag("tr")) {
                 sectionBuilder.addSecondaryActivity(this.toSecondaryActivity(secondaryRow).setType(component).build());
             }
-        }
+        });
 
         List<Element> primaryRows = this.activePage.select("[id='win0divSSR_CLSRCH_MTG1$0'] tr.ps_grid-row");
         if (components.size() != 1 && components.size() != primaryRows.size()) {

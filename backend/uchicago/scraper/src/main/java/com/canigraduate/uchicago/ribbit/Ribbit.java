@@ -11,12 +11,12 @@ import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-class Ribbit {
+public class Ribbit {
     private static final String BASE_URL = "http://collegecatalog.uchicago.edu/ribbit/index.cgi?page=getcourse.rjs&code=";
     private static final Logger LOG = Logger.getLogger(Ribbit.class.getName());
     private static final Pattern TITLE_PATTERN = Pattern.compile("([^.]+)\\. (.+?)\\.?(?: +(\\d+) Units\\.)?");
 
-    public static Course getRecordForCourse(String course) throws IOException {
+    public static Optional<Course> getRecordForCourse(String course) throws IOException {
         Document cdata = Jsoup.parse(new BrowsingSession().get(Ribbit.BASE_URL + course).text());
         return Optional.ofNullable(cdata.selectFirst("p.courseblocktitle"))
                 .map(element -> Ribbit.TITLE_PATTERN.matcher(
@@ -31,7 +31,6 @@ class Ribbit {
                                     .map(element -> Normalizer.normalize(element.text(), Normalizer.Form.NFKD)))
                             .setPriority(20000)
                             .build();
-                })
-                .orElse(null);
+                });
     }
 }

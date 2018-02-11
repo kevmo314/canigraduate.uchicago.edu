@@ -12,7 +12,7 @@ import java.util.Optional;
 @AutoValue
 public abstract class Course {
     public static Builder builder() {
-        return new AutoValue_Course.Builder().setPriority(0);
+        return new AutoValue_Course.Builder().setPriority(0).setLeaf(true);
     }
 
     public static Course create(Course a, Course b) {
@@ -35,7 +35,7 @@ public abstract class Course {
                 .setDescription(p.getDescription().isPresent() ? p.getDescription() : q.getDescription())
                 .addAllNotes(a.getNotes())
                 .addAllNotes(b.getNotes())
-                .setSequence(p.getSequence().isPresent() ? p.getSequence() : q.getSequence())
+                .setParent(p.getParent().isPresent() ? p.getParent() : q.getParent())
                 .setPriority(p.getPriority())
                 .putAllSections(a.getSections())
                 .putAllSections(b.getSections())
@@ -50,7 +50,7 @@ public abstract class Course {
 
     public abstract ImmutableSet<String> getNotes();
 
-    public abstract Optional<String> getSequence();
+    public abstract Optional<String> getParent();
 
     public abstract int getPriority();
 
@@ -61,6 +61,11 @@ public abstract class Course {
     }
 
     public abstract ImmutableSet<String> getCrosslists();
+
+    /**
+     * Gets whether this course represents a sequence metacourse.
+     */
+    public abstract boolean isLeaf();
 
     @AutoValue.Builder
     public abstract static class Builder {
@@ -82,14 +87,14 @@ public abstract class Course {
             return this;
         }
 
-        Builder addAllNotes(Iterable<String> notes) {
+        public Builder addAllNotes(Iterable<String> notes) {
             this.notesBuilder().addAll(notes);
             return this;
         }
 
-        public abstract Builder setSequence(String sequence);
+        public abstract Builder setParent(String sequence);
 
-        public abstract Builder setSequence(Optional<String> sequence);
+        public abstract Builder setParent(Optional<String> sequence);
 
         public abstract Builder setPriority(int priority);
 
@@ -100,12 +105,7 @@ public abstract class Course {
             return this;
         }
 
-        public Builder putAllSections(Iterable<? extends Map.Entry<String, Section>> sections) {
-            this.sectionsBuilder().putAll(sections);
-            return this;
-        }
-
-        Builder putAllSections(Map<String, Section> sections) {
+        public Builder putAllSections(Map<String, Section> sections) {
             this.sectionsBuilder().putAll(sections);
             return this;
         }
@@ -121,6 +121,8 @@ public abstract class Course {
             this.crosslistsBuilder().addAll(crosslists);
             return this;
         }
+
+        public abstract Builder setLeaf(boolean isLeaf);
 
         public abstract Course build();
     }

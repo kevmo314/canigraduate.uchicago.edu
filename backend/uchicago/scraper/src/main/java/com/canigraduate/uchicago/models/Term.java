@@ -28,11 +28,11 @@ public abstract class Term implements Comparable<Term> {
         return 4 * this.getYear() + PERIOD_MAP.get(this.getPeriod());
     }
 
-    private int getYear() {
+    public int getYear() {
         return Integer.parseInt(this.getTerm().substring(this.getTerm().length() - 4));
     }
 
-    private String getPeriod() {
+    public String getPeriod() {
         return this.getTerm().substring(0, 6);
     }
 

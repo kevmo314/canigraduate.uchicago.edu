@@ -3,7 +3,7 @@ package com.canigraduate.uchicago.coursesearch;
 import com.canigraduate.uchicago.models.Course;
 import com.canigraduate.uchicago.models.Enrollment;
 import com.canigraduate.uchicago.models.Term;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Map;
