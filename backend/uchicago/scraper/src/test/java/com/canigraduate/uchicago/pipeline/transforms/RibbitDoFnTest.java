@@ -14,9 +14,9 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.Optional;
 
-public class RibbitDoFnTest extends PipelineTest {
+class RibbitDoFnTest extends PipelineTest {
     @Test
-    public void processElement() throws IOException {
+    void processElement() throws IOException {
         PCollection<KV<Key, Course>> results = this.pipeline.apply(
                 Create.of(Key.builder().setCourse("MATH 15100").build(), Key.builder().setCourse("MATH 15300").build(),
                         Key.builder().setCourse("nonexistent course").build())).apply(ParDo.of(new RibbitDoFn()));

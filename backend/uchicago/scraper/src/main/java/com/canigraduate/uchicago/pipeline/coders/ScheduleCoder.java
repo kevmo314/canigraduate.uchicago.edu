@@ -2,7 +2,10 @@ package com.canigraduate.uchicago.pipeline.coders;
 
 import com.canigraduate.uchicago.models.Schedule;
 import com.google.common.collect.ImmutableSet;
-import org.apache.beam.sdk.coders.*;
+import org.apache.beam.sdk.coders.BigEndianLongCoder;
+import org.apache.beam.sdk.coders.Coder;
+import org.apache.beam.sdk.coders.CustomCoder;
+import org.apache.beam.sdk.coders.SetCoder;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,7 +26,7 @@ public class ScheduleCoder extends CustomCoder<Schedule> {
     }
 
     @Override
-    public Schedule decode(InputStream inStream) throws CoderException, IOException {
+    public Schedule decode(InputStream inStream) throws IOException {
         return Schedule.create(ImmutableSet.copyOf(BLOCK_CODER.decode(inStream)));
     }
 
@@ -33,17 +36,17 @@ public class ScheduleCoder extends CustomCoder<Schedule> {
         private BlockCoder() {
         }
 
-        public static BlockCoder of() {
+        static BlockCoder of() {
             return new BlockCoder();
         }
 
         @Override
-        public void encode(Schedule.Block value, OutputStream outStream) throws CoderException, IOException {
+        public void encode(Schedule.Block value, OutputStream outStream) throws IOException {
             BIG_ENDIAN_LONG_CODER.encode(value.toLong(), outStream);
         }
 
         @Override
-        public Schedule.Block decode(InputStream inStream) throws CoderException, IOException {
+        public Schedule.Block decode(InputStream inStream) throws IOException {
             return Schedule.Block.fromLong(BIG_ENDIAN_LONG_CODER.decode(inStream));
         }
     }

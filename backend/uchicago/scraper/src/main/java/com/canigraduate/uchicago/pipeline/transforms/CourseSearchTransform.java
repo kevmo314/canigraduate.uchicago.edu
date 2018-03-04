@@ -26,7 +26,7 @@ public class CourseSearchTransform extends PTransform<PBegin, PCollection<KV<Key
                 .apply(new CourseTransform());
     }
 
-    public static class TermTransform extends PTransform<PBegin, PCollection<KV<Key, String>>> {
+    static class TermTransform extends PTransform<PBegin, PCollection<KV<Key, String>>> {
         @Override
         public PCollection<KV<Key, String>> expand(PBegin input) {
             try {
@@ -40,7 +40,7 @@ public class CourseSearchTransform extends PTransform<PBegin, PCollection<KV<Key
         }
     }
 
-    public static class DepartmentTransform
+    static class DepartmentTransform
             extends PTransform<PCollection<KV<Key, String>>, PCollection<KV<Key, Params>>> {
         @Override
         public PCollection<KV<Key, Params>> expand(PCollection<KV<Key, String>> input) {
@@ -60,24 +60,24 @@ public class CourseSearchTransform extends PTransform<PBegin, PCollection<KV<Key
         }
     }
 
-    public static class CourseTransform extends PTransform<PCollection<KV<Key, Params>>, PCollection<KV<Key, Course>>> {
+    static class CourseTransform extends PTransform<PCollection<KV<Key, Params>>, PCollection<KV<Key, Course>>> {
         @Override
         public PCollection<KV<Key, Course>> expand(PCollection<KV<Key, Params>> input) {
             return input.apply(FlatMapElements.into(new TypeDescriptor<KV<Key, Course>>() {
-            }).via(e -> {
-                return IntStream.range(0, 25)
-                        .boxed()
-                        .flatMap(shard -> {
-                            try {
-                                return CourseSearch.getCourses(e.getValue().getTermKey(),
-                                        e.getValue().getDepartmentKey(), shard).entrySet().stream();
-                            } catch (IOException ex) {
-                                throw new RuntimeException(ex);
-                            }
-                        })
-                        .map(entry -> KV.of(e.getKey().withCourse(entry.getKey()), entry.getValue()))
-                        .collect(Collectors.toList());
-            }));
+            }).via(e -> IntStream.range(0, 25)
+                    .boxed()
+                    .flatMap(shard -> {
+                        try {
+                            return CourseSearch.getCourses(e.getValue().getTermKey(), e.getValue().getDepartmentKey(),
+                                    shard)
+                                    .entrySet()
+                                    .stream();
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    })
+                    .map(entry -> KV.of(e.getKey().withCourse(entry.getKey()), entry.getValue()))
+                    .collect(Collectors.toList())));
         }
     }
 

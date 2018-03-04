@@ -70,8 +70,9 @@ class Scanner {
             this.nextPage();
             return Optional.empty();
         }
-        if (row.selectFirst("span[id^='UC_CLSRCH_WRK_UC_CLASS_TITLE$']").text().trim().isEmpty()) {
-            // Sometimes you get an empty course...
+        if (row.selectFirst("span[id^='UC_CLSRCH_WRK_UC_CLASS_TITLE$']").text().trim().isEmpty() || row.selectFirst(
+                "div[id^='win0divUC_RSLT_NAV_WRK_HTMLAREA$']").text().trim().isEmpty()) {
+            // Sometimes you get an empty course or the descriptor is missing...
             this.nextPage();
             return Optional.empty();
         }
@@ -80,7 +81,7 @@ class Scanner {
         String name = this.selectFirstText("span[id='UC_CLS_DTL_WRK_UC_CLASS_TITLE$0']")
                 .orElseThrow(() -> new IllegalStateException("Missing course name."));
         String descriptor = this.selectFirstText("div[id='win0divUC_CLS_DTL_WRK_HTMLAREA$0']")
-                .orElseThrow(() -> new IllegalStateException("Missing course description."));
+                .orElseThrow(() -> new IllegalStateException("Missing course descriptor."));
         Matcher descriptorMatcher = DESCRIPTOR_REGEX.matcher(descriptor);
         if (!descriptorMatcher.matches()) {
             LOGGER.log(Level.WARNING, "Could not match course descriptor: " + descriptor);
@@ -104,7 +105,9 @@ class Scanner {
                 LOGGER.warning("Secondary component " + component + " not recognized.");
             }
             for (Element secondaryRow : table.getElementsByTag("tr")) {
-                sectionBuilder.addSecondaryActivity(this.toSecondaryActivity(secondaryRow).setType(component).build());
+                this.toSecondaryActivity(secondaryRow)
+                        .map(activity -> activity.setType(component).build())
+                        .ifPresent(sectionBuilder::addSecondaryActivity);
             }
         });
 
@@ -142,18 +145,20 @@ class Scanner {
                 .setLocation(row.selectFirst("span[id^='MTG_LOC']").text().trim());
     }
 
-    private SecondaryActivity.Builder toSecondaryActivity(Element row) {
-        Element descriptor = row.selectFirst("div[id^='win0divDISC_HTM$']");
-        if (descriptor == null) {
-            throw new IllegalStateException("Missing descriptor");
-        }
-        Matcher descriptorMatcher = SECTION_REGEX.matcher(descriptor.text().trim());
+    private Optional<SecondaryActivity.Builder> toSecondaryActivity(Element row) {
+        String descriptor = Optional.ofNullable(row.selectFirst("div[id^='win0divDISC_HTM$']"))
+                .map(element -> element.text().trim())
+                .orElseThrow(() -> new IllegalStateException("Missing descriptor."));
+        Matcher descriptorMatcher = SECTION_REGEX.matcher(descriptor);
         if (!descriptorMatcher.matches()) {
-            throw new IllegalStateException("Unmatched descriptor");
+            if (descriptor.isEmpty()) {
+                return Optional.empty();
+            }
+            throw new IllegalStateException("Unmatched descriptor: " + descriptor);
         }
         String[] tokens = row.selectFirst("div[id^='win0divUC_CLS_REL_WRK_DESCR1$445$$']").text().trim().split(" ");
         String[] enrollment = tokens[tokens.length - 1].split("/");
-        return SecondaryActivity.builder()
+        return Optional.of(SecondaryActivity.builder()
                 .setId(descriptorMatcher.group("section"))
                 .setEnrollment(Enrollment.builder()
                         .setEnrolled(Integer.parseInt(enrollment[0]))
@@ -161,7 +166,7 @@ class Scanner {
                         .build())
                 .addAllInstructors(Arrays.asList(row.selectFirst("div[id^='win0divDISC_INSTR$']").text().split(",")))
                 .setSchedule(Schedule.parse(row.selectFirst("div[id^='win0divDISC_SCHED$']").text().trim()))
-                .setLocation(row.selectFirst("div[id^='win0divDISC_ROOM$']").text().trim());
+                .setLocation(row.selectFirst("div[id^='win0divDISC_ROOM$']").text().trim()));
     }
 
     private Enrollment nextEnrollment() {

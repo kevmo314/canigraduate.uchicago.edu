@@ -4,7 +4,10 @@ import com.canigraduate.uchicago.models.Enrollment;
 import com.canigraduate.uchicago.models.PrimaryActivity;
 import com.canigraduate.uchicago.models.SecondaryActivity;
 import com.canigraduate.uchicago.models.Section;
-import org.apache.beam.sdk.coders.*;
+import org.apache.beam.sdk.coders.Coder;
+import org.apache.beam.sdk.coders.CustomCoder;
+import org.apache.beam.sdk.coders.SetCoder;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,7 +39,7 @@ public class SectionCoder extends CustomCoder<Section> {
     }
 
     @Override
-    public Section decode(InputStream inStream) throws CoderException, IOException {
+    public Section decode(InputStream inStream) throws IOException {
         return Section.builder()
                 .addAllNotes(STRING_SET_CODER.decode(inStream))
                 .setPrerequisites(STRING_OPTIONAL_CODER.decode(inStream))

@@ -1,22 +1,30 @@
 package com.canigraduate.uchicago.timeschedules;
 
 import com.canigraduate.uchicago.models.*;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import org.jsoup.nodes.Element;
 
 import java.util.*;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 class Scanner {
-    private final List<Element> cells;
+    private static final Logger LOGGER = Logger.getLogger(Scanner.class.getName());
+    private static final Pattern ID_PATTERN = Pattern.compile("([A-Z]{4})\\s/\\s(\\d{5})\\s-\\s(.+)");
+    private final Element[] cells;
     private Section section = null;
     private Course course = null;
     private int index;
 
     Scanner(List<Element> cells) {
-        this.cells = cells;
-        for (int i = 0; i < this.cells.size(); i++) {
-            if (!this.cells.get(i).hasAttr("colspan")) {
+        this.cells = cells.toArray(new Element[]{});
+        this.index = this.cells.length;
+        for (int i = 0; i < this.cells.length; i++) {
+            if (!this.cells[i].hasAttr("colspan")) {
                 this.index = i;
                 break;
             }
@@ -24,20 +32,32 @@ class Scanner {
     }
 
     public boolean hasNext() {
-        return this.index < this.cells.size();
+        return this.index < this.cells.length;
     }
 
-    public Map.Entry<String, Course> nextCourseEntry() {
+    public Optional<Map.Entry<String, Course>> nextCourseEntry() {
+        Preconditions.checkState(this.peek().parent().tagName().equals("tr"), "Parent is not a row.");
+        Preconditions.checkState(this.peek().parent().child(0).equals(this.peek()),
+                "Did not start at beginning of row.");
+        Preconditions.checkState(!this.peek().attr("colspan").equals("24"), "Not a parsable course.");
         String text = this.nextString();
-        String[] data = text.split("\\s[/-]\\s");
-        for (int i = 0; i < data.length; i++) {
-            data[i] = data[i].trim();
+        Matcher matcher = ID_PATTERN.matcher(text);
+        if (!matcher.matches()) {
+            this.skip(13);
+            if (!text.isEmpty()) {
+                LOGGER.warning("Invalid parsing: " + text);
+            }
+            return Optional.empty();
         }
-        if (data.length != 3 || data[0].length() + data[1].length() != 9) {
-            this.index--;
-            throw new IllegalStateException("Invalid parsing");
-        }
+        String department = matcher.group(1);
+        String ordinal = matcher.group(2);
+        String sectionId = matcher.group(3);
         String name = this.nextString();
+        if (name.equals("CANCELLED")) {
+            // Skip this entry.
+            this.skip(12);
+            return Optional.empty();
+        }
         String units = this.nextString();
         Activity activity = this.nextActivity();
         this.index -= 6;
@@ -45,10 +65,6 @@ class Scanner {
         this.index += 2;
         ImmutableSet<String> crosslists = this.nextCrosslists();
         this.index += 1;
-        if (name.equals("CANCELLED")) {
-            // Skip this entry.
-            return this.nextCourseEntry();
-        }
         Course.Builder courseBuilder = Course.builder().setName(name).addAllCrosslists(crosslists);
         Section.Builder sectionBuilder = Section.builder().setEnrollment(enrollment).addActivity(activity);
         while (this.hasNext()) {
@@ -61,20 +77,31 @@ class Scanner {
             } catch (IllegalStateException ex) {
                 // Ignore, try adding an activity.
             }
-            try {
-                sectionBuilder.addActivity(this.nextActivity());
-                continue;
-            } catch (IllegalStateException ex) {
-                // Looks like a course, so finalize.
+            String check = this.nextString();
+            this.index--;
+            if (check.split("\\s[/-]\\s").length == 3) {
+                break;
             }
-            break;
+            this.index += 3;
+            sectionBuilder.addActivity(this.nextActivity());
         }
-        return new AbstractMap.SimpleImmutableEntry<>(String.format("%s %s", data[0], data[1]),
-                courseBuilder.putSection(data[2], sectionBuilder.build()).build());
+        return Optional.of(new AbstractMap.SimpleImmutableEntry<>(String.format("%s %s", department, ordinal),
+                courseBuilder.putSection(sectionId, sectionBuilder.build()).build()));
+    }
+
+    private void skip(int delta) {
+        this.index += delta;
+        while (this.hasNext() && this.peek().attr("colspan").equals("24")) {
+            this.index++;
+        }
+    }
+
+    private Element peek() {
+        return this.cells[this.index];
     }
 
     private Element next() {
-        return this.cells.get(this.index++);
+        return this.cells[this.index++];
     }
 
     private String nextString() {
@@ -86,9 +113,7 @@ class Scanner {
     }
 
     private String nextNote() {
-        if (!this.cells.get(this.index).attr("colspan").equals("24")) {
-            throw new IllegalStateException("Not notes");
-        }
+        Preconditions.checkState(this.peek().attr("colspan").equals("24"));
         return this.nextString();
     }
 
@@ -112,6 +137,7 @@ class Scanner {
         ImmutableSet.Builder<String> builder = new ImmutableSortedSet.Builder<>(String::compareTo);
         String[] tokens = this.nextString().split(",");
         for (String token : tokens) {
+            token = token.trim();
             if (!token.isEmpty()) {
                 builder.add(token);
             }
@@ -120,14 +146,9 @@ class Scanner {
     }
 
     private Activity nextActivity() {
-        String check = this.nextString();
-        this.index--;
-        if (check.split("\\s[/-]\\s").length == 3) {
-            throw new IllegalStateException("Not an activity");
-        } else if (check.isEmpty()) {
-            this.index += 3;
-        }
-        String[] instructors = this.nextString().split(";");
+        List<String> instructors = Arrays.stream(this.nextString().split(";"))
+                .map(String::trim)
+                .collect(Collectors.toList());
         Schedule schedule = this.nextSchedule();
         String sectionType = this.nextString();
         String activityId = this.nextString();
@@ -136,16 +157,13 @@ class Scanner {
         String location = this.nextString().replaceAll("\\s+-", "-");
         this.index += 3;
         if (activityType.isEmpty()) {
-            return PrimaryActivity.builder()
-                    .addAllInstructors(Arrays.asList(instructors))
+            return PrimaryActivity.builder().addAllInstructors(instructors)
                     .setSchedule(schedule)
                     .setType(sectionType)
                     .setLocation(location)
                     .build();
         } else {
-            return SecondaryActivity.builder()
-                    .setId(activityId)
-                    .addAllInstructors(Arrays.asList(instructors))
+            return SecondaryActivity.builder().setId(activityId).addAllInstructors(instructors)
                     .setSchedule(schedule)
                     .setType(activityType)
                     .setLocation(location)

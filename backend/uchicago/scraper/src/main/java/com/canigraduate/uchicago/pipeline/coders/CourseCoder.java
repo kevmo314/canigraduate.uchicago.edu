@@ -36,7 +36,7 @@ public class CourseCoder extends CustomCoder<Course> {
     }
 
     @Override
-    public Course decode(InputStream inStream) throws CoderException, IOException {
+    public Course decode(InputStream inStream) throws IOException {
         return Course.builder()
                 .setName(STRING_CODER.decode(inStream))
                 .setDescription(STRING_OPTIONAL_CODER.decode(inStream))

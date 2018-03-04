@@ -2,7 +2,6 @@ package com.canigraduate.uchicago.pipeline.coders;
 
 import com.canigraduate.uchicago.models.Enrollment;
 import org.apache.beam.sdk.coders.Coder;
-import org.apache.beam.sdk.coders.CoderException;
 import org.apache.beam.sdk.coders.CustomCoder;
 import org.apache.beam.sdk.coders.VarIntCoder;
 
@@ -19,13 +18,13 @@ public class EnrollmentCoder extends CustomCoder<Enrollment> {
     }
 
     @Override
-    public void encode(Enrollment value, OutputStream outStream) throws CoderException, IOException {
+    public void encode(Enrollment value, OutputStream outStream) throws IOException {
         OPTIONAL_INT_CODER.encode(value.getEnrolled(), outStream);
         OPTIONAL_INT_CODER.encode(value.getMaximum(), outStream);
     }
 
     @Override
-    public Enrollment decode(InputStream inStream) throws CoderException, IOException {
+    public Enrollment decode(InputStream inStream) throws IOException {
         return Enrollment.builder()
                 .setEnrolled(OPTIONAL_INT_CODER.decode(inStream))
                 .setMaximum(OPTIONAL_INT_CODER.decode(inStream))

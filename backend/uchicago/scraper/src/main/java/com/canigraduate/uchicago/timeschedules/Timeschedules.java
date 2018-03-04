@@ -58,8 +58,14 @@ public class Timeschedules {
         for (Element table : doc.getElementsByTag("tbody")) {
             Scanner scanner = new Scanner(table.getElementsByTag("td"));
             while (scanner.hasNext()) {
-                Map.Entry<String, Course> entry = scanner.nextCourseEntry();
-                courses.put(entry.getKey(), Course.create(courses.get(entry.getKey()), entry.getValue()));
+                try {
+                    scanner.nextCourseEntry()
+                            .ifPresent(entry -> courses.put(entry.getKey(),
+                                    Course.create(courses.get(entry.getKey()), entry.getValue())));
+                } catch (Exception ex) {
+                    System.out.println(url);
+                    throw ex;
+                }
             }
         }
         return ImmutableMap.copyOf(courses);

@@ -8,9 +8,9 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CollegeCatalogTest {
+class CollegeCatalogTest {
     @Test
-    public void getDepartments() throws IOException {
+    void getDepartments() throws IOException {
         Map<String, String> departments = CollegeCatalog.getDepartments();
         assertThat(departments).isNotEmpty();
         assertThat(departments).containsEntry("Anthropology",
@@ -18,7 +18,7 @@ public class CollegeCatalogTest {
     }
 
     @Test
-    public void getCoursesAndSequences() throws IOException {
+    void getCoursesAndSequences() throws IOException {
         Map<String, Course> courses = CollegeCatalog.getCoursesAndSequences(
                 "http://collegecatalog.uchicago.edu/thecollege/anthropology/");
         assertThat(courses).isNotEmpty();
@@ -30,7 +30,7 @@ public class CollegeCatalogTest {
     }
 
     @Test
-    public void getCoursesAndSequences_sequenceParenting() throws IOException {
+    void getCoursesAndSequences_sequenceParenting() throws IOException {
         Map<String, Course> courses = CollegeCatalog.getCoursesAndSequences(
                 "http://collegecatalog.uchicago.edu/thecollege/mathematics/");
         assertThat(courses).isNotEmpty().containsKeys("MATH 15200", "MATH 24400", "MATH 15100-15200-15300");

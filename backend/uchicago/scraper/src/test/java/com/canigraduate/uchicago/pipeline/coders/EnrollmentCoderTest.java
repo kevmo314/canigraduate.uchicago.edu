@@ -11,9 +11,9 @@ import java.io.InputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class EnrollmentCoderTest {
+class EnrollmentCoderTest {
     @Test
-    public void test() throws IOException {
+    void test() throws IOException {
         Coder<Enrollment> coder = EnrollmentCoder.of();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Enrollment enrollment = Enrollment.builder().setMaximum(4).setEnrolled(1).build();
@@ -23,7 +23,7 @@ public class EnrollmentCoderTest {
     }
 
     @Test
-    public void test_withMissingMaximum() throws IOException {
+    void test_withMissingMaximum() throws IOException {
         Coder<Enrollment> coder = EnrollmentCoder.of();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Enrollment enrollment = Enrollment.builder().setEnrolled(1).build();
@@ -34,7 +34,7 @@ public class EnrollmentCoderTest {
 
 
     @Test
-    public void test_withMissingEnrolled() throws IOException {
+    void test_withMissingEnrolled() throws IOException {
         Coder<Enrollment> coder = EnrollmentCoder.of();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Enrollment enrollment = Enrollment.builder().setMaximum(10).build();

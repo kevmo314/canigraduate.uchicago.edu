@@ -11,10 +11,10 @@ import java.io.InputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ScheduleCoderTest {
+class ScheduleCoderTest {
 
     @Test
-    public void test() throws IOException {
+    void test() throws IOException {
         Coder<Schedule> coder = ScheduleCoder.of();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Schedule schedule = Schedule.parse("MWF10:30AM-11:30AM");

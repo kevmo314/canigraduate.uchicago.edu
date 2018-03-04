@@ -5,3 +5,7 @@ canigraduate.*
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Ignore IDE files
+.vscode
+.idea

@@ -22,7 +22,7 @@ public class BrowsingSession {
             try {
                 Connection.Response response = connection.cookies(this.cookies)
                         .userAgent("Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)")
-                        .timeout(30 * 1000)
+                        .timeout(30 * 1000).maxBodySize(0)
                         .execute();
                 if (response.statusCode() != 200) {
                     throw new IOException("HTTP response status: " + response.statusCode());

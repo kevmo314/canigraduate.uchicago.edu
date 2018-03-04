@@ -29,7 +29,7 @@ public class TimeschedulesTransform extends PTransform<PBegin, PCollection<KV<Ke
                 .apply(new CourseTransform());
     }
 
-    public static class TermTransform extends PTransform<PBegin, PCollection<KV<Key, String>>> {
+    static class TermTransform extends PTransform<PBegin, PCollection<KV<Key, String>>> {
         @Override
         public PCollection<KV<Key, String>> expand(PBegin input) {
             try {
@@ -43,7 +43,7 @@ public class TimeschedulesTransform extends PTransform<PBegin, PCollection<KV<Ke
         }
     }
 
-    public static class DepartmentTransform
+    static class DepartmentTransform
             extends PTransform<PCollection<KV<Key, String>>, PCollection<KV<Key, String>>> {
         @Override
         public PCollection<KV<Key, String>> expand(PCollection<KV<Key, String>> input) {
@@ -61,7 +61,7 @@ public class TimeschedulesTransform extends PTransform<PBegin, PCollection<KV<Ke
         }
     }
 
-    public static class CourseTransform extends PTransform<PCollection<KV<Key, String>>, PCollection<KV<Key, Course>>> {
+    static class CourseTransform extends PTransform<PCollection<KV<Key, String>>, PCollection<KV<Key, Course>>> {
         @Override
         public PCollection<KV<Key, Course>> expand(PCollection<KV<Key, String>> input) {
             return input.apply(FlatMapElements.into(OUTPUT).via(e -> {

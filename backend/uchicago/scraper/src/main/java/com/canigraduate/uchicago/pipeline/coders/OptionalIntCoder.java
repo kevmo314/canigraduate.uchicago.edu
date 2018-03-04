@@ -3,7 +3,6 @@ package com.canigraduate.uchicago.pipeline.coders;
 import com.google.common.collect.ImmutableList;
 import org.apache.beam.sdk.coders.AtomicCoder;
 import org.apache.beam.sdk.coders.Coder;
-import org.apache.beam.sdk.coders.CoderException;
 import org.apache.beam.sdk.coders.NullableCoder;
 
 import java.io.IOException;
@@ -24,12 +23,12 @@ public class OptionalIntCoder extends Coder<OptionalInt> {
     }
 
     @Override
-    public void encode(OptionalInt value, OutputStream outStream) throws CoderException, IOException {
+    public void encode(OptionalInt value, OutputStream outStream) throws IOException {
         this.nullableCoder.encode(value.isPresent() ? value.getAsInt() : null, outStream);
     }
 
     @Override
-    public OptionalInt decode(InputStream inStream) throws CoderException, IOException {
+    public OptionalInt decode(InputStream inStream) throws IOException {
         Integer value = this.nullableCoder.decode(inStream);
         return value == null ? OptionalInt.empty() : OptionalInt.of(value);
     }

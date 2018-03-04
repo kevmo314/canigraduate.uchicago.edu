@@ -10,6 +10,7 @@ import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,12 +28,17 @@ public abstract class Schedule {
             {"sat"}};
 
     public static Schedule parse(String s) {
-        if (s.contains("ARR") || s.contains("TBA") || s.isEmpty()) {
+        if (s.contains("&") || s.contains(",") || s.contains(";")) {
+            return Arrays.stream(s.split("[&,;]"))
+                    .map(Schedule::parse)
+                    .reduce(Schedule.create(ImmutableSet.of()), Schedule::create);
+        }
+        if (s.contains("ARR") || s.contains("TBA") || s.contains(": -") || s.isEmpty()) {
             return new AutoValue_Schedule(ImmutableSet.of());
         }
         Matcher tokens = PATTERN.matcher(s.replaceAll("\\s", ""));
         if (!tokens.matches()) {
-            throw new IllegalArgumentException("Regex didn't match " + s);
+            throw new IllegalArgumentException("Regex didn't match: " + s);
         }
         String days = tokens.group(1);
         if (days.equals("M-F")) {
@@ -65,6 +71,11 @@ public abstract class Schedule {
             }
         }
         return dfs(days, from, to, offset + 1, index);
+    }
+
+    private static Schedule create(Schedule a, Schedule b) {
+        return new AutoValue_Schedule(
+                new ImmutableSet.Builder<Schedule.Block>().addAll(a.getBlocks()).addAll(b.getBlocks()).build());
     }
 
     public static Schedule create(ImmutableSet<Block> newBlocks) {
@@ -103,7 +114,7 @@ public abstract class Schedule {
             return ((this.getDay().getValue() * SECONDS_PER_DAY) + from) * SECONDS_PER_DAY + to;
         }
 
-        public int compareTo(Block that) {
+        int compareTo(Block that) {
             return ComparisonChain.start()
                     .compare(this.getDay(), that.getDay())
                     .compare(this.getFrom(), that.getFrom())

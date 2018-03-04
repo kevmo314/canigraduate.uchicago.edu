@@ -1,7 +1,7 @@
 package com.canigraduate.uchicago.models;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -13,8 +13,8 @@ import java.util.stream.Stream;
 import static java.time.DayOfWeek.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ScheduleTest {
-    static Stream<Arguments> data() {
+class ScheduleTest {
+    private static Stream<Arguments> data() {
         return Stream.of(Arguments.of("ARRARR", Schedule.create(ImmutableSet.of())),
                 Arguments.of("MWF12:30PM-1:20PM", expect("12:30:00", "13:20:00", MONDAY, WEDNESDAY, FRIDAY)),
                 Arguments.of("TTh10:30AM-11:50AM", expect("10:30:00", "11:50:00", TUESDAY, THURSDAY)),
@@ -33,7 +33,7 @@ public class ScheduleTest {
     }
 
     private static Schedule expect(String from, String to, DayOfWeek... days) {
-        ImmutableSet.Builder<Schedule.Block> builder = new ImmutableSortedSet.Builder<>(Schedule.Block::compareTo);
+        ImmutableSet.Builder<Schedule.Block> builder = new ImmutableSet.Builder<>();
         for (DayOfWeek day : days) {
             builder.add(Schedule.Block.create(day, LocalTime.parse(from), LocalTime.parse(to)));
         }
@@ -42,7 +42,19 @@ public class ScheduleTest {
 
     @ParameterizedTest
     @MethodSource("data")
-    public void parse(String input, Schedule expected) {
+    void parse(String input, Schedule expected) {
         assertThat(Schedule.parse(input)).isEqualTo(expected);
+    }
+
+    @Test
+    void parse_multiple() {
+        assertThat(Schedule.parse("Mon Wed Fri : 01:30 PM-05:30 PM & Tue Thu : 01:00 PM-03:00 PM")).isEqualTo(
+                Schedule.create(new ImmutableSet.Builder<Schedule.Block>().add(
+                        Schedule.Block.create(MONDAY, LocalTime.parse("13:30:00"), LocalTime.parse("17:30:00")))
+                        .add(Schedule.Block.create(WEDNESDAY, LocalTime.parse("13:30:00"), LocalTime.parse("17:30:00")))
+                        .add(Schedule.Block.create(FRIDAY, LocalTime.parse("13:30:00"), LocalTime.parse("17:30:00")))
+                        .add(Schedule.Block.create(TUESDAY, LocalTime.parse("13:00:00"), LocalTime.parse("15:00:00")))
+                        .add(Schedule.Block.create(THURSDAY, LocalTime.parse("13:00:00"), LocalTime.parse("15:00:00")))
+                        .build()));
     }
 }

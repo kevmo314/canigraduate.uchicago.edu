@@ -2,7 +2,10 @@ package com.canigraduate.uchicago.pipeline.coders;
 
 import com.canigraduate.uchicago.models.PrimaryActivity;
 import com.canigraduate.uchicago.models.Schedule;
-import org.apache.beam.sdk.coders.*;
+import org.apache.beam.sdk.coders.Coder;
+import org.apache.beam.sdk.coders.CustomCoder;
+import org.apache.beam.sdk.coders.SetCoder;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,7 +32,7 @@ public class PrimaryActivityCoder extends CustomCoder<PrimaryActivity> {
     }
 
     @Override
-    public PrimaryActivity decode(InputStream inStream) throws CoderException, IOException {
+    public PrimaryActivity decode(InputStream inStream) throws IOException {
         return PrimaryActivity.builder()
                 .addAllInstructors(STRING_SET_CODER.decode(inStream))
                 .setSchedule(SCHEDULE_CODER.decode(inStream))

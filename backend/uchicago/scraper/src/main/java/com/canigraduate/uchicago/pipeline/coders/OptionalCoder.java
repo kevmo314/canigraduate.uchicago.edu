@@ -2,7 +2,6 @@ package com.canigraduate.uchicago.pipeline.coders;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.beam.sdk.coders.Coder;
-import org.apache.beam.sdk.coders.CoderException;
 import org.apache.beam.sdk.coders.NullableCoder;
 
 import java.io.IOException;
@@ -26,12 +25,12 @@ public class OptionalCoder<T> extends Coder<Optional<T>> {
     }
 
     @Override
-    public void encode(Optional<T> value, OutputStream outStream) throws CoderException, IOException {
+    public void encode(Optional<T> value, OutputStream outStream) throws IOException {
         this.nullableCoder.encode(value.orElse(null), outStream);
     }
 
     @Override
-    public Optional<T> decode(InputStream inStream) throws CoderException, IOException {
+    public Optional<T> decode(InputStream inStream) throws IOException {
         return Optional.ofNullable(this.nullableCoder.decode(inStream));
     }
 

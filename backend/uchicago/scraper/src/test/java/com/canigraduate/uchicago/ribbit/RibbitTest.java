@@ -8,10 +8,10 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class RibbitTest {
+class RibbitTest {
 
     @Test
-    public void getRecordForCourse() throws IOException {
+    void getRecordForCourse() throws IOException {
         Optional<Course> record = Ribbit.getRecordForCourse("MATH 19900");
         assertThat(record).isPresent();
         assertThat(record).map(Course::getName).contains("Introduction to Analysis and Linear Algebra");
@@ -19,7 +19,7 @@ public class RibbitTest {
     }
 
     @Test
-    public void getNonexistent() throws IOException {
+    void getNonexistent() throws IOException {
         assertThat(Ribbit.getRecordForCourse("MATH SLDJF")).isNotPresent();
     }
 }

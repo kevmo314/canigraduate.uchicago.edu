@@ -3,7 +3,6 @@ package com.canigraduate.uchicago.pipeline.coders;
 import com.canigraduate.uchicago.models.Term;
 import com.canigraduate.uchicago.pipeline.models.Key;
 import org.apache.beam.sdk.coders.Coder;
-import org.apache.beam.sdk.coders.CoderException;
 import org.apache.beam.sdk.coders.CustomCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 
@@ -21,14 +20,14 @@ public class KeyCoder extends CustomCoder<Key> {
     }
 
     @Override
-    public void encode(Key value, OutputStream outStream) throws CoderException, IOException {
+    public void encode(Key value, OutputStream outStream) throws IOException {
         TERM_OPTIONAL_CODER.encode(value.getTerm(), outStream);
         STRING_OPTIONAL_CODER.encode(value.getDepartment(), outStream);
         STRING_OPTIONAL_CODER.encode(value.getCourse(), outStream);
     }
 
     @Override
-    public Key decode(InputStream inStream) throws CoderException, IOException {
+    public Key decode(InputStream inStream) throws IOException {
         return Key.builder()
                 .setTerm(TERM_OPTIONAL_CODER.decode(inStream))
                 .setDepartment(STRING_OPTIONAL_CODER.decode(inStream))

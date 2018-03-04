@@ -3,7 +3,10 @@ package com.canigraduate.uchicago.pipeline.coders;
 import com.canigraduate.uchicago.models.Enrollment;
 import com.canigraduate.uchicago.models.Schedule;
 import com.canigraduate.uchicago.models.SecondaryActivity;
-import org.apache.beam.sdk.coders.*;
+import org.apache.beam.sdk.coders.Coder;
+import org.apache.beam.sdk.coders.CustomCoder;
+import org.apache.beam.sdk.coders.SetCoder;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,7 +36,7 @@ public class SecondaryActivityCoder extends CustomCoder<SecondaryActivity> {
     }
 
     @Override
-    public SecondaryActivity decode(InputStream inStream) throws CoderException, IOException {
+    public SecondaryActivity decode(InputStream inStream) throws IOException {
         return SecondaryActivity.builder()
                 .setId(STRING_CODER.decode(inStream))
                 .addAllInstructors(STRING_SET_CODER.decode(inStream))

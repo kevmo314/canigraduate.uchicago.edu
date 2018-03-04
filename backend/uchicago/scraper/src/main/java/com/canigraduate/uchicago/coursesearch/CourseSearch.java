@@ -39,9 +39,14 @@ public class CourseSearch {
         Scanner scanner = new Scanner(new Browser().setId(termKey), department).setShard(shard);
         Map<String, Course> courses = new HashMap<>();
         while (scanner.hasNext()) {
-            scanner.nextCourseEntry()
-                    .ifPresent(entry -> courses.put(entry.getKey(),
-                            Course.create(courses.get(entry.getKey()), entry.getValue())));
+            try {
+                scanner.nextCourseEntry()
+                        .ifPresent(entry -> courses.put(entry.getKey(),
+                                Course.create(courses.get(entry.getKey()), entry.getValue())));
+            } catch (Exception ex) {
+                System.err.println("Error when parsing " + termKey + " " + department + " " + shard);
+                throw ex;
+            }
         }
         return ImmutableMap.copyOf(courses);
     }

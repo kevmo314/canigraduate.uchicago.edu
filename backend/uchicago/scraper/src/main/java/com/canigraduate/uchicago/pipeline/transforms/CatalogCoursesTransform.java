@@ -21,7 +21,7 @@ public class CatalogCoursesTransform extends PTransform<PBegin, PCollection<KV<K
         return input.getPipeline().apply(new DepartmentTransform()).apply(new CourseTransform());
     }
 
-    public static class DepartmentTransform extends PTransform<PBegin, PCollection<KV<Key, String>>> {
+    static class DepartmentTransform extends PTransform<PBegin, PCollection<KV<Key, String>>> {
         @Override
         public PCollection<KV<Key, String>> expand(PBegin input) {
             try {
@@ -35,7 +35,7 @@ public class CatalogCoursesTransform extends PTransform<PBegin, PCollection<KV<K
         }
     }
 
-    public static class CourseTransform extends PTransform<PCollection<KV<Key, String>>, PCollection<KV<Key, Course>>> {
+    static class CourseTransform extends PTransform<PCollection<KV<Key, String>>, PCollection<KV<Key, Course>>> {
         @Override
         public PCollection<KV<Key, Course>> expand(PCollection<KV<Key, String>> input) {
             return input.apply(FlatMapElements.into(new TypeDescriptor<KV<Key, Course>>() {

@@ -2,7 +2,6 @@ package com.canigraduate.uchicago.pipeline.coders;
 
 import com.canigraduate.uchicago.models.Grade;
 import org.apache.beam.sdk.coders.Coder;
-import org.apache.beam.sdk.coders.CoderException;
 import org.apache.beam.sdk.coders.CustomCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 
@@ -23,7 +22,7 @@ public class GradeCoder extends CustomCoder<Grade> {
     }
 
     @Override
-    public Grade decode(InputStream inStream) throws CoderException, IOException {
+    public Grade decode(InputStream inStream) throws IOException {
         return Grade.create(STRING_CODER.decode(inStream));
     }
 }

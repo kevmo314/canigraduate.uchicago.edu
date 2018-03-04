@@ -11,9 +11,9 @@ import java.io.InputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class GradeCoderTest {
+class GradeCoderTest {
     @Test
-    public void test() throws IOException {
+    void test() throws IOException {
         Coder<Grade> coder = GradeCoder.of();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Grade grade = Grade.create("grade");

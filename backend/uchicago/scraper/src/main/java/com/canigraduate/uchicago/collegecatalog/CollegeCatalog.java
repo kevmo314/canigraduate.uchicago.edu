@@ -4,7 +4,6 @@ import com.canigraduate.uchicago.BrowsingSession;
 import com.canigraduate.uchicago.models.Course;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -13,6 +12,7 @@ import java.text.Normalizer;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class CollegeCatalog {
     private static final String BASE_URL = "http://collegecatalog.uchicago.edu";
@@ -67,8 +67,10 @@ public class CollegeCatalog {
                 previousCourse = course.map(CourseKey::getCourse);
             }
         }
-        return ImmutableMap.copyOf(Iterables.transform(courseMap.entrySet(),
-                entry -> new AbstractMap.SimpleEntry<>(entry.getKey(), entry.getValue().build())));
+        return ImmutableMap.copyOf(courseMap.entrySet()
+                .stream()
+                .map(entry -> new AbstractMap.SimpleEntry<>(entry.getKey(), entry.getValue().build()))
+                .collect(Collectors.toList()));
     }
 
     @AutoValue

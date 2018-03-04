@@ -13,9 +13,9 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CourseCoderTest {
+class CourseCoderTest {
     @Test
-    public void test() throws IOException {
+    void test() throws IOException {
         Map<String, Course> courses = Timeschedules.getCourses(
                 "http://timeschedules.uchicago.edu/view.php?dept=PHYS&term=81");
         assertThat(courses).containsKey("PHYS 13300");
