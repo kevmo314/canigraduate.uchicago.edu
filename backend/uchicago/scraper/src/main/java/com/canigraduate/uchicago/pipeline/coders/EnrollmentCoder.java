@@ -30,4 +30,9 @@ public class EnrollmentCoder extends CustomCoder<Enrollment> {
                 .setMaximum(OPTIONAL_INT_CODER.decode(inStream))
                 .build();
     }
+
+    @Override
+    public void verifyDeterministic() throws NonDeterministicException {
+        verifyDeterministic(this, "Value coder must be deterministic", OPTIONAL_INT_CODER);
+    }
 }

@@ -34,4 +34,10 @@ public class KeyCoder extends CustomCoder<Key> {
                 .setCourse(STRING_OPTIONAL_CODER.decode(inStream))
                 .build();
     }
+
+    @Override
+    public void verifyDeterministic() throws NonDeterministicException {
+        verifyDeterministic(this, "Value coder must be deterministic", TERM_OPTIONAL_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_OPTIONAL_CODER);
+    }
 }

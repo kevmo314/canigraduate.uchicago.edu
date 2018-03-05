@@ -9,6 +9,7 @@ name = "pypi"
 
 setuptools = "*"
 psutil = "*"
+pytest = "*"
 
 
 [packages]
@@ -17,5 +18,6 @@ psutil = "*"
 bitarray = "*"
 lxml = "*"
 requests = "*"
-firebase-admin = "*"
 pyspark = "*"
+firebase-admin = "*"
+google-cloud-firestore = "*"

@@ -40,8 +40,7 @@ public class CourseSearchTransform extends PTransform<PBegin, PCollection<KV<Key
         }
     }
 
-    static class DepartmentTransform
-            extends PTransform<PCollection<KV<Key, String>>, PCollection<KV<Key, Params>>> {
+    static class DepartmentTransform extends PTransform<PCollection<KV<Key, String>>, PCollection<KV<Key, Params>>> {
         @Override
         public PCollection<KV<Key, Params>> expand(PCollection<KV<Key, String>> input) {
             return input.apply(FlatMapElements.into(new TypeDescriptor<KV<Key, Params>>() {

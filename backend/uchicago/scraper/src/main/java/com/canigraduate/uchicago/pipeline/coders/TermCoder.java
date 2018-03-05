@@ -25,4 +25,9 @@ public class TermCoder extends CustomCoder<Term> {
     public Term decode(InputStream inStream) throws IOException {
         return Term.create(STRING_CODER.decode(inStream));
     }
+
+    @Override
+    public void verifyDeterministic() throws NonDeterministicException {
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_CODER);
+    }
 }

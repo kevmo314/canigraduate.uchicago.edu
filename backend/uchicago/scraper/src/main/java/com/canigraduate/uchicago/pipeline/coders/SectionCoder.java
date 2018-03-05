@@ -48,4 +48,14 @@ public class SectionCoder extends CustomCoder<Section> {
                 .addAllSecondaryActivities(SECONDARY_ACTIVITY_SET_CODER.decode(inStream))
                 .build();
     }
+
+    @Override
+    public void verifyDeterministic() throws NonDeterministicException {
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_SET_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_OPTIONAL_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", ENROLLMENT_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", PRIMARY_ACTIVITY_SET_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", SECONDARY_ACTIVITY_SET_CODER);
+    }
 }

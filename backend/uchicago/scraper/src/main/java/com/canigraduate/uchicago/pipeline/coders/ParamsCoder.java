@@ -26,4 +26,9 @@ public class ParamsCoder extends CustomCoder<CourseSearchTransform.Params> {
     public CourseSearchTransform.Params decode(InputStream inStream) throws IOException {
         return CourseSearchTransform.Params.create(STRING_CODER.decode(inStream), STRING_CODER.decode(inStream));
     }
+
+    @Override
+    public void verifyDeterministic() throws NonDeterministicException {
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_CODER);
+    }
 }

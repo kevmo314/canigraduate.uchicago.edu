@@ -34,4 +34,9 @@ def get_department_urls(id):
 
 def parse_department(uri):
     id, department, i = uri
-    return list(CourseSearch(id).courses(department, i).items())
+    for i in range(3):
+        try:
+            return list(CourseSearch(id).courses(department, i).items())
+        except requests.exceptions.ConnectionError:
+            pass
+    raise Exception('Failed to parse ' + str(uri))

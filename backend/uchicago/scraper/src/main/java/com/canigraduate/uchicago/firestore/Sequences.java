@@ -34,9 +34,8 @@ public class Sequences {
         return root.document(course).get(transaction).map(Document::getFields).map(CourseDeserializer::toMapValue);
     }
 
-    public JsonObject set(Course course) {
+    public JsonObject set(String id, Course course) {
         return FirestoreService.commit(ImmutableList.of(new Write().setUpdate(
-                new Document().setFields(CourseSerializer.toMapValue(course))
-                        .setName("sequences/" + course.getName()))));
+                new Document().setFields(CourseSerializer.toMapValue(course)).setName("sequences/" + id))));
     }
 }

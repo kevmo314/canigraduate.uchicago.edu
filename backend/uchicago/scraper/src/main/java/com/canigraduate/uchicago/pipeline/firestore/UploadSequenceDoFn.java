@@ -6,6 +6,7 @@ import com.canigraduate.uchicago.pipeline.models.Key;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 
+import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
@@ -16,6 +17,8 @@ public class UploadSequenceDoFn extends DoFn<KV<Key, Course>, Void> {
 
     @ProcessElement
     public void processElement(ProcessContext c) {
-        new Sequences().set(c.element().getValue());
+        new Sequences().set(Objects.requireNonNull(c.element().getKey())
+                .getCourse()
+                .orElseThrow(() -> new IllegalStateException("Missing sequence identifier.")), c.element().getValue());
     }
 }

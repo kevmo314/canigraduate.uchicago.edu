@@ -1,21 +1,20 @@
 package com.canigraduate.uchicago.models;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableMap;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @AutoValue
 public abstract class Term implements Comparable<Term> {
     public static final Term MINIMUM_TERM = Term.create("Autumn 2002");
 
-    private static final Map<String, Integer> PERIOD_MAP = new HashMap<String, Integer>() {{
-        this.put("Winter", 0);
-        this.put("Spring", 1);
-        this.put("Summer", 2);
-        this.put("Autumn", 3);
-    }};
+    private static final Map<String, Integer> PERIOD_MAP = new ImmutableMap.Builder<String, Integer>().put("Winter", 0)
+            .put("Spring", 1)
+            .put("Summer", 2)
+            .put("Autumn", 3)
+            .build();
 
     public static Term create(String newTerm) {
         return new AutoValue_Term(newTerm);
@@ -39,5 +38,9 @@ public abstract class Term implements Comparable<Term> {
     @Override
     public int compareTo(@NotNull Term that) {
         return this.hashCode() - that.hashCode();
+    }
+
+    public int getOrdinal() {
+        return PERIOD_MAP.get(getPeriod()) + getYear() * PERIOD_MAP.size();
     }
 }

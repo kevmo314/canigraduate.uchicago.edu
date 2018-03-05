@@ -50,4 +50,9 @@ public class ScheduleCoder extends CustomCoder<Schedule> {
             return Schedule.Block.fromLong(BIG_ENDIAN_LONG_CODER.decode(inStream));
         }
     }
+
+    @Override
+    public void verifyDeterministic() throws NonDeterministicException {
+        verifyDeterministic(this, "Value coder must be deterministic", BLOCK_CODER);
+    }
 }

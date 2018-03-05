@@ -20,7 +20,7 @@ class TestTimeschedules(unittest.TestCase):
 
     def test_get_department_urls(self):
         departments = list(timeschedules.get_department_urls('27'))
-        self.assertEqual(len(departments), 115)
+        self.assertEqual(len(departments), 139)
         self.assertEqual(list(sorted(departments))[0][0], 'ANCC')
         self.assertEqual(
             list(sorted(departments))[0][1],

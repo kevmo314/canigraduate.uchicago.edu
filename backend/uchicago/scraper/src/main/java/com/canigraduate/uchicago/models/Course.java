@@ -67,6 +67,12 @@ public abstract class Course {
      */
     public abstract boolean isLeaf();
 
+    public Course withPriority(int priority) {
+        return this.toBuilder().setPriority(priority).build();
+    }
+
+    abstract Builder toBuilder();
+
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setName(String name);

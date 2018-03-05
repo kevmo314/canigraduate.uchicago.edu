@@ -40,4 +40,12 @@ public class PrimaryActivityCoder extends CustomCoder<PrimaryActivity> {
                 .setLocation(STRING_CODER.decode(inStream))
                 .build();
     }
+
+    @Override
+    public void verifyDeterministic() throws NonDeterministicException {
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", SCHEDULE_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_SET_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_OPTIONAL_CODER);
+    }
 }

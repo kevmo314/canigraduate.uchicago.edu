@@ -2,12 +2,9 @@ package com.canigraduate.uchicago.firestore;
 
 import com.canigraduate.uchicago.firestore.models.Document;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
@@ -57,11 +54,7 @@ public class DocumentReference {
             if (transaction != null) {
                 url += "?transaction=" + URLEncoder.encode(transaction, "UTF-8");
             }
-            HttpGet request = new HttpGet(url);
-            request.addHeader(FirestoreService.getAuthorizationHeader());
-            JsonObject response = new JsonParser().parse(
-                    new InputStreamReader(new DefaultHttpClient().execute(request).getEntity().getContent()))
-                    .getAsJsonObject();
+            JsonObject response = FirestoreService.execute(new HttpGet(url));
             if (response.has("error") && response.getAsJsonObject("error").get("code").getAsInt() == 404) {
                 return Optional.empty();
             }

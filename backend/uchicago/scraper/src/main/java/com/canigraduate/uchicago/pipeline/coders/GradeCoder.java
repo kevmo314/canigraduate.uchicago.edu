@@ -25,4 +25,9 @@ public class GradeCoder extends CustomCoder<Grade> {
     public Grade decode(InputStream inStream) throws IOException {
         return Grade.create(STRING_CODER.decode(inStream));
     }
+
+    @Override
+    public void verifyDeterministic() throws NonDeterministicException {
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_CODER);
+    }
 }

@@ -46,4 +46,13 @@ public class SecondaryActivityCoder extends CustomCoder<SecondaryActivity> {
                 .setEnrollment(ENROLLMENT_CODER.decode(inStream))
                 .build();
     }
+
+    @Override
+    public void verifyDeterministic() throws NonDeterministicException {
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", SCHEDULE_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_SET_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_OPTIONAL_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", ENROLLMENT_CODER);
+    }
 }

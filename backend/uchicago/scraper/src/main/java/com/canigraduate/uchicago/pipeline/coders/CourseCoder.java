@@ -47,4 +47,14 @@ public class CourseCoder extends CustomCoder<Course> {
                 .addAllCrosslists(STRING_SET_CODER.decode(inStream))
                 .build();
     }
+
+    @Override
+    public void verifyDeterministic() throws NonDeterministicException {
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_SET_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_OPTIONAL_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", INT_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", SECTION_CODER);
+        verifyDeterministic(this, "Value coder must be deterministic", STRING_SECTION_MAP_CODER);
+    }
 }

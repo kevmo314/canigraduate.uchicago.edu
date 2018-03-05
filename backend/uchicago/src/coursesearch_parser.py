@@ -52,6 +52,7 @@ class CourseSearch(object):
             'UC_CLSRCH_WRK2_STRM': self.coursesearch_id
         }, **data}
         self.counter += 1
+        print(data)
         return self.parse(
             self.session.post(
                 COURSE_SEARCH_URL, data=data, timeout=30, **kwargs))

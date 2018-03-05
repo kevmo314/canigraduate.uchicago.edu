@@ -1,22 +1,25 @@
 package com.canigraduate.uchicago.firestore;
 
+import com.canigraduate.uchicago.ServiceAccountCredentials;
 import com.canigraduate.uchicago.firestore.models.Document;
 import com.canigraduate.uchicago.firestore.models.Write;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.apache.http.Header;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicHeader;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
@@ -24,21 +27,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FirestoreService {
-    private static final GoogleCredentials credentials = getCredentials();
+    private static final GoogleCredentials credentials = ServiceAccountCredentials.getCredentials(
+            ImmutableList.of("https://www.googleapis.com/auth/datastore"));
     private static final String FIRESTORE_URL = "https://firestore.googleapis.com/v1beta1/";
     private static DocumentReference UCHICAGO = new CollectionReference(null, "institutions").document("uchicago");
 
-    private static GoogleCredentials getCredentials() {
-        try {
-            GoogleCredentials credentials = GoogleCredentials.fromStream(
-                    FirestoreService.class.getResourceAsStream("service_account_key.json"))
-                    .createScoped(ImmutableList.of("https://www.googleapis.com/auth/datastore"));
-            credentials.refresh();
-            return credentials;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     public static String getBasePath() {
         return "projects/canigraduate-43286/databases/(default)/documents";
@@ -67,13 +60,44 @@ public class FirestoreService {
         UCHICAGO = ref;
     }
 
+    static JsonObject execute(HttpUriRequest request) {
+        return execute(request, true);
+    }
+
+    private static JsonObject execute(HttpUriRequest request, boolean retry) {
+        request.addHeader("Authorization", "Bearer " + credentials.getAccessToken().getTokenValue());
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+        try {
+            CloseableHttpResponse response = httpclient.execute(request);
+            HttpEntity entity = response.getEntity();
+            Reader in = new InputStreamReader(entity.getContent());
+            JsonParser parser = new JsonParser();
+            JsonObject obj = parser.parse(in).getAsJsonObject();
+            EntityUtils.consume(entity);
+            in.close();
+            response.close();
+            if (obj.has("error")) {
+                JsonObject err = obj.getAsJsonObject("error");
+                if (err.get("code").getAsInt() == 401 && err.get("status").getAsString().equals("UNAUTHENTICATED")) {
+                    credentials.refresh();
+                    return execute(request, false);
+                } else if (err.get("code").getAsInt() == 404) {
+                    return obj;
+                } else {
+                    throw new RuntimeException("Error from server: " + obj.toString());
+                }
+            }
+            return obj;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     static void delete(DocumentReference doc) {
         // Delete the immediate document.
         try {
-            HttpDelete request = new HttpDelete(doc.getUrl());
-            request.addHeader(getAuthorizationHeader());
-            new DefaultHttpClient().execute(request);
-        } catch (IOException e) {
+            execute(new HttpDelete(doc.getUrl()));
+        } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
         doc.collections().forEach(FirestoreService::delete);
@@ -95,15 +119,10 @@ public class FirestoreService {
 
     static List<String> listCollectionIds(DocumentReference doc) {
         try {
-            HttpPost request = new HttpPost(
-                    getBaseUrl() + ":listCollectionIds?parent=" + URLEncoder.encode(getBasePath() + "/" + doc.getPath(),
-                            "UTF-8"));
-            request.addHeader(getAuthorizationHeader());
-            ImmutableList.Builder builder = new ImmutableList.Builder();
-            Optional.ofNullable(new JsonParser().parse(
-                    new InputStreamReader(new DefaultHttpClient().execute(request).getEntity().getContent()))
-                    .getAsJsonObject()
-                    .getAsJsonArray("collectionIds"))
+            String url = getBaseUrl() + ":listCollectionIds?parent=" + URLEncoder.encode(
+                    getBasePath() + "/" + doc.getPath(), "UTF-8");
+            ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
+            Optional.ofNullable(execute(new HttpPost(url)).getAsJsonArray("collectionsId"))
                     .ifPresent(array -> array.forEach(id -> builder.add(id.getAsString())));
             return builder.build();
         } catch (IOException e) {
@@ -116,41 +135,33 @@ public class FirestoreService {
     }
 
     static List<String> listDocumentIds(CollectionReference collection, String transaction) {
-        try {
-            String params = "mask.fieldPaths=_&pageSize=500&showMissing=true";
-            if (transaction != null) {
-                params += "&transaction=" + URLEncoder.encode(transaction, "UTF-8");
+        ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
+        Optional<String> nextPageToken = Optional.empty();
+        do {
+            try {
+                String params = "mask.fieldPaths=_&pageSize=500&showMissing=true";
+                if (transaction != null) {
+                    params += "&transaction=" + URLEncoder.encode(transaction, "UTF-8");
+                }
+                if (nextPageToken.isPresent()) {
+                    params += "&pageToken=" + URLEncoder.encode(nextPageToken.get(), "UTF-8");
+                }
+                JsonObject obj = execute(new HttpGet(collection.getUrl() + "?" + params));
+                Optional.ofNullable(obj.getAsJsonArray("documents"))
+                        .ifPresent(array -> array.forEach(
+                                doc -> builder.add(new Document(doc.getAsJsonObject()).getId())));
+                nextPageToken = Optional.ofNullable(obj.get("nextPageToken")).map(JsonElement::getAsString);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            HttpGet request = new HttpGet(collection.getUrl() + "?" + params);
-            request.addHeader(getAuthorizationHeader());
-            ImmutableList.Builder builder = new ImmutableList.Builder();
-            Optional.ofNullable(new JsonParser().parse(
-                    new InputStreamReader(new DefaultHttpClient().execute(request).getEntity().getContent()))
-                    .getAsJsonObject()
-                    .getAsJsonArray("documents"))
-                    .ifPresent(array -> array.forEach(doc -> builder.add(new Document(doc.getAsJsonObject()).getId())));
-            return builder.build();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    static Header getAuthorizationHeader() {
-        return new BasicHeader("Authorization", "Bearer " + credentials.getAccessToken().getTokenValue());
+        } while (nextPageToken.isPresent());
+        return builder.build();
     }
 
     public static String beginTransaction() {
-        HttpPost request = new HttpPost(getBaseUrl() + ":beginTransaction");
-        request.addHeader(getAuthorizationHeader());
-        try {
-            return new JsonParser().parse(
-                    new InputStreamReader(new DefaultHttpClient().execute(request).getEntity().getContent()))
-                    .getAsJsonObject()
-                    .get("transaction")
-                    .getAsString();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return Optional.ofNullable(execute(new HttpPost(getBaseUrl() + ":beginTransaction")).get("transaction"))
+                .map(JsonElement::getAsString)
+                .orElseThrow(() -> new RuntimeException("Missing transaction"));
     }
 
     public static JsonObject commit(List<Write> writes) {
@@ -166,19 +177,13 @@ public class FirestoreService {
             writeRequest.addProperty("transaction", transaction);
         }
         HttpPost request = new HttpPost(getBaseUrl() + ":commit");
-        request.addHeader(getAuthorizationHeader());
         try {
             request.setEntity(new StringEntity(writeRequest.toString()));
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
-        try {
-            return new JsonParser().parse(
-                    new InputStreamReader(new DefaultHttpClient().execute(request).getEntity().getContent()))
-                    .getAsJsonObject();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        request.setHeader(HTTP.CONTENT_TYPE, "application/json");
+        return execute(request);
     }
 }
 
