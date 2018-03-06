@@ -6,7 +6,6 @@ import com.canigraduate.uchicago.pipeline.firestore.DeleteDoFn;
 import com.canigraduate.uchicago.pipeline.firestore.UploadSequenceDoFn;
 import com.canigraduate.uchicago.pipeline.models.Key;
 import com.canigraduate.uchicago.pipeline.transforms.*;
-import com.google.common.collect.ImmutableList;
 import org.apache.beam.runners.dataflow.DataflowRunner;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.Pipeline;
@@ -28,15 +27,18 @@ public class Scraper {
         dataflowOptions.setJobName("scraper-uchicago");
         dataflowOptions.setProject("canigraduate-43286");
         dataflowOptions.setTempLocation("gs://uchicago/dataflow-temp");
-        dataflowOptions.setGcpCredential(new ServiceAccountCredentials(
-                ImmutableList.of("https://www.googleapis.com/auth/cloud-platform")).getCredentials());
+        dataflowOptions.setGcpCredential(
+                new ServiceAccountCredentials("https://www.googleapis.com/auth/cloud-platform").getCredentials());
+        dataflowOptions.setMaxNumWorkers(100);
+        dataflowOptions.setRegion("us-central1");
 
         Pipeline p = Pipeline.create(dataflowOptions);
         p.getCoderRegistry().registerCoderProvider(new ModelSubtypeCoderProvider());
 
         PCollection<KV<Key, Course>> courses = PCollectionList.of(p.apply(new TimeschedulesTransform()))
-                .and(p.apply(new CourseSearchTransform())).apply(Flatten.pCollections());
-        courses.apply("Assign priorities", ParDo.of(new AssignPriorityDoFn()))
+                .and(p.apply(new CourseSearchTransform()))
+                .apply(Flatten.pCollections());
+        courses.apply("Assign priorities", new AssignPriorityTransform())
                 .apply("Upload course data", new UploadTransform());
         PCollection<Key> courseKeys = courses.apply("Fetch course keys", Keys.create());
         PCollectionList.of(p.apply(new FirestoreCoursesTransform()))

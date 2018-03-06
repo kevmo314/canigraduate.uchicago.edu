@@ -2,6 +2,7 @@ package com.canigraduate.uchicago;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.OAuth2Credentials;
+import com.google.common.collect.ImmutableList;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 
@@ -15,8 +16,8 @@ public class ServiceAccountCredentials {
     private OAuth2Credentials credentials;
     private BasicHeader header;
 
-    public ServiceAccountCredentials(List<String> scopes) {
-        this.scopes = scopes;
+    public ServiceAccountCredentials(String... scopes) {
+        this.scopes = ImmutableList.copyOf(scopes);
     }
 
     private boolean isExpired() {

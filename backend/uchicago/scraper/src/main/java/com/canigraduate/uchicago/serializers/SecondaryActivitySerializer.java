@@ -6,7 +6,6 @@ import com.canigraduate.uchicago.firestore.models.Value;
 import com.canigraduate.uchicago.models.Schedule;
 import com.canigraduate.uchicago.models.SecondaryActivity;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,7 +15,11 @@ class SecondaryActivitySerializer {
         return new ImmutableMap.Builder<String, Object>().put("id", activity.getId())
                 .put("instructors", activity.getInstructors())
                 .put("type", activity.getType())
-                .put("schedule", Lists.transform(activity.getSchedule().getBlocks().asList(), Schedule.Block::toLong))
+                .put("schedule", activity.getSchedule()
+                        .getBlocks()
+                        .stream()
+                        .map(Schedule.Block::toLong)
+                        .collect(Collectors.toList()))
                 .put("location", activity.getLocation())
                 .put("enrollment", EnrollmentSerializer.toMap(activity.getEnrollment()))
                 .build();
@@ -24,12 +27,11 @@ class SecondaryActivitySerializer {
 
     public static MapValue toMapValue(SecondaryActivity activity) {
         MapValue fields = new MapValue().put("id", activity.getId())
-                .put("instructors", new ArrayValue(
-                        activity.getInstructors().asList().stream().map(Value::new).collect(Collectors.toList())))
+                .put("instructors",
+                        new ArrayValue(activity.getInstructors().stream().map(Value::new).collect(Collectors.toList())))
                 .put("location", activity.getLocation())
                 .put("schedule", new ArrayValue(activity.getSchedule()
                         .getBlocks()
-                        .asList()
                         .stream()
                         .map(block -> new Value(block.toLong()))
                         .collect(Collectors.toList())))

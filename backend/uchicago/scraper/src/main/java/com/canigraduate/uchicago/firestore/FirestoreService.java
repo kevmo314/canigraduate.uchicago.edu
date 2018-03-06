@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 public class FirestoreService {
     private static final ServiceAccountCredentials CREDENTIALS = new ServiceAccountCredentials(
-            ImmutableList.of("https://www.googleapis.com/auth/datastore"));
+            "https://www.googleapis.com/auth/datastore");
     private static final String FIRESTORE_URL = "https://firestore.googleapis.com/v1beta1/";
     private static DocumentReference UCHICAGO = new CollectionReference(null, "institutions").document("uchicago");
 

@@ -13,20 +13,17 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
-import java.util.logging.Logger;
-
 /**
  * Upload a course to Firestore.
  */
 public class UploadDescriptionTransform extends PTransform<PCollection<KV<String, Course>>, PDone> {
-    private static final Logger LOGGER = Logger.getLogger(UploadDescriptionTransform.class.getName());
     private static final TypeDescriptor<KV<Key, Course>> INTERMEDIATE = new TypeDescriptor<KV<Key, Course>>() {
     };
 
     @Override
     public PDone expand(PCollection<KV<String, Course>> input) {
         // Group by course first to reduce datastore contention.
-        input.apply("Add key to Ribbit descriptions", MapElements.into(INTERMEDIATE)
+        input.apply("Map to Key", MapElements.into(INTERMEDIATE)
                 .via(e -> KV.of(Key.builder().setCourse(e.getKey()).build(), e.getValue())))
                 .apply("Group by key", GroupByKey.create())
                 .apply("Merge courses", MapElements.into(INTERMEDIATE)
