@@ -15,9 +15,9 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-public class CatalogCoursesTransform extends PTransform<PBegin, PCollection<KV<Key, Course>>> {
+public class CatalogCoursesTransform extends PTransform<PBegin, PCollection<KV<String, Course>>> {
     @Override
-    public PCollection<KV<Key, Course>> expand(PBegin input) {
+    public PCollection<KV<String, Course>> expand(PBegin input) {
         return input.getPipeline().apply(new DepartmentTransform()).apply(new CourseTransform());
     }
 
@@ -35,16 +35,15 @@ public class CatalogCoursesTransform extends PTransform<PBegin, PCollection<KV<K
         }
     }
 
-    static class CourseTransform extends PTransform<PCollection<KV<Key, String>>, PCollection<KV<Key, Course>>> {
+    static class CourseTransform extends PTransform<PCollection<KV<Key, String>>, PCollection<KV<String, Course>>> {
         @Override
-        public PCollection<KV<Key, Course>> expand(PCollection<KV<Key, String>> input) {
-            return input.apply(FlatMapElements.into(new TypeDescriptor<KV<Key, Course>>() {
+        public PCollection<KV<String, Course>> expand(PCollection<KV<Key, String>> input) {
+            return input.apply(FlatMapElements.into(new TypeDescriptor<KV<String, Course>>() {
             }).via(e -> {
                 try {
                     return CollegeCatalog.getCoursesAndSequences(e.getValue())
                             .entrySet()
-                            .stream()
-                            .map(entry -> KV.of(e.getKey().withCourse(entry.getKey()), entry.getValue()))
+                            .stream().map(entry -> KV.of(entry.getKey(), entry.getValue()))
                             .collect(Collectors.toList());
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);

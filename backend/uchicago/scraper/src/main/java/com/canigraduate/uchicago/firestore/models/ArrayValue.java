@@ -29,7 +29,8 @@ public class ArrayValue {
         if (!this.object.has("values")) {
             return ImmutableList.of();
         }
-        return new ImmutableList.Builder().addAll(Iterators.transform(this.object.getAsJsonArray("values").iterator(),
-                value -> new Value(value.getAsJsonObject()))).build();
+        return new ImmutableList.Builder<Value>().addAll(
+                Iterators.transform(this.object.getAsJsonArray("values").iterator(),
+                        value -> new Value(value.getAsJsonObject()))).build();
     }
 }

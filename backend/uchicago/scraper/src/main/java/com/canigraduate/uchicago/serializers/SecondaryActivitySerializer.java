@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 class SecondaryActivitySerializer {
     public static Map<String, Object> toMap(SecondaryActivity activity) {
-        return new ImmutableMap.Builder().put("id", activity.getId())
+        return new ImmutableMap.Builder<String, Object>().put("id", activity.getId())
                 .put("instructors", activity.getInstructors())
                 .put("type", activity.getType())
                 .put("schedule", Lists.transform(activity.getSchedule().getBlocks().asList(), Schedule.Block::toLong))

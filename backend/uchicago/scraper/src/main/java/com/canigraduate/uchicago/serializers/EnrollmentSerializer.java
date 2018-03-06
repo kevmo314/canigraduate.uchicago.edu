@@ -11,7 +11,8 @@ class EnrollmentSerializer {
     public static Map<String, Object> toMap(Enrollment enrollment) {
         OptionalInt enrolled = enrollment.getEnrolled();
         OptionalInt maximum = enrollment.getMaximum();
-        return new ImmutableMap.Builder().put("enrolled", enrolled.isPresent() ? enrolled.getAsInt() : null)
+        return new ImmutableMap.Builder<String, Object>().put("enrolled",
+                enrolled.isPresent() ? enrolled.getAsInt() : null)
                 .put("maximum", maximum.isPresent() ? maximum.getAsInt() : null)
                 .build();
     }

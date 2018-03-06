@@ -3,11 +3,11 @@ package com.canigraduate.uchicago.models;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @AutoValue
 public abstract class Course {
@@ -27,18 +27,14 @@ public abstract class Course {
         }
         Course p = a.getPriority() >= b.getPriority() ? a : b;
         Course q = a.getPriority() >= b.getPriority() ? b : a;
-        Map<String, Section> sections = new HashMap<>();
-        for (Map.Entry<String, Section> entry : Sets.union(a.getSections().entrySet(), b.getSections().entrySet())) {
-            sections.put(entry.getKey(), Section.create(sections.get(entry.getKey()), entry.getValue()));
-        }
         return builder().setName(p.getName().isEmpty() ? q.getName() : p.getName())
                 .setDescription(p.getDescription().isPresent() ? p.getDescription() : q.getDescription())
                 .addAllNotes(a.getNotes())
                 .addAllNotes(b.getNotes())
                 .setParent(p.getParent().isPresent() ? p.getParent() : q.getParent())
                 .setPriority(p.getPriority())
-                .putAllSections(a.getSections())
-                .putAllSections(b.getSections())
+                .putAllSections(Stream.concat(a.getSections().entrySet().stream(), b.getSections().entrySet().stream())
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Section::create)))
                 .addAllCrosslists(a.getCrosslists())
                 .addAllCrosslists(b.getCrosslists())
                 .build();

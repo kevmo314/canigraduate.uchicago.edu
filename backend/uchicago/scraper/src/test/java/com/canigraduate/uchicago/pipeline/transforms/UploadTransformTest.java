@@ -1,4 +1,4 @@
-package com.canigraduate.uchicago.pipeline.firestore;
+package com.canigraduate.uchicago.pipeline.transforms;
 
 import com.canigraduate.uchicago.firestore.*;
 import com.canigraduate.uchicago.models.Course;
@@ -10,7 +10,6 @@ import com.canigraduate.uchicago.pipeline.models.Key;
 import com.canigraduate.uchicago.timeschedules.Timeschedules;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -21,7 +20,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class UploadDoFnTest {
+class UploadTransformTest {
     @BeforeAll
     static void beforeAll() {
         FirestoreService.setUChicago(new CollectionReference(null, "institutions").document("uchicago-testing"));
@@ -46,8 +45,7 @@ class UploadDoFnTest {
                 .build(), timeschedules.get("PHYS 13300")), KV.of(Key.builder()
                 .setCourse("PHYS 14300")
                 .setTerm(Term.create("Spring 2010"))
-                .setDepartment("PHYS")
-                .build(), timeschedules.get("PHYS 14300")))).apply(ParDo.of(new UploadDoFn()));
+                .setDepartment("PHYS").build(), timeschedules.get("PHYS 14300")))).apply(new UploadTransform());
         pipeline.run();
 
         Courses courses = new Courses();
@@ -75,5 +73,7 @@ class UploadDoFnTest {
 
         courses.delete("PHYS 13300");
         courses.delete("PHYS 14300");
+
+        assertThat(courses.list()).isEmpty();
     }
 }

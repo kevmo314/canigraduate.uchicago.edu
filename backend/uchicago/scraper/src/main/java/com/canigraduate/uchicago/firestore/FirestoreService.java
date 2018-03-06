@@ -3,7 +3,6 @@ package com.canigraduate.uchicago.firestore;
 import com.canigraduate.uchicago.ServiceAccountCredentials;
 import com.canigraduate.uchicago.firestore.models.Document;
 import com.canigraduate.uchicago.firestore.models.Write;
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -27,11 +26,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FirestoreService {
-    private static final GoogleCredentials credentials = ServiceAccountCredentials.getCredentials(
+    private static final ServiceAccountCredentials CREDENTIALS = new ServiceAccountCredentials(
             ImmutableList.of("https://www.googleapis.com/auth/datastore"));
     private static final String FIRESTORE_URL = "https://firestore.googleapis.com/v1beta1/";
     private static DocumentReference UCHICAGO = new CollectionReference(null, "institutions").document("uchicago");
-
 
     public static String getBasePath() {
         return "projects/canigraduate-43286/databases/(default)/documents";
@@ -65,7 +63,7 @@ public class FirestoreService {
     }
 
     private static JsonObject execute(HttpUriRequest request, boolean retry) {
-        request.addHeader("Authorization", "Bearer " + credentials.getAccessToken().getTokenValue());
+        request.addHeader(CREDENTIALS.getAuthorizationHeader());
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
             CloseableHttpResponse response = httpclient.execute(request);
@@ -79,8 +77,7 @@ public class FirestoreService {
             if (obj.has("error")) {
                 JsonObject err = obj.getAsJsonObject("error");
                 if (err.get("code").getAsInt() == 401 && err.get("status").getAsString().equals("UNAUTHENTICATED")) {
-                    credentials.refresh();
-                    return execute(request, false);
+                    throw new RuntimeException("Error from server: " + obj.toString());
                 } else if (err.get("code").getAsInt() == 404) {
                     return obj;
                 } else {
@@ -94,13 +91,13 @@ public class FirestoreService {
     }
 
     static void delete(DocumentReference doc) {
+        doc.collections().forEach(FirestoreService::delete);
         // Delete the immediate document.
         try {
             execute(new HttpDelete(doc.getUrl()));
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
-        doc.collections().forEach(FirestoreService::delete);
     }
 
     static void delete(CollectionReference collection) {
@@ -122,7 +119,7 @@ public class FirestoreService {
             String url = getBaseUrl() + ":listCollectionIds?parent=" + URLEncoder.encode(
                     getBasePath() + "/" + doc.getPath(), "UTF-8");
             ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
-            Optional.ofNullable(execute(new HttpPost(url)).getAsJsonArray("collectionsId"))
+            Optional.ofNullable(execute(new HttpPost(url)).getAsJsonArray("collectionIds"))
                     .ifPresent(array -> array.forEach(id -> builder.add(id.getAsString())));
             return builder.build();
         } catch (IOException e) {
