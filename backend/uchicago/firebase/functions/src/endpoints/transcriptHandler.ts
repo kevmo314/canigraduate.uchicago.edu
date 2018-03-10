@@ -1,5 +1,5 @@
 import Users from '../firestore/Users';
-import PubSub from '@google-cloud/pubsub';
+import * as PubSub from '@google-cloud/pubsub';
 import getTranscript from '../transforms/getTranscript';
 
 const canned =
@@ -9,13 +9,13 @@ export default async function(req, res, next) {
   if (req.username === 'test' && req.password === 'test') {
     res.status(200);
     res.json(JSON.parse(canned));
-    return;
+    return Promise.resolve();
   }
   if (!req.username || !req.password) {
     res.set('WWW-Authenticate', 'Basic realm="UChicago CNetID"');
     res.status(401);
     next(new Error('"username" and/or "password" missing in request body.'));
-    return;
+    return Promise.resolve();
   }
   let user = null;
   try {
@@ -24,7 +24,7 @@ export default async function(req, res, next) {
     res.set('WWW-Authenticate', 'Basic realm="UChicago CNetID"');
     res.status(403);
     next(e);
-    return;
+    return Promise.resolve();
   }
   const token = await Users.getToken(user);
   const transcript = await getTranscript(jar =>
@@ -33,12 +33,17 @@ export default async function(req, res, next) {
   res.json({ token, transcript });
   res.status(200);
   // Then publish a pubsub event.
-  return PubSub({ projectId: 'canigraduate-43286' })
+  const publisher = new PubSub({ projectId: 'canigraduate-43286' })
     .topic('grades')
-    .publish(
-      transcript.filter(record => record['quality']).map(record => ({
+    .publisher();
+  return Promise.all(
+    transcript
+      .filter(record => record['quality'])
+      .map(record => ({
         chicagoId: user.uid,
         record,
-      })),
-    );
+      }))
+      .map(data => Buffer.from(JSON.stringify(data)))
+      .map(buffer => publisher.publish(buffer)),
+  );
 }

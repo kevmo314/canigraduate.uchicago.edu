@@ -72,7 +72,6 @@ app.use((err, req, res, next) => {
 export const api = functions.https.onRequest(app);
 export const grades = functions.pubsub.topic('grades').onPublish(event => {
   const { chicagoId, record } = event.data.json;
-
   const key = crypto
     .pbkdf2Sync(
       [record['term'], record['course'], record['section']].join(),
@@ -85,7 +84,7 @@ export const grades = functions.pubsub.topic('grades').onPublish(event => {
     .replace(/=/g, '')
     .replace(/\+/g, '-')
     .replace(/\//g, '_');
-  admin
+  return admin
     .firestore()
     .collection('institutions')
     .doc('uchicago')
