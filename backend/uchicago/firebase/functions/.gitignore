@@ -1,3 +1,5 @@
 node_modules
 service-account.json
-test/config.js
+test/config.ts
+lib
+etc

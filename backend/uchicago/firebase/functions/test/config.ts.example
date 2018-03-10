@@ -1,4 +1,4 @@
-exports.credentials = {
+export default {
   username: 'kdwang',
   password: '<uchicago password>',
 };

@@ -1,0 +1,211 @@
+[debug] [2018-03-10T18:59:58.289Z] ----------------------------------------------------------------------
+[debug] [2018-03-10T18:59:58.299Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\bin\firebase deploy --only functions
+[debug] [2018-03-10T18:59:58.299Z] CLI Version:   3.17.4
+[debug] [2018-03-10T18:59:58.299Z] Platform:      win32
+[debug] [2018-03-10T18:59:58.299Z] Node Version:  v9.7.1
+[debug] [2018-03-10T18:59:58.300Z] Time:          Sat Mar 10 2018 13:59:58 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T18:59:58.300Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2018-03-10T18:59:58.320Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2018-03-10T18:59:58.321Z] > authorizing via signed-in user
+[debug] [2018-03-10T18:59:58.324Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/canigraduate-43286  
+  
+ Sat Mar 10 2018 13:59:58 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T18:59:58.847Z] <<< HTTP RESPONSE 200
+[debug] [2018-03-10T18:59:58.849Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/canigraduate-43286/tokens  
+  
+ Sat Mar 10 2018 13:59:58 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T18:59:59.269Z] <<< HTTP RESPONSE 200
+[info] 
+[info] === Deploying to 'canigraduate-43286'...
+[info] 
+[info] i  deploying functions
+[info] Running command: npm --prefix ./functions/ run lint
+[info] Running command: npm --prefix ./functions/ run build
+[info] +  functions: Finished running predeploy script.
+[debug] [2018-03-10T19:00:08.770Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "scripts": {
+    "clean": "rimraf lib && rimraf node_modules/base64url/typings && rimraf node_modules/base64url/dist/base64url.d.ts",
+    "build": "tsc",
+    "serve": "npm run build && firebase serve --only functions",
+    "shell": "npm run build && firebase experimental:functions:shell",
+    "lint": "tslint src/**/*.ts",
+    "start": "npm run shell",
+    "deploy": "npm run clean && firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "test": "cross-env GCLOUD_PROJECT=canigraduate-43826 mocha -r ts-node/register test/**/*Test.ts"
+  },
+  "dependencies": {
+    "@google-cloud/pubsub": "^0.16.5",
+    "cheerio": "^1.0.0-rc.2",
+    "cors": "^2.8.4",
+    "express": "^4.15.4",
+    "firebase-admin": "^5.10.0",
+    "firebase-functions": "^0.8.1",
+    "ldapjs": "^1.0.1",
+    "nodemailer": "^4.0.1",
+    "request": "^2.83.0",
+    "request-promise-native": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.2",
+    "@types/cheerio": "^0.22.7",
+    "@types/mocha": "^2.2.48",
+    "@types/request-promise-native": "^1.0.14",
+    "@types/sinon": "^4.3.0",
+    "@types/supertest": "^2.0.4",
+    "chai": "^4.1.2",
+    "cross-env": "^5.1.4",
+    "mocha": "^5.0.4",
+    "mocha.parallel": "^0.15.5",
+    "mockery": "^2.1.0",
+    "nodemailer-mock": "^1.3.13",
+    "request-debug": "^0.2.0",
+    "rimraf": "^2.6.2",
+    "sinon": "^4.4.2",
+    "supertest": "^3.0.0",
+    "ts-node": "^5.0.1",
+    "tslint": "^5.8.0",
+    "typescript": "^2.5.3"
+  },
+  "private": true
+}
+[info] i  functions: ensuring necessary APIs are enabled...
+[debug] [2018-03-10T19:00:08.774Z] >>> HTTP REQUEST GET https://servicemanagement.googleapis.com/v1/services/cloudfunctions.googleapis.com/projectSettings/canigraduate-43286?view=CONSUMER_VIEW  
+  
+ Sat Mar 10 2018 14:00:08 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:08.775Z] >>> HTTP REQUEST GET https://servicemanagement.googleapis.com/v1/services/runtimeconfig.googleapis.com/projectSettings/canigraduate-43286?view=CONSUMER_VIEW  
+  
+ Sat Mar 10 2018 14:00:08 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:09.670Z] <<< HTTP RESPONSE 200
+[info] +  functions: all necessary APIs are enabled
+[debug] [2018-03-10T19:00:09.677Z] <<< HTTP RESPONSE 200
+[debug] [2018-03-10T19:00:09.678Z] >>> HTTP REQUEST GET https://appengine.googleapis.com/v1/apps/canigraduate-43286  
+  
+ Sat Mar 10 2018 14:00:09 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:09.679Z] >>> HTTP REQUEST GET https://apikeys.googleapis.com/v1/projects/canigraduate-43286/apiKeys  
+  
+ Sat Mar 10 2018 14:00:09 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:09.996Z] <<< HTTP RESPONSE 200
+[debug] [2018-03-10T19:00:10.202Z] <<< HTTP RESPONSE 200
+[info] i  functions: preparing functions directory for uploading...
+[debug] [2018-03-10T19:00:10.205Z] >>> HTTP REQUEST GET https://runtimeconfig.googleapis.com/v1beta1/projects/canigraduate-43286/configs  
+  
+ Sat Mar 10 2018 14:00:10 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:10.576Z] <<< HTTP RESPONSE 200
+[debug] [2018-03-10T19:00:10.577Z] >>> HTTP REQUEST GET https://runtimeconfig.googleapis.com/v1beta1/projects/canigraduate-43286/configs/smtp/variables  
+  
+ Sat Mar 10 2018 14:00:10 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:10.916Z] <<< HTTP RESPONSE 200
+[debug] [2018-03-10T19:00:10.917Z] >>> HTTP REQUEST GET https://runtimeconfig.googleapis.com/v1beta1/projects/canigraduate-43286/configs/smtp/variables/email  
+  
+ Sat Mar 10 2018 14:00:10 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:10.917Z] >>> HTTP REQUEST GET https://runtimeconfig.googleapis.com/v1beta1/projects/canigraduate-43286/configs/smtp/variables/password  
+  
+ Sat Mar 10 2018 14:00:10 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:11.210Z] <<< HTTP RESPONSE 200
+[debug] [2018-03-10T19:00:11.254Z] <<< HTTP RESPONSE 200
+[info] i  functions: packaged functions (114.79 KB) for uploading
+[debug] [2018-03-10T19:00:14.408Z] >>> HTTP REQUEST GET https://www.googleapis.com/storage/v1/b/staging.canigraduate-43286.appspot.com  
+  
+ Sat Mar 10 2018 14:00:14 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:14.647Z] <<< HTTP RESPONSE 200
+[debug] [2018-03-10T19:00:14.648Z] >>> HTTP REQUEST POST https://www.googleapis.com/upload/storage/v1/b/staging.canigraduate-43286.appspot.com/o?uploadType=media&name=firebase-functions-source  
+ ReadStream {
+  _readableState: 
+   ReadableState {
+     objectMode: false,
+     highWaterMark: 65536,
+     buffer: BufferList { head: [Object], tail: [Object], length: 1 },
+     length: 65536,
+     pipes: null,
+     pipesCount: 0,
+     flowing: null,
+     ended: false,
+     endEmitted: false,
+     reading: false,
+     sync: false,
+     needReadable: false,
+     emittedReadable: true,
+     readableListening: false,
+     resumeScheduled: false,
+     destroyed: false,
+     defaultEncoding: 'utf8',
+     awaitDrain: 0,
+     readingMore: false,
+     decoder: null,
+     encoding: null },
+  readable: true,
+  domain: null,
+  _events: { end: [Function] },
+  _eventsCount: 1,
+  _maxListeners: undefined,
+  path: 'C:\\Users\\Kevin\\AppData\\Local\\Temp\\firebase-functions-17576J0vR8plUTBDF.zip',
+  fd: 5,
+  flags: 'r',
+  mode: 438,
+  start: 0,
+  end: Infinity,
+  autoClose: true,
+  pos: 65536,
+  bytesRead: 65536,
+  closed: false } 
+ Sat Mar 10 2018 14:00:14 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:15.215Z] <<< HTTP RESPONSE 200
+[info] +  functions: functions folder uploaded successfully
+[debug] [2018-03-10T19:00:15.217Z] >>> HTTP REQUEST GET https://cloudfunctions.googleapis.com/v1/projects/canigraduate-43286/locations/us-central1/functions  
+  
+ Sat Mar 10 2018 14:00:15 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:15.644Z] <<< HTTP RESPONSE 200
+[info] i  functions: updating function api...
+[debug] [2018-03-10T19:00:15.648Z] Trigger is:  {"httpsTrigger":{}}
+[info] i  functions: updating function grades...
+[debug] [2018-03-10T19:00:15.656Z] Trigger is:  {"eventTrigger":{"resource":"projects/canigraduate-43286/topics/grades","eventType":"providers/cloud.pubsub/eventTypes/topic.publish"}}
+[info] i  functions: updating function watches...
+[debug] [2018-03-10T19:00:15.663Z] Trigger is:  {"eventTrigger":{"resource":"projects/canigraduate-43286/databases/(default)/documents/institutions/uchicago/courses/{course}/terms/{term}/sections/{section}","eventType":"providers/cloud.firestore/eventTypes/document.write"}}
+[debug] [2018-03-10T19:00:15.665Z] >>> HTTP REQUEST PATCH https://cloudfunctions.googleapis.com/v1/projects/canigraduate-43286/locations/us-central1/functions/api 
+query params: {"updateMask":"sourceArchiveUrl,name,labels,httpsTrigger"} 
+ { sourceArchiveUrl: 'gs://staging.canigraduate-43286.appspot.com/firebase-functions-source',
+  name: 'projects/canigraduate-43286/locations/us-central1/functions/api',
+  labels: { 'deployment-tool': 'cli-firebase' },
+  httpsTrigger: {} } 
+ Sat Mar 10 2018 14:00:15 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:15.667Z] >>> HTTP REQUEST PATCH https://cloudfunctions.googleapis.com/v1/projects/canigraduate-43286/locations/us-central1/functions/grades 
+query params: {"updateMask":"sourceArchiveUrl,name,labels,eventTrigger.resource,eventTrigger.eventType"} 
+ { sourceArchiveUrl: 'gs://staging.canigraduate-43286.appspot.com/firebase-functions-source',
+  name: 'projects/canigraduate-43286/locations/us-central1/functions/grades',
+  labels: { 'deployment-tool': 'cli-firebase' },
+  eventTrigger: 
+   { resource: 'projects/canigraduate-43286/topics/grades',
+     eventType: 'providers/cloud.pubsub/eventTypes/topic.publish' } } 
+ Sat Mar 10 2018 14:00:15 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:15.668Z] >>> HTTP REQUEST PATCH https://cloudfunctions.googleapis.com/v1/projects/canigraduate-43286/locations/us-central1/functions/watches 
+query params: {"updateMask":"sourceArchiveUrl,name,labels,eventTrigger.resource,eventTrigger.eventType"} 
+ { sourceArchiveUrl: 'gs://staging.canigraduate-43286.appspot.com/firebase-functions-source',
+  name: 'projects/canigraduate-43286/locations/us-central1/functions/watches',
+  labels: { 'deployment-tool': 'cli-firebase' },
+  eventTrigger: 
+   { resource: 'projects/canigraduate-43286/databases/(default)/documents/institutions/uchicago/courses/{course}/terms/{term}/sections/{section}',
+     eventType: 'providers/cloud.firestore/eventTypes/document.write' } } 
+ Sat Mar 10 2018 14:00:15 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:15.958Z] <<< HTTP RESPONSE 200
+[debug] [2018-03-10T19:00:16.083Z] <<< HTTP RESPONSE 200
+[debug] [2018-03-10T19:00:16.092Z] <<< HTTP RESPONSE 200
+[debug] [2018-03-10T19:00:16.093Z] >>> HTTP REQUEST GET https://cloudfunctions.googleapis.com/v1/projects/canigraduate-43286/locations/us-central1/functions  
+  
+ Sat Mar 10 2018 14:00:16 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:16.445Z] <<< HTTP RESPONSE 200
+[debug] [2018-03-10T19:00:16.446Z] >>> HTTP REQUEST GET https://cloudfunctions.googleapis.com/v1/operations/Y2FuaWdyYWR1YXRlLTQzMjg2L3VzLWNlbnRyYWwxL2FwaS93d3pxVkRad3pXVQ  
+  
+ Sat Mar 10 2018 14:00:16 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:16.447Z] >>> HTTP REQUEST GET https://cloudfunctions.googleapis.com/v1/operations/Y2FuaWdyYWR1YXRlLTQzMjg2L3VzLWNlbnRyYWwxL2dyYWRlcy9kM1BDb3JFZG9iSQ  
+  
+ Sat Mar 10 2018 14:00:16 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:16.448Z] >>> HTTP REQUEST GET https://cloudfunctions.googleapis.com/v1/operations/Y2FuaWdyYWR1YXRlLTQzMjg2L3VzLWNlbnRyYWwxL3dhdGNoZXMvemNhSmxDVTNuMkU  
+  
+ Sat Mar 10 2018 14:00:16 GMT-0500 (Eastern Standard Time)
+[debug] [2018-03-10T19:00:16.754Z] <<< HTTP RESPONSE 200
+[debug] [2018-03-10T19:00:16.764Z] <<< HTTP RESPONSE 200
+[debug] [2018-03-10T19:00:16.767Z] <<< HTTP RESPONSE 200

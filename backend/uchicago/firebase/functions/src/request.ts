@@ -1,4 +1,6 @@
-module.exports.request = require('request-promise-native').defaults({
+import * as requestPromiseNative from 'request-promise-native';
+
+export default requestPromiseNative.defaults({
   followAllRedirects: true,
   removeRefererHeader: true,
   headers: {
