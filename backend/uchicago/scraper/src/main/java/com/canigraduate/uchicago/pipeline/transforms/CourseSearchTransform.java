@@ -14,8 +14,8 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class CourseSearchTransform extends PTransform<PBegin, PCollection<KV<Key, Course>>> {
     @Override
@@ -60,23 +60,21 @@ public class CourseSearchTransform extends PTransform<PBegin, PCollection<KV<Key
     }
 
     static class CourseTransform extends PTransform<PCollection<KV<Key, Params>>, PCollection<KV<Key, Course>>> {
+        private static final TypeDescriptor<KV<Key, String>> COURSE_PAGES = new TypeDescriptor<KV<Key, String>>() {
+        };
+        private static final TypeDescriptor<KV<Key, Course>> INTERMEDIATE = new TypeDescriptor<KV<Key, Course>>() {
+        };
+
         @Override
         public PCollection<KV<Key, Course>> expand(PCollection<KV<Key, Params>> input) {
-            return input.apply(FlatMapElements.into(new TypeDescriptor<KV<Key, Course>>() {
-            }).via(e -> IntStream.range(0, 25)
-                    .boxed()
-                    .flatMap(shard -> {
-                        try {
-                            return CourseSearch.getCourses(e.getValue().getTermKey(), e.getValue().getDepartmentKey(),
-                                    shard)
-                                    .entrySet()
-                                    .stream();
-                        } catch (IOException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    })
-                    .map(entry -> KV.of(e.getKey().withCourse(entry.getKey()), entry.getValue()))
-                    .collect(Collectors.toList())));
+            return input.apply(FlatMapElements.into(COURSE_PAGES)
+                    .via(e -> CourseSearch.getCoursePages(e.getValue().getTermKey(), e.getValue().getDepartmentKey())
+                            .stream()
+                            .map(entry -> KV.of(e.getKey(), entry))
+                            .collect(Collectors.toList()))).apply(MapElements.into(INTERMEDIATE).via(e -> {
+                Map.Entry<String, Course> entry = CourseSearch.getCourseEntry(e.getValue());
+                return KV.of(e.getKey().withCourse(entry.getKey()), entry.getValue());
+            }));
         }
     }
 

@@ -4,6 +4,7 @@ import com.canigraduate.uchicago.BrowsingSession;
 import com.canigraduate.uchicago.models.Course;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -27,7 +28,8 @@ public class CollegeCatalog {
     }
 
     public static Map<String, String> getDepartments() throws IOException {
-        Document doc = new BrowsingSession().get(BASE_URL + "/thecollege/programsofstudy/");
+        Document doc = Jsoup.parse(new BrowsingSession().get(BASE_URL + "/thecollege/programsofstudy/"));
+        doc.setBaseUri(BASE_URL);
         ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<>();
         for (Element link : doc.selectFirst("ul[id='/thecollege/programsofstudy/']").getElementsByTag("li")) {
             builder.put(link.text(), link.selectFirst("a").absUrl("href"));
@@ -36,7 +38,7 @@ public class CollegeCatalog {
     }
 
     public static Map<String, Course> getCoursesAndSequences(String url) throws IOException {
-        Document doc = new BrowsingSession().get(url);
+        Document doc = Jsoup.parse(new BrowsingSession().get(url));
         Element courses = doc.selectFirst("div.courses");
         if (courses == null) {
             return ImmutableMap.of();

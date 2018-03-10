@@ -2,12 +2,16 @@ package com.canigraduate.uchicago.coursesearch;
 
 import com.canigraduate.uchicago.models.Course;
 import com.canigraduate.uchicago.models.Term;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class CourseSearch {
     public static Map<Term, String> getTerms() throws IOException {
@@ -27,7 +31,8 @@ public class CourseSearch {
     public static Map<String, String> getDepartments(String termKey) throws IOException {
         Browser browser = new Browser().setId(termKey);
         ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<>();
-        for (Element option : browser.action("UC_CLSRCH_WRK2_STRM").select("#UC_CLSRCH_WRK2_SUBJECT option")) {
+        for (Element option : Jsoup.parse(browser.action("UC_CLSRCH_WRK2_STRM"))
+                .select("#UC_CLSRCH_WRK2_SUBJECT option")) {
             if (option.hasAttr("value") && !option.attr("value").isEmpty()) {
                 builder.put(option.attr("value"), option.attr("value"));
             }
@@ -35,19 +40,29 @@ public class CourseSearch {
         return builder.build();
     }
 
-    public static Map<String, Course> getCourses(String termKey, String department, int shard) throws IOException {
-        Scanner scanner = new Scanner(new Browser().setId(termKey), department).setShard(shard);
-        Map<String, Course> courses = new HashMap<>();
-        while (scanner.hasNext()) {
+    public static List<String> getCoursePages(String termKey, String department) {
+        return IntStream.range(0, 25).parallel().boxed().flatMap(shard -> {
+            ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
             try {
-                scanner.nextCourseEntry()
-                        .ifPresent(entry -> courses.put(entry.getKey(),
-                                Course.create(courses.get(entry.getKey()), entry.getValue())));
-            } catch (Exception ex) {
+                Scanner scanner = new Scanner(new Browser().setId(termKey), department).setShard(shard);
+                while (scanner.hasNext()) {
+                    scanner.nextCoursePage().ifPresent(builder::add);
+                }
+                return builder.build().stream();
+            } catch (IOException e) {
                 System.err.println("Error when parsing " + termKey + " " + department + " " + shard);
-                throw ex;
+                throw new RuntimeException(e);
             }
-        }
-        return ImmutableMap.copyOf(courses);
+        }).collect(Collectors.toList());
+    }
+
+    public static Map.Entry<String, Course> getCourseEntry(String page) {
+        return Scanner.toCourseEntry(page);
+    }
+
+    public static Map<String, Course> getCourses(String termKey, String department) {
+        return getCoursePages(termKey, department).stream()
+                .map(CourseSearch::getCourseEntry)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Course::create));
     }
 }

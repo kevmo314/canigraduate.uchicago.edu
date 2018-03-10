@@ -17,7 +17,7 @@ public class Ribbit {
     private static final Pattern TITLE_PATTERN = Pattern.compile("([^.]+)\\. (.+?)\\.?(?: +(\\d+) Units\\.)?");
 
     public static Optional<Course> getRecordForCourse(String course) throws IOException {
-        Document cdata = Jsoup.parse(new BrowsingSession().get(Ribbit.BASE_URL + course).text());
+        Document cdata = Jsoup.parse(Jsoup.parse(new BrowsingSession().get(Ribbit.BASE_URL + course)).text());
         return Optional.ofNullable(cdata.selectFirst("p.courseblocktitle"))
                 .map(element -> Ribbit.TITLE_PATTERN.matcher(
                         Normalizer.normalize(element.text(), Normalizer.Form.NFKD).trim()))

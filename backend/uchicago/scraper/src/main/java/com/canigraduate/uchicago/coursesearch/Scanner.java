@@ -3,6 +3,7 @@ package com.canigraduate.uchicago.coursesearch;
 import com.canigraduate.uchicago.models.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -28,8 +29,8 @@ class Scanner {
     public Scanner(Browser browser, String department) throws IOException {
         this.browser = browser;
         this.browser.action("UC_CLSRCH_WRK2_STRM");
-        this.activePage = this.browser.action("UC_CLSRCH_WRK2_SEARCH_BTN",
-                ImmutableMap.of("UC_CLSRCH_WRK2_SUBJECT", department));
+        this.activePage = Jsoup.parse(this.browser.action("UC_CLSRCH_WRK2_SEARCH_BTN",
+                ImmutableMap.of("UC_CLSRCH_WRK2_SUBJECT", department)));
     }
 
     public Scanner setShard(int shard) {
@@ -41,46 +42,17 @@ class Scanner {
         return this.activePage != null && this.activePage.select("tr[id^='DESCR100']").size() > this.shard;
     }
 
-    private void nextPage() throws IOException {
-        // Trigger the next page.
-        if (this.activePage.selectFirst("a[id='UC_RSLT_NAV_WRK_SEARCH_CONDITION2$46$']") != null) {
-            this.activePage = this.browser.action("UC_RSLT_NAV_WRK_SEARCH_CONDITION2$46$");
-        } else {
-            this.activePage = null;
-        }
-    }
-
-    private Optional<String> selectFirstText(String query) {
-        return Optional.ofNullable(this.activePage.selectFirst(query))
+    private static Optional<String> selectFirstText(Document page, String query) {
+        return Optional.ofNullable(page.selectFirst(query))
                 .map(element -> element.text().trim())
                 .filter(str -> !str.isEmpty());
     }
 
-    public Optional<Map.Entry<String, Course>> nextCourseEntry() throws IOException {
-        Optional<String> error = this.selectFirstText("span[id='DERIVED_CLSMG_ERROR_TEXT']");
-        if (error.isPresent() && this.shard <= 0) {
-            // Only the first index shard should report page-level errors.
-            LOGGER.log(Level.WARNING, error.get());
-        }
-        Element row = this.activePage.select("tr[id^='DESCR100']").get(this.shard);
-        if (Optional.ofNullable(row.selectFirst("span.label"))
-                .map(label -> label.text().trim().equals("Cancelled"))
-                .orElse(false)) {
-            // Ignore cancelled courses.
-            this.nextPage();
-            return Optional.empty();
-        }
-        if (row.selectFirst("span[id^='UC_CLSRCH_WRK_UC_CLASS_TITLE$']").text().trim().isEmpty() || row.selectFirst(
-                "div[id^='win0divUC_RSLT_NAV_WRK_HTMLAREA$']").text().trim().isEmpty()) {
-            // Sometimes you get an empty course or the descriptor is missing...
-            this.nextPage();
-            return Optional.empty();
-        }
-        this.activePage = this.browser.action("UC_RSLT_NAV_WRK_PTPG_NUI_DRILLOUT$" + this.shard);
-        // Do some parsing of the page.
-        String name = this.selectFirstText("span[id='UC_CLS_DTL_WRK_UC_CLASS_TITLE$0']")
+    public static Map.Entry<String, Course> toCourseEntry(String html) {
+        Document page = Jsoup.parse(html);
+        String name = selectFirstText(page, "span[id='UC_CLS_DTL_WRK_UC_CLASS_TITLE$0']")
                 .orElseThrow(() -> new IllegalStateException("Missing course name."));
-        String descriptor = this.selectFirstText("div[id='win0divUC_CLS_DTL_WRK_HTMLAREA$0']")
+        String descriptor = selectFirstText(page, "div[id='win0divUC_CLS_DTL_WRK_HTMLAREA$0']")
                 .orElseThrow(() -> new IllegalStateException("Missing course descriptor."));
         Matcher descriptorMatcher = DESCRIPTOR_REGEX.matcher(descriptor);
         if (!descriptorMatcher.matches()) {
@@ -88,14 +60,14 @@ class Scanner {
         }
         String courseId = descriptorMatcher.group("id");
         String sectionId = descriptorMatcher.group("section");
-        List<String> components = this.selectFirstText("div[id='win0divUC_CLS_DTL_WRK_SSR_COMPONENT_LONG$0']")
+        List<String> components = selectFirstText(page, "div[id='win0divUC_CLS_DTL_WRK_SSR_COMPONENT_LONG$0']")
                 .map(text -> Stream.of(text.split(",")).map(String::trim).collect(Collectors.toList()))
                 .orElse(new ArrayList<>());
         Section.Builder sectionBuilder = Section.builder()
-                .setPrerequisites(this.selectFirstText("span[id='UC_CLS_DTL_WRK_SSR_REQUISITE_LONG$0']"))
-                .addNote(this.selectFirstText("span[id='DERIVED_CLSRCH_SSR_CLASSNOTE_LONG$0']"))
-                .setEnrollment(this.nextEnrollment());
-        this.activePage.select("[id^='win0divUC_CLS_REL_WRK_RELATE_CLASS_NBR_1']").forEach(table -> {
+                .setPrerequisites(selectFirstText(page, "span[id='UC_CLS_DTL_WRK_SSR_REQUISITE_LONG$0']"))
+                .addNote(selectFirstText(page, "span[id='DERIVED_CLSRCH_SSR_CLASSNOTE_LONG$0']"))
+                .setEnrollment(nextEnrollment(page));
+        page.select("[id^='win0divUC_CLS_REL_WRK_RELATE_CLASS_NBR_1']").forEach(table -> {
             if (table.parents().stream().anyMatch(element -> element.hasClass("psc_hidden"))) {
                 // AIS renders random shit sometimes.
                 return;
@@ -105,13 +77,13 @@ class Scanner {
                 LOGGER.warning("Secondary component " + component + " not recognized.");
             }
             for (Element secondaryRow : table.getElementsByTag("tr")) {
-                this.toSecondaryActivity(secondaryRow)
+                toSecondaryActivity(secondaryRow)
                         .map(activity -> activity.setType(component).build())
                         .ifPresent(sectionBuilder::addSecondaryActivity);
             }
         });
 
-        List<Element> primaryRows = this.activePage.select("[id='win0divSSR_CLSRCH_MTG1$0'] tr.ps_grid-row");
+        List<Element> primaryRows = page.select("[id='win0divSSR_CLSRCH_MTG1$0'] tr.ps_grid-row");
         if (components.size() != 1 && components.size() != primaryRows.size()) {
             LOGGER.log(Level.WARNING, String.format("Could not uniquely resolve components %s", components.toString()));
         }
@@ -123,29 +95,22 @@ class Scanner {
                 primaryComponent = components.get(i);
             }
             sectionBuilder.addPrimaryActivity(
-                    this.toPrimaryActivity(primaryRows.get(i)).setType(Optional.ofNullable(primaryComponent)).build());
+                    toPrimaryActivity(primaryRows.get(i)).setType(Optional.ofNullable(primaryComponent)).build());
         }
 
-        Course course = Course.builder()
-                .setName(name)
-                .setDescription(this.selectFirstText("span[id='UC_CLS_DTL_WRK_DESCRLONG$0']"))
-                .putSection(sectionId, sectionBuilder.build())
-                .addAllCrosslists(this.nextCrosslists())
-                .build();
-        // Return to the index page.
-        this.browser.action("UC_CLS_DTL_WRK_RETURN_PB$0");
-        this.nextPage();
-        return Optional.of(new AbstractMap.SimpleEntry<>(courseId, course));
+        return new AbstractMap.SimpleEntry<>(courseId, Course.builder()
+                .setName(name).setDescription(selectFirstText(page, "span[id='UC_CLS_DTL_WRK_DESCRLONG$0']"))
+                .putSection(sectionId, sectionBuilder.build()).addAllCrosslists(nextCrosslists(page)).build());
     }
 
-    private PrimaryActivity.Builder toPrimaryActivity(Element row) {
+    private static PrimaryActivity.Builder toPrimaryActivity(Element row) {
         return PrimaryActivity.builder()
                 .addAllInstructors(Arrays.asList(row.selectFirst("span[id^='MTG$']").text().trim().split(",")))
                 .setSchedule(Schedule.parse(row.selectFirst("span[id^='MTG_SCHED']").text().trim()))
                 .setLocation(row.selectFirst("span[id^='MTG_LOC']").text().trim());
     }
 
-    private Optional<SecondaryActivity.Builder> toSecondaryActivity(Element row) {
+    private static Optional<SecondaryActivity.Builder> toSecondaryActivity(Element row) {
         String descriptor = Optional.ofNullable(row.selectFirst("div[id^='win0divDISC_HTM$']"))
                 .map(element -> element.text().trim())
                 .orElseThrow(() -> new IllegalStateException("Missing descriptor."));
@@ -169,9 +134,9 @@ class Scanner {
                 .setLocation(row.selectFirst("div[id^='win0divDISC_ROOM$']").text().trim()));
     }
 
-    private Enrollment nextEnrollment() {
-        String[] tokens = this.selectFirstText("span[id='UC_CLS_DTL_WRK_DESCR3$0']")
-                .orElseGet(() -> this.selectFirstText("span[id='UC_CLS_DTL_WRK_DESCR1$0']")
+    private static Enrollment nextEnrollment(Document page) {
+        String[] tokens = selectFirstText(page, "span[id='UC_CLS_DTL_WRK_DESCR3$0']").orElseGet(
+                () -> selectFirstText(page, "span[id='UC_CLS_DTL_WRK_DESCR1$0']")
                         .orElseThrow(() -> new IllegalStateException("Could not resolve enrollment.")))
                 .split(" ");
         String[] enrollment = tokens[tokens.length - 1].split("/");
@@ -181,9 +146,45 @@ class Scanner {
                 .build();
     }
 
-    private List<String> nextCrosslists() {
-        return this.selectFirstText("div[id='win0divUC_CLS_DTL_WRK_SSR_COMPONENT_LONG$0']")
+    private static List<String> nextCrosslists(Document page) {
+        return selectFirstText(page, "div[id='win0divUC_CLS_DTL_WRK_SSR_COMPONENT_LONG$0']")
                 .map(text -> Arrays.asList(text.split(",")))
                 .orElse(ImmutableList.of());
+    }
+
+    private void nextPage() throws IOException {
+        // Trigger the next page.
+        if (this.activePage.selectFirst("a[id='UC_RSLT_NAV_WRK_SEARCH_CONDITION2$46$']") != null) {
+            this.activePage = Jsoup.parse(this.browser.action("UC_RSLT_NAV_WRK_SEARCH_CONDITION2$46$"));
+        } else {
+            this.activePage = null;
+        }
+    }
+
+    public Optional<String> nextCoursePage() throws IOException {
+        Optional<String> error = selectFirstText(this.activePage, "span[id='DERIVED_CLSMG_ERROR_TEXT']");
+        if (error.isPresent() && this.shard <= 0) {
+            // Only the first index shard should report page-level errors.
+            LOGGER.log(Level.WARNING, error.get());
+        }
+        Element row = this.activePage.select("tr[id^='DESCR100']").get(this.shard);
+        if (Optional.ofNullable(row.selectFirst("span.label"))
+                .map(label -> label.text().trim().equals("Cancelled"))
+                .orElse(false)) {
+            // Ignore cancelled courses.
+            this.nextPage();
+            return Optional.empty();
+        }
+        if (row.selectFirst("span[id^='UC_CLSRCH_WRK_UC_CLASS_TITLE$']").text().trim().isEmpty() || row.selectFirst(
+                "div[id^='win0divUC_RSLT_NAV_WRK_HTMLAREA$']").text().trim().isEmpty()) {
+            // Sometimes you get an empty course or the descriptor is missing...
+            this.nextPage();
+            return Optional.empty();
+        }
+        String childPage = this.browser.action("UC_RSLT_NAV_WRK_PTPG_NUI_DRILLOUT$" + this.shard);
+        // Return to the index page.
+        this.browser.action("UC_CLS_DTL_WRK_RETURN_PB$0");
+        this.nextPage();
+        return Optional.of(childPage);
     }
 }

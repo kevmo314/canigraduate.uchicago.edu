@@ -2,7 +2,6 @@ package com.canigraduate.uchicago;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,7 +16,7 @@ public class BrowsingSession {
         this.retries = 3;
     }
 
-    private Document fetch(Connection connection) throws IOException {
+    private String fetch(Connection connection) throws IOException {
         for (int i = 0; i < this.retries; i++) {
             try {
                 Connection.Response response = connection.cookies(this.cookies)
@@ -28,7 +27,7 @@ public class BrowsingSession {
                     throw new IOException("HTTP response status: " + response.statusCode());
                 }
                 this.cookies.putAll(response.cookies());
-                return response.parse();
+                return response.body();
             } catch (IOException ex) {
                 if (i == this.retries - 1) {
                     throw ex;
@@ -39,11 +38,11 @@ public class BrowsingSession {
 
     }
 
-    public Document get(String url) throws IOException {
+    public String get(String url) throws IOException {
         return this.fetch(Jsoup.connect(url).method(Connection.Method.GET));
     }
 
-    public Document post(String url, Map<String, String> data) throws IOException {
+    public String post(String url, Map<String, String> data) throws IOException {
         return this.fetch(Jsoup.connect(url).method(Connection.Method.POST).data(data));
     }
 }
