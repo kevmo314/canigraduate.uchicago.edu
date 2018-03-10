@@ -72,14 +72,9 @@ app.use((err, req, res, next) => {
 export const api = functions.https.onRequest(app);
 export const grades = functions.pubsub.topic('grades').onPublish(event => {
   const { chicagoId, record } = event.data.json;
+  const basis = [record['term'], record['course'], record['section']].join();
   const key = crypto
-    .pbkdf2Sync(
-      [record['term'], record['course'], record['section']].join(),
-      chicagoId,
-      2000000,
-      20,
-      'sha512',
-    )
+    .pbkdf2Sync(basis, chicagoId, 2000000, 20, 'sha512')
     .toString('base64')
     .replace(/=/g, '')
     .replace(/\+/g, '-')
