@@ -9,7 +9,8 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.beam.sdk.values.TypeDescriptors;
 
-class MapToJsonArray extends PTransform<PCollection<KV<String, Iterable<String>>>, PCollection<KV<String, JsonArray>>> {
+class MapValuesToJsonArray
+        extends PTransform<PCollection<KV<String, Iterable<String>>>, PCollection<KV<String, JsonArray>>> {
     @Override
     public PCollection<KV<String, JsonArray>> expand(PCollection<KV<String, Iterable<String>>> input) {
         return input.apply(

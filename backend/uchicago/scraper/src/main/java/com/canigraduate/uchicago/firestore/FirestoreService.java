@@ -182,12 +182,12 @@ public class FirestoreService {
         return execute(request);
     }
 
-    public static JsonObject writeIndex(String name, String payload) {
+    public static JsonObject writeJsonIndex(String name, JsonObject payload) {
         String bucket = UCHICAGO.getName();
         HttpPost request = new HttpPost(
                 String.format("https://www.googleapis.com/upload/storage/v1/b/%s/o?name=indexes/%s", bucket, name));
         try {
-            request.setEntity(new ByteArrayEntity(compress(payload)));
+            request.setEntity(new ByteArrayEntity(compress(payload.toString())));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

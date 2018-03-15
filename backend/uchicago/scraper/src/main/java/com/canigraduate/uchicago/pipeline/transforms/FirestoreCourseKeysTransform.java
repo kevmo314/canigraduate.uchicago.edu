@@ -21,8 +21,9 @@ public class FirestoreCourseKeysTransform extends PTransform<PBegin, PCollection
         return input.getPipeline()
                 .apply(Create.of(1).withType(TypeDescriptors.integers()))
                 // Done to avoid running new Courses().list() locally to reduce egress charges/latency.
-                .apply(FlatMapElements.into(TypeDescriptors.strings()).via(ignore -> new Courses().list()))
-                .apply(FlatMapElements.into(TypeDescriptor.of(Key.class))
+                .apply("Fetch courses",
+                        FlatMapElements.into(TypeDescriptors.strings()).via(ignore -> new Courses().list()))
+                .apply("Fetch terms", FlatMapElements.into(TypeDescriptor.of(Key.class))
                         .via(course -> Streams.stream(new Terms(course).list())
                                 .map(Term::create)
                                 .map(term -> Key.builder()

@@ -66,7 +66,7 @@ class FirestoreServiceTest {
     void writeIndex() {
         JsonObject object = new JsonObject();
         object.addProperty("mookey", "cowvalue");
-        JsonObject result = FirestoreService.writeIndex("test", object.toString());
+        JsonObject result = FirestoreService.writeJsonIndex("test", object);
         assertThat(result.has("id")).isTrue();
     }
 }

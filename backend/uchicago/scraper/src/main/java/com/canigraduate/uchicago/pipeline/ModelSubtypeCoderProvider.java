@@ -7,6 +7,7 @@ import com.canigraduate.uchicago.pipeline.models.TermAndDepartment;
 import com.canigraduate.uchicago.pipeline.transforms.CourseSearchTransform;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.apache.beam.sdk.coders.CannotProvideCoderException;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.coders.CoderProvider;
@@ -19,7 +20,7 @@ public class ModelSubtypeCoderProvider extends CoderProvider {
     private static final Map<Class<?>, Coder> CODER_MAP = new ImmutableMap.Builder<Class<?>, Coder>().put(Key.class,
             KeyCoder.of())
             .put(TermAndDepartment.class, TermAndDepartmentCoder.of())
-            .put(JsonArray.class, JsonArrayCoder.of())
+            .put(JsonArray.class, JsonArrayCoder.of()).put(JsonObject.class, JsonObjectCoder.of())
             .put(CourseSearchTransform.Params.class, ParamsCoder.of())
             .put(Course.class, CourseCoder.of())
             .put(Enrollment.class, EnrollmentCoder.of())
