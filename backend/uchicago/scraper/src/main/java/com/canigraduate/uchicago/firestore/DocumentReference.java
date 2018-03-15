@@ -1,6 +1,7 @@
 package com.canigraduate.uchicago.firestore;
 
 import com.canigraduate.uchicago.firestore.models.Document;
+import com.google.common.collect.Streams;
 import com.google.gson.JsonObject;
 import org.apache.http.client.methods.HttpGet;
 
@@ -15,9 +16,13 @@ public class DocumentReference {
     private final String name;
     private final CollectionReference parent;
 
-    public DocumentReference(CollectionReference parent, String name) {
+    DocumentReference(CollectionReference parent, String name) {
         this.parent = parent;
         this.name = name;
+    }
+
+    String getName() {
+        return this.name;
     }
 
     String getUrl() throws UnsupportedEncodingException {
@@ -28,16 +33,18 @@ public class DocumentReference {
         return this.parent.getPath() + "/" + name;
     }
 
-    CollectionReference collection(String name) {
+    public CollectionReference collection(String name) {
         return new CollectionReference(this, name);
     }
 
-    private List<String> collectionIds() {
+    private Iterable<String> collectionIds() {
         return FirestoreService.listCollectionIds(this);
     }
 
     public List<CollectionReference> collections() {
-        return collectionIds().stream().map(id -> new CollectionReference(this, id)).collect(Collectors.toList());
+        return Streams.stream(collectionIds())
+                .map(id -> new CollectionReference(this, id))
+                .collect(Collectors.toList());
     }
 
     public void delete() {

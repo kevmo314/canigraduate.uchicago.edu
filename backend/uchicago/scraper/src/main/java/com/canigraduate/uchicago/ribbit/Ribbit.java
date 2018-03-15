@@ -8,12 +8,10 @@ import org.jsoup.nodes.Document;
 import java.io.IOException;
 import java.text.Normalizer;
 import java.util.Optional;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 public class Ribbit {
     private static final String BASE_URL = "http://collegecatalog.uchicago.edu/ribbit/index.cgi?page=getcourse.rjs&code=";
-    private static final Logger LOG = Logger.getLogger(Ribbit.class.getName());
     private static final Pattern TITLE_PATTERN = Pattern.compile("([^.]+)\\. (.+?)\\.?(?: +(\\d+) Units\\.)?");
 
     public static Optional<Course> getRecordForCourse(String course) throws IOException {

@@ -35,7 +35,7 @@ public class OptionalCoder<T> extends Coder<Optional<T>> {
     }
 
     @Override
-    public List<? extends Coder<?>> getCoderArguments() {
+    public List<? extends Coder<T>> getCoderArguments() {
         return ImmutableList.of(this.nullableCoder);
     }
 

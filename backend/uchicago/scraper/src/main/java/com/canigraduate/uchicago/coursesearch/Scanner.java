@@ -1,7 +1,6 @@
 package com.canigraduate.uchicago.coursesearch;
 
 import com.canigraduate.uchicago.models.*;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -26,7 +25,7 @@ class Scanner {
     private int shard;
     private Document activePage;
 
-    public Scanner(Browser browser, String department) throws IOException {
+    Scanner(Browser browser, String department) throws IOException {
         this.browser = browser;
         this.browser.action("UC_CLSRCH_WRK2_STRM");
         this.activePage = Jsoup.parse(this.browser.action("UC_CLSRCH_WRK2_SEARCH_BTN",
@@ -147,9 +146,11 @@ class Scanner {
     }
 
     private static List<String> nextCrosslists(Document page) {
-        return selectFirstText(page, "div[id='win0divUC_CLS_DTL_WRK_SSR_COMPONENT_LONG$0']")
-                .map(text -> Arrays.asList(text.split(",")))
-                .orElse(ImmutableList.of());
+        return page.select("select[id='UC_CLS_DTL_WRK_DESCR125$0'] option")
+                .stream()
+                .map(element -> element.text().split("/")[0].trim())
+                .filter(value -> !value.isEmpty())
+                .collect(Collectors.toList());
     }
 
     private void nextPage() throws IOException {

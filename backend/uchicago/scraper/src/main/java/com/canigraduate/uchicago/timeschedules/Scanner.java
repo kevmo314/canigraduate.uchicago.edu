@@ -16,8 +16,6 @@ class Scanner {
     private static final Logger LOGGER = Logger.getLogger(Scanner.class.getName());
     private static final Pattern ID_PATTERN = Pattern.compile("([A-Z]{4})\\s/\\s(\\d{5})\\s-\\s(.+)");
     private final Element[] cells;
-    private Section section = null;
-    private Course course = null;
     private int index;
 
     Scanner(List<Element> cells) {

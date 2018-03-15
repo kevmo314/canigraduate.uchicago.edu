@@ -1,5 +1,7 @@
 package com.canigraduate.uchicago.firestore;
 
+import com.google.common.collect.Streams;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
@@ -36,15 +38,15 @@ public class CollectionReference {
         FirestoreService.delete(this);
     }
 
-    public List<String> documentIds() {
+    public Iterable<String> documentIds() {
         return FirestoreService.listDocumentIds(this);
     }
 
-    public List<String> documentIds(String transaction) {
+    public Iterable<String> documentIds(String transaction) {
         return FirestoreService.listDocumentIds(this, transaction);
     }
 
     public List<DocumentReference> documents() {
-        return documentIds().stream().map(id -> new DocumentReference(this, id)).collect(Collectors.toList());
+        return Streams.stream(documentIds()).map(id -> new DocumentReference(this, id)).collect(Collectors.toList());
     }
 }

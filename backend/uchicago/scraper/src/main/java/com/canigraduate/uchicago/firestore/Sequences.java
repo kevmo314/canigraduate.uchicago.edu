@@ -5,10 +5,10 @@ import com.canigraduate.uchicago.firestore.models.Document;
 import com.canigraduate.uchicago.firestore.models.Write;
 import com.canigraduate.uchicago.models.Course;
 import com.canigraduate.uchicago.serializers.CourseSerializer;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 
-import java.util.List;
 import java.util.Optional;
 
 public class Sequences {
@@ -22,7 +22,7 @@ public class Sequences {
         root.document(course).delete();
     }
 
-    public List<String> list() {
+    public Iterable<String> list() {
         return root.documentIds();
     }
 
@@ -35,6 +35,7 @@ public class Sequences {
     }
 
     public JsonObject set(String id, Course course) {
+        Preconditions.checkState(id.length() > 10, "Sequence id is wrong length.");
         return FirestoreService.commit(ImmutableList.of(new Write().setUpdate(
                 new Document().setFields(CourseSerializer.toMapValue(course)).setName("sequences/" + id))));
     }

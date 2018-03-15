@@ -9,6 +9,10 @@ public class Write {
         this.object = new JsonObject();
     }
 
+    public Write(JsonObject parse) {
+        this.object = parse;
+    }
+
     public JsonObject toJsonObject() {
         return this.object;
     }

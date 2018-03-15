@@ -8,7 +8,6 @@ import com.canigraduate.uchicago.serializers.TermSerializer;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 
-import java.util.List;
 import java.util.Optional;
 
 public class Terms {
@@ -24,7 +23,7 @@ public class Terms {
         root.document(term).delete();
     }
 
-    public List<String> list() {
+    public Iterable<String> list() {
         return root.documentIds();
     }
 

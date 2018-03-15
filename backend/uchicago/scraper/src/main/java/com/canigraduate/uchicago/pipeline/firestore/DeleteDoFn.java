@@ -7,8 +7,6 @@ import org.apache.beam.sdk.transforms.DoFn;
 public class DeleteDoFn extends DoFn<Key, Void> {
     @ProcessElement
     public void processElement(ProcessContext c) {
-        String course = c.element().getCourse().orElseThrow(() -> new RuntimeException("Missing course"));
-        String term = c.element().getTerm().orElseThrow(() -> new RuntimeException("Missing course")).getTerm();
-        new Terms(course).delete(term);
+        new Terms(c.element().getCourse()).delete(c.element().getTerm().getTerm());
     }
 }

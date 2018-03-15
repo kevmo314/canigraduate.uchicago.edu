@@ -20,7 +20,6 @@ public class AssignPriorityTransform extends PTransform<PCollection<KV<Key, Cour
                 .via(e -> KV.of(e.getKey(), e.getValue()
                         .withPriority(Objects.requireNonNull(e.getKey())
                                 .getTerm()
-                                .orElseThrow(() -> new IllegalStateException("Missing term"))
                                 .getOrdinal()))));
     }
 }

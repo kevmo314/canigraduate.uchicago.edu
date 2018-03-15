@@ -8,7 +8,6 @@ import com.canigraduate.uchicago.serializers.SectionSerializer;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 
-import java.util.List;
 import java.util.Optional;
 
 public class Sections {
@@ -35,7 +34,7 @@ public class Sections {
         return new Write().setDelete(FirestoreService.getBasePath() + "/" + root.document(section).getPath());
     }
 
-    public List<String> list() {
+    public Iterable<String> list() {
         return root.documentIds();
     }
 
@@ -56,7 +55,7 @@ public class Sections {
                 .setName("courses/" + course + "/terms/" + term + "/sections/" + id));
     }
 
-    public List<String> list(String transaction) {
+    public Iterable<String> list(String transaction) {
         return root.documentIds(transaction);
     }
 }

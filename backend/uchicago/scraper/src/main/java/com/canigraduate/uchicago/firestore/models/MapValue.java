@@ -32,14 +32,13 @@ public class MapValue {
     }
 
     private JsonObject getFields() {
-        return this.object.getAsJsonObject("fields");
+        // Weird, it's empty?
+        return Optional.ofNullable(this.object.getAsJsonObject("fields")).orElse(new JsonObject());
     }
 
     public Map<String, Value> toMap() {
-        return new ImmutableMap.Builder().putAll(this.getFields()
-                .entrySet()
-                .stream()
-                .map(entry -> new AbstractMap.SimpleEntry(entry.getKey(),
+        return new ImmutableMap.Builder<String, Value>().putAll(
+                this.getFields().entrySet().stream().map(entry -> new AbstractMap.SimpleEntry<>(entry.getKey(),
                         new Value(entry.getValue().getAsJsonObject())))
                 .collect(Collectors.toList())).build();
     }

@@ -42,4 +42,11 @@ class CollegeCatalogTest {
         assertThat(courses.get("MATH 15100-15200-15300").getParent()).isNotPresent();
         assertThat(courses.get("MATH 15100-15200-15300").isLeaf()).isFalse();
     }
+
+    @Test
+    void getCoursesAndSequences_pbpl() throws IOException {
+        Map<String, Course> courses = CollegeCatalog.getCoursesAndSequences(
+                "http://collegecatalog.uchicago.edu/thecollege/publicpolicystudies/");
+        assertThat(courses).containsKey("PBPL 29900").doesNotContainKey("PBPL PBPL");
+    }
 }

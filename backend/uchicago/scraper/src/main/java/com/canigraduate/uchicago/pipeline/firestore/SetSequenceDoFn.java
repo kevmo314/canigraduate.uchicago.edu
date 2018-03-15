@@ -6,13 +6,11 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 
 import java.util.Objects;
-import java.util.logging.Logger;
 
 /**
  * Upload a course to Firestore.
  */
-public class UploadSequenceDoFn extends DoFn<KV<String, Course>, Void> {
-    private static final Logger LOGGER = Logger.getLogger(UploadSequenceDoFn.class.getName());
+public class SetSequenceDoFn extends DoFn<KV<String, Course>, Void> {
 
     @ProcessElement
     public void processElement(ProcessContext c) {

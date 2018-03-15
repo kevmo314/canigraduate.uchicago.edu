@@ -10,24 +10,23 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.*;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLEncoder;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPOutputStream;
 
 public class FirestoreService {
     private static final ServiceAccountCredentials CREDENTIALS = new ServiceAccountCredentials(
-            "https://www.googleapis.com/auth/datastore");
+            "https://www.googleapis.com/auth/datastore", "https://www.googleapis.com/auth/devstorage.full_control");
     private static final String FIRESTORE_URL = "https://firestore.googleapis.com/v1beta1/";
     private static DocumentReference UCHICAGO = new CollectionReference(null, "institutions").document("uchicago");
 
@@ -47,7 +46,7 @@ public class FirestoreService {
         return FIRESTORE_URL + getUChicagoPath();
     }
 
-    static DocumentReference getUChicago() {
+    public static DocumentReference getUChicago() {
         return UCHICAGO;
     }
 
@@ -114,7 +113,7 @@ public class FirestoreService {
         } while (!documents.isEmpty());
     }
 
-    static List<String> listCollectionIds(DocumentReference doc) {
+    static Iterable<String> listCollectionIds(DocumentReference doc) {
         try {
             String url = getBaseUrl() + ":listCollectionIds?parent=" + URLEncoder.encode(
                     getBasePath() + "/" + doc.getPath(), "UTF-8");
@@ -127,11 +126,11 @@ public class FirestoreService {
         }
     }
 
-    static List<String> listDocumentIds(CollectionReference collection) {
+    static Iterable<String> listDocumentIds(CollectionReference collection) {
         return listDocumentIds(collection, null);
     }
 
-    static List<String> listDocumentIds(CollectionReference collection, String transaction) {
+    static Iterable<String> listDocumentIds(CollectionReference collection, String transaction) {
         ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
         Optional<String> nextPageToken = Optional.empty();
         do {
@@ -161,11 +160,11 @@ public class FirestoreService {
                 .orElseThrow(() -> new RuntimeException("Missing transaction"));
     }
 
-    public static JsonObject commit(List<Write> writes) {
+    public static JsonObject commit(Iterable<Write> writes) {
         return commit(writes, null);
     }
 
-    public static JsonObject commit(List<Write> writes, String transaction) {
+    public static JsonObject commit(Iterable<Write> writes, String transaction) {
         JsonObject writeRequest = new JsonObject();
         JsonArray jsonWrites = new JsonArray();
         writes.forEach(write -> jsonWrites.add(write.toJsonObject()));
@@ -181,6 +180,45 @@ public class FirestoreService {
         }
         request.setHeader(HTTP.CONTENT_TYPE, "application/json");
         return execute(request);
+    }
+
+    public static JsonObject writeIndex(String name, String payload) {
+        String bucket = UCHICAGO.getName();
+        HttpPost request = new HttpPost(
+                String.format("https://www.googleapis.com/upload/storage/v1/b/%s/o?name=indexes/%s", bucket, name));
+        try {
+            request.setEntity(new ByteArrayEntity(compress(payload)));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        request.setHeader(HTTP.CONTENT_TYPE, "application/json");
+        JsonObject response = execute(request);
+        makeReadableAndCompressed(name);
+        return response;
+    }
+
+    private static JsonObject makeReadableAndCompressed(String name) {
+        String bucket = UCHICAGO.getName();
+        HttpPut request;
+        try {
+            request = new HttpPut(String.format("https://www.googleapis.com/storage/v1/b/%s/o/%s", bucket,
+                    URLEncoder.encode("indexes/" + name, "UTF-8")));
+            request.setEntity(new StringEntity(
+                    "{\"acl\":[{\"entity\":\"allUsers\",\"role\":\"READER\"}],\"metadata\":{\"Content-Encoding\":\"gzip\"}}\n"));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+        request.setHeader(HTTP.CONTENT_TYPE, "application/json");
+        return execute(request);
+    }
+
+    private static byte[] compress(String data) throws IOException {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(data.length())) {
+            try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+                gzipOutputStream.write(data.getBytes());
+            }
+            return byteArrayOutputStream.toByteArray();
+        }
     }
 }
 

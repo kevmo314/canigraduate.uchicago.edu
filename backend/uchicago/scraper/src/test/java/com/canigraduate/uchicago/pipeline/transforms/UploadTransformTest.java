@@ -45,7 +45,8 @@ class UploadTransformTest {
                 .build(), timeschedules.get("PHYS 13300")), KV.of(Key.builder()
                 .setCourse("PHYS 14300")
                 .setTerm(Term.create("Spring 2010"))
-                .setDepartment("PHYS").build(), timeschedules.get("PHYS 14300")))).apply(new UploadTransform());
+                .setDepartment("PHYS")
+                .build(), timeschedules.get("PHYS 14300")))).apply("Upload courses", new UploadTransform());
         pipeline.run();
 
         Courses courses = new Courses();

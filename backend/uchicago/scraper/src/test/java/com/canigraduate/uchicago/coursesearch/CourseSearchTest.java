@@ -31,7 +31,7 @@ class CourseSearchTest {
     }
 
     @Test
-    void getCourses() throws IOException {
+    void getCourses() {
         Map<String, Course> courses = CourseSearch.getCourses("2168", "ARAB");
         assertThat(courses).containsKeys("ARAB 10101", "ARAB 30301", "ARAB 30551");
         assertThat(courses.get("ARAB 10101").getSections()).containsOnlyKeys("1", "2", "3", "4");
@@ -47,7 +47,20 @@ class CourseSearchTest {
     }
 
     @Test
-    void getCourses_cancelledAndSecondaries() throws IOException {
+    void getCourses_crosslists() {
+        Map<String, Course> courses = CourseSearch.getCourses("2184", "EALC");
+        assertThat(courses).containsKeys("EALC 11000");
+        assertThat(courses.get("EALC 11000").getCrosslists()).containsExactlyInAnyOrder("HIST 15300", "SOSC 23700",
+                "CRES 11000");
+        assertThat(courses.get("EALC 11000").getSections()).containsKey("1");
+        assertThat(courses.get("EALC 11000").getSection("1").getPrimaryActivities()).hasSize(1)
+                .allSatisfy(activity -> assertThat(activity.getType()).contains("Lecture"));
+        assertThat(courses.get("EALC 11000").getSection("1").getSecondaryActivities()).hasSize(2)
+                .allSatisfy(activity -> assertThat(activity.getType()).contains("Discussion"));
+    }
+
+    @Test
+    void getCourses_cancelledAndSecondaries() {
         Map<String, Course> courses = CourseSearch.getCourses("2168", "MATH");
         assertThat(courses).hasSize(46).containsKeys("MATH 11200");
         assertThat(courses.get("MATH 11200").getSections()).containsOnlyKeys("20", "40");
@@ -58,7 +71,7 @@ class CourseSearchTest {
     }
 
     @Test
-    void getCourses_edgeCases() throws IOException {
+    void getCourses_edgeCases() {
         assertThat(CourseSearch.getCourses("2178", "HIST")).isNotEmpty();
         assertThat(CourseSearch.getCourses("2178", "EALC")).isNotEmpty();
         assertThat(CourseSearch.getCourses("2184", "BIOS")).isNotEmpty();

@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class CollegeCatalog {
     private static final String BASE_URL = "http://collegecatalog.uchicago.edu";
-    private static final Pattern TITLE = Pattern.compile("([^.]+)\\. +(.+?)\\.?(?: +\\d+ Units\\.)?");
+    private static final Pattern TITLE = Pattern.compile("([A-Z]{4} [\\d-]+)\\. +(.+?)\\.?(?: +\\d+ Units\\.)?");
 
     private static Optional<CourseKey> parseCourseKey(String title) {
         Matcher matcher = TITLE.matcher(Normalizer.normalize(title, Normalizer.Form.NFKD).trim());

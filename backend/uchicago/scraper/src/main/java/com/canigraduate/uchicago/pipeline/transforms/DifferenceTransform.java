@@ -14,16 +14,16 @@ import org.apache.beam.sdk.values.TupleTag;
 
 public class DifferenceTransform<T> extends PTransform<PCollectionList<T>, PCollection<T>> {
     @Override
-    public PCollection<T> expand(PCollectionList<T> inputs) {
-        PCollection<T> minuend = inputs.get(0);
-        PCollection<T> subtrahend = inputs.get(1);
+    public PCollection<T> expand(PCollectionList<T> input) {
+        PCollection<T> minuend = input.get(0);
+        PCollection<T> subtrahend = input.get(1);
         final TupleTag<Long> minuendTag = new TupleTag<>();
         final TupleTag<Long> subtrahendTag = new TupleTag<>();
         return KeyedPCollectionTuple.of(minuendTag, minuend.apply("Minuend Count", Count.perElement()))
                 .and(subtrahendTag, subtrahend.apply("Subtrahend Count", Count.perElement()))
                 .apply("CoGroupByKey", CoGroupByKey.create())
                 .apply("Subtract", ParDo.of(new DoFn<KV<T, CoGbkResult>, T>() {
-                    @ProcessElement
+                    @DoFn.ProcessElement
                     public void processElement(ProcessContext c) {
                         CoGbkResult result = c.element().getValue();
                         if (result.getOnly(minuendTag, 0L) > 0 && result.getOnly(subtrahendTag, 0L) == 0) {
