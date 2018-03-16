@@ -4,13 +4,13 @@ import com.canigraduate.uchicago.ServiceAccountCredentials;
 import com.canigraduate.uchicago.firestore.models.Document;
 import com.canigraduate.uchicago.firestore.models.Write;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.*;
-import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -131,11 +131,27 @@ public class FirestoreService {
     }
 
     static Iterable<String> listDocumentIds(CollectionReference collection, String transaction) {
-        ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
+        return Iterables.transform(listDocuments(collection, transaction, false), Document::getId);
+    }
+
+    static Iterable<Document> listDocuments(CollectionReference collection) {
+        return listDocuments(collection, null);
+    }
+
+    static Iterable<Document> listDocuments(CollectionReference collection, String transaction) {
+        return listDocuments(collection, transaction, true);
+    }
+
+    private static Iterable<Document> listDocuments(CollectionReference collection, String transaction,
+                                                    boolean includeFields) {
+        ImmutableList.Builder<Document> builder = new ImmutableList.Builder<>();
         Optional<String> nextPageToken = Optional.empty();
         do {
             try {
-                String params = "mask.fieldPaths=_&pageSize=500&showMissing=true";
+                String params = "pageSize=500&showMissing=true";
+                if (!includeFields) {
+                    params += "&mask.fieldPaths=_";
+                }
                 if (transaction != null) {
                     params += "&transaction=" + URLEncoder.encode(transaction, "UTF-8");
                 }
@@ -144,14 +160,14 @@ public class FirestoreService {
                 }
                 JsonObject obj = execute(new HttpGet(collection.getUrl() + "?" + params));
                 Optional.ofNullable(obj.getAsJsonArray("documents"))
-                        .ifPresent(array -> array.forEach(
-                                doc -> builder.add(new Document(doc.getAsJsonObject()).getId())));
+                        .ifPresent(array -> array.forEach(doc -> builder.add(new Document(doc.getAsJsonObject()))));
                 nextPageToken = Optional.ofNullable(obj.get("nextPageToken")).map(JsonElement::getAsString);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         } while (nextPageToken.isPresent());
         return builder.build();
+
     }
 
     public static String beginTransaction() {
@@ -182,29 +198,30 @@ public class FirestoreService {
         return execute(request);
     }
 
-    public static JsonObject writeJsonIndex(String name, JsonObject payload) {
+    public static JsonObject writeIndex(String name, String payload) {
         String bucket = UCHICAGO.getName();
         HttpPost request = new HttpPost(
                 String.format("https://www.googleapis.com/upload/storage/v1/b/%s/o?name=indexes/%s", bucket, name));
         try {
-            request.setEntity(new ByteArrayEntity(compress(payload.toString())));
+            // request.setEntity(new ByteArrayEntity(compress(payload.toString())));
+            request.setEntity(new StringEntity(payload));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         request.setHeader(HTTP.CONTENT_TYPE, "application/json");
         JsonObject response = execute(request);
-        makeReadableAndCompressed(name);
+        makeReadable(name);
         return response;
     }
 
-    private static JsonObject makeReadableAndCompressed(String name) {
+
+    private static JsonObject makeReadable(String name) {
         String bucket = UCHICAGO.getName();
-        HttpPut request;
+        HttpPatch request;
         try {
-            request = new HttpPut(String.format("https://www.googleapis.com/storage/v1/b/%s/o/%s", bucket,
+            request = new HttpPatch(String.format("https://www.googleapis.com/storage/v1/b/%s/o/%s", bucket,
                     URLEncoder.encode("indexes/" + name, "UTF-8")));
-            request.setEntity(new StringEntity(
-                    "{\"acl\":[{\"entity\":\"allUsers\",\"role\":\"READER\"}],\"metadata\":{\"Content-Encoding\":\"gzip\"}}\n"));
+            request.setEntity(new StringEntity("{\"acl\":[{\"entity\":\"allUsers\",\"role\":\"READER\"}]}\n"));
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }

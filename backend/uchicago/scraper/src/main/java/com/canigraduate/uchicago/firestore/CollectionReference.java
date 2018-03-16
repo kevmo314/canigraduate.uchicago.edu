@@ -1,5 +1,6 @@
 package com.canigraduate.uchicago.firestore;
 
+import com.canigraduate.uchicago.firestore.models.Document;
 import com.google.common.collect.Streams;
 
 import java.io.UnsupportedEncodingException;
@@ -44,6 +45,14 @@ public class CollectionReference {
 
     public Iterable<String> documentIds(String transaction) {
         return FirestoreService.listDocumentIds(this, transaction);
+    }
+
+    public Iterable<Document> allDocuments() {
+        return FirestoreService.listDocuments(this);
+    }
+
+    public Iterable<Document> allDocuments(String transaction) {
+        return FirestoreService.listDocuments(this, transaction);
     }
 
     public List<DocumentReference> documents() {

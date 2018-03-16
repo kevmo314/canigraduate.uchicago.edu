@@ -1,24 +1,20 @@
 package com.canigraduate.uchicago.pipeline.indexing;
 
-import com.canigraduate.uchicago.pipeline.ReduceElements;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Streams;
-import com.google.gson.JsonObject;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TypeDescriptor;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class ReduceToJsonObject extends PTransform<PCollection<KV<String, Iterable<String>>>, PCollection<JsonObject>> {
+public class ReduceToJsonObject
+        extends PTransform<PCollection<KV<String, Iterable<String>>>, PCollection<KV<String, String>>> {
     private final PCollectionView<List<String>> courses;
 
     private ReduceToJsonObject(PCollectionView<List<String>> courses) {
@@ -30,7 +26,7 @@ public class ReduceToJsonObject extends PTransform<PCollection<KV<String, Iterab
     }
 
     @Override
-    public PCollection<JsonObject> expand(PCollection<KV<String, Iterable<String>>> input) {
+    public PCollection<KV<String, String>> expand(PCollection<KV<String, Iterable<String>>> input) {
         return input.apply(ParDo.of(new DoFn<KV<String, Iterable<String>>, KV<String, String>>() {
             @ProcessElement
             public void processElement(ProcessContext c) {
@@ -41,12 +37,6 @@ public class ReduceToJsonObject extends PTransform<PCollection<KV<String, Iterab
                                 coursesArray.size()))
                         .collect(Collectors.toList()))));
             }
-        }).withSideInputs(courses))
-                .apply(new ReduceElements<>())
-                .apply(MapElements.into(TypeDescriptor.of(JsonObject.class)).via(e -> {
-                    JsonObject output = new JsonObject();
-                    e.forEach(kv -> output.addProperty(Objects.requireNonNull(kv.getKey()), kv.getValue()));
-                    return output;
-                }));
+        }).withSideInputs(courses));
     }
 }

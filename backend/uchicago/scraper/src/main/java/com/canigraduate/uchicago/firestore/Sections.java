@@ -6,6 +6,7 @@ import com.canigraduate.uchicago.firestore.models.Write;
 import com.canigraduate.uchicago.models.Section;
 import com.canigraduate.uchicago.serializers.SectionSerializer;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.gson.JsonObject;
 
 import java.util.Optional;
@@ -36,6 +37,10 @@ public class Sections {
 
     public Iterable<String> list() {
         return root.documentIds();
+    }
+
+    public Iterable<Section> all() {
+        return Iterables.transform(root.allDocuments(), doc -> SectionDeserializer.fromMapValue(doc.getFields()));
     }
 
     public Optional<Section> get(String section) {
