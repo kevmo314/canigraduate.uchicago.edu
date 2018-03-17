@@ -6,6 +6,8 @@ import * as crypto from 'crypto';
 import notifyWatch from './transforms/notifyWatch';
 import transcriptHandler from './endpoints/transcriptHandler';
 import evaluationsHandler from './endpoints/evaluationsHandler';
+import listIndexesHandler from './endpoints/listIndexesHandler';
+import getIndexesHandler from './endpoints/getIndexesHandler';
 
 const serviceAccount = require('../service-account.json');
 
@@ -34,6 +36,8 @@ app.use((req, res, next) => {
 
 app.disable('x-powered-by');
 
+app.all('/indexes/:type', listIndexesHandler);
+app.all('/indexes/:type/:key', getIndexesHandler);
 app.all('/evaluations/:id', evaluationsHandler);
 app.all('/transcript', transcriptHandler);
 app.all('/grades', (req, res, next) => {
@@ -93,13 +97,26 @@ export const grades = functions.pubsub.topic('grades').onPublish(event => {
       tenure: record['tenure'],
     });
 });
+
+type Params = {
+  course: string;
+  term: string;
+  section: string;
+};
+
+const SECTION_PATH =
+  'institutions/uchicago/courses/{course}/terms/{term}/sections/{section}';
+export const incrementIndex = functions.firestore
+  .document(SECTION_PATH)
+  .onCreate(event => adjustCardinalityHandler(event.params as Params, 1));
+export const decrementIndex = functions.firestore
+  .document(SECTION_PATH)
+  .onCreate(event => adjustCardinalityHandler(event.params as Params, -1));
 export const watches = functions.firestore
-  .document(
-    'institutions/uchicago/courses/{course}/terms/{term}/sections/{section}',
-  )
+  .document(SECTION_PATH)
   .onWrite(event => {
     notifyWatch(
-      event.params as { course: string; term: string; section: string },
+      event.params as Params,
       event.data.previous.data(),
       event.data.data(),
     );
