@@ -6,10 +6,13 @@ import com.canigraduate.uchicago.firestore.models.Write;
 import com.canigraduate.uchicago.models.Section;
 import com.canigraduate.uchicago.serializers.SectionSerializer;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import com.google.gson.JsonObject;
 
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class Sections {
     private final CollectionReference root;
@@ -39,8 +42,11 @@ public class Sections {
         return root.documentIds();
     }
 
-    public Iterable<Section> all() {
-        return Iterables.transform(root.allDocuments(), doc -> SectionDeserializer.fromMapValue(doc.getFields()));
+    public Iterable<Map.Entry<String, Section>> all() {
+        return Streams.stream(root.allDocuments())
+                .map(doc -> new AbstractMap.SimpleImmutableEntry<>(doc.getId(),
+                        SectionDeserializer.fromMapValue(doc.getFields())))
+                .collect(Collectors.toList());
     }
 
     public Optional<Section> get(String section) {

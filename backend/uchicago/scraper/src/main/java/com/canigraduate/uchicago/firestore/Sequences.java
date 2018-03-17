@@ -31,7 +31,7 @@ public class Sequences {
     }
 
     private Optional<Course> get(String course, String transaction) {
-        return root.document(course).get(transaction).map(Document::getFields).map(CourseDeserializer::toMapValue);
+        return root.document(course).get(transaction).map(Document::getFields).map(CourseDeserializer::fromMapValue);
     }
 
     public JsonObject set(String id, Course course) {

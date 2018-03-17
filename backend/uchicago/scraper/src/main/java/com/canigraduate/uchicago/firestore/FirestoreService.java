@@ -3,8 +3,10 @@ package com.canigraduate.uchicago.firestore;
 import com.canigraduate.uchicago.ServiceAccountCredentials;
 import com.canigraduate.uchicago.firestore.models.Document;
 import com.canigraduate.uchicago.firestore.models.Write;
+import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -19,7 +21,9 @@ import org.apache.http.util.EntityUtils;
 
 import java.io.*;
 import java.net.URLEncoder;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
@@ -144,30 +148,64 @@ public class FirestoreService {
 
     private static Iterable<Document> listDocuments(CollectionReference collection, String transaction,
                                                     boolean includeFields) {
-        ImmutableList.Builder<Document> builder = new ImmutableList.Builder<>();
-        Optional<String> nextPageToken = Optional.empty();
-        do {
-            try {
-                String params = "pageSize=500&showMissing=true";
-                if (!includeFields) {
-                    params += "&mask.fieldPaths=_";
-                }
-                if (transaction != null) {
-                    params += "&transaction=" + URLEncoder.encode(transaction, "UTF-8");
-                }
-                if (nextPageToken.isPresent()) {
-                    params += "&pageToken=" + URLEncoder.encode(nextPageToken.get(), "UTF-8");
-                }
-                JsonObject obj = execute(new HttpGet(collection.getUrl() + "?" + params));
-                Optional.ofNullable(obj.getAsJsonArray("documents"))
-                        .ifPresent(array -> array.forEach(doc -> builder.add(new Document(doc.getAsJsonObject()))));
-                nextPageToken = Optional.ofNullable(obj.get("nextPageToken")).map(JsonElement::getAsString);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } while (nextPageToken.isPresent());
-        return builder.build();
+        return () -> new Iterator<Document>() {
+            boolean finished = false;
+            String nextPageToken = null;
+            EvictingQueue<Document> queue = EvictingQueue.create(300);
 
+            @Override
+            public boolean hasNext() {
+                if (queue.isEmpty()) {
+                    repopulateQueue();
+                }
+                return !finished || !queue.isEmpty();
+            }
+
+            private void repopulateQueue() {
+                if (finished) {
+                    return;
+                }
+                try {
+                    // Issue a new request to populate the queue.
+                    String params = "pageSize=300&showMissing=true";
+                    if (!includeFields) {
+                        params += "&mask.fieldPaths=_";
+                    }
+                    if (transaction != null) {
+                        params += "&transaction=" + URLEncoder.encode(transaction, "UTF-8");
+                    }
+                    if (nextPageToken != null) {
+                        params += "&pageToken=" + URLEncoder.encode(nextPageToken, "UTF-8");
+                    }
+                    JsonObject obj = execute(new HttpGet(collection.getUrl() + "?" + params));
+                    JsonArray documents = obj.getAsJsonArray("documents");
+                    if (documents == null) {
+                        finished = true;
+                        return;
+                    }
+                    Streams.stream(documents).map(JsonElement::getAsJsonObject).map(Document::new).forEach(queue::add);
+                    nextPageToken = Optional.ofNullable(obj.get("nextPageToken"))
+                            .map(JsonElement::getAsString)
+                            .orElse(null);
+                    if (nextPageToken == null) {
+                        finished = true;
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public Document next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+                if (queue.isEmpty()) {
+                    repopulateQueue();
+                }
+                return queue.poll();
+            }
+        };
     }
 
     public static String beginTransaction() {
@@ -194,16 +232,16 @@ public class FirestoreService {
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
-        request.setHeader(HTTP.CONTENT_TYPE, "application/json");
+        // request.setHeader(HTTP.CONTENT_TYPE, "application/json");
         return execute(request);
     }
 
     public static JsonObject writeIndex(String name, String payload) {
         String bucket = UCHICAGO.getName();
-        HttpPost request = new HttpPost(
-                String.format("https://www.googleapis.com/upload/storage/v1/b/%s/o?name=indexes/%s", bucket, name));
+        HttpPost request;
         try {
-            // request.setEntity(new ByteArrayEntity(compress(payload.toString())));
+            request = new HttpPost(String.format("https://www.googleapis.com/upload/storage/v1/b/%s/o?name=%s", bucket,
+                    URLEncoder.encode("indexes/" + name, "UTF-8")));
             request.setEntity(new StringEntity(payload));
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -221,7 +259,7 @@ public class FirestoreService {
         try {
             request = new HttpPatch(String.format("https://www.googleapis.com/storage/v1/b/%s/o/%s", bucket,
                     URLEncoder.encode("indexes/" + name, "UTF-8")));
-            request.setEntity(new StringEntity("{\"acl\":[{\"entity\":\"allUsers\",\"role\":\"READER\"}]}\n"));
+            request.setEntity(new StringEntity("{\"acl\":[{\"entity\":\"allUsers\",\"role\":\"READER\"}]}"));
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }

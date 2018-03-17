@@ -26,7 +26,7 @@ public class Scraper extends PTransform<PBegin, PDone> {
         courses.apply("Assign priorities", new AssignPriorityTransform())
                 .apply("Upload course data", new UploadTransform());
         PCollection<Key> courseKeys = courses.apply("Fetch course keys", Keys.create());
-        PCollectionList.of(p.apply(new FirestoreCourseKeysTransform()))
+        PCollectionList.of(p.apply(new FirestoreListCoursesTransform()).apply(new FirestoreCourseKeysTransform()))
                 .and(courseKeys)
                 .apply("Find tombstone courses", new DifferenceTransform<>())
                 .apply("Delete from Firestore", ParDo.of(new DeleteDoFn()));

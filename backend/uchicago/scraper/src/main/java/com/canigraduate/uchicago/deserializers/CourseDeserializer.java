@@ -22,7 +22,7 @@ public class CourseDeserializer {
                 .build();
     }
 
-    public static Course toMapValue(MapValue fields) {
+    public static Course fromMapValue(MapValue fields) {
         return Course.builder()
                 .setName(fields.get("name").map(Value::getString).get())
                 .setDescription(fields.get("description").map(Value::getString))

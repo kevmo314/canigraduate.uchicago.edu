@@ -7,9 +7,13 @@ import com.canigraduate.uchicago.models.Course;
 import com.canigraduate.uchicago.serializers.CourseSerializer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
 import com.google.gson.JsonObject;
 
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class Courses {
     private final CollectionReference root;
@@ -26,12 +30,19 @@ public class Courses {
         return root.documentIds();
     }
 
+    public Iterable<Map.Entry<String, Course>> all() {
+        return Streams.stream(root.allDocuments())
+                .map(doc -> new AbstractMap.SimpleImmutableEntry<>(doc.getId(),
+                        CourseDeserializer.fromMapValue(doc.getFields())))
+                .collect(Collectors.toList());
+    }
+
     public Optional<Course> get(String course) {
         return get(course, null);
     }
 
     public Optional<Course> get(String course, String transaction) {
-        return root.document(course).get(transaction).map(Document::getFields).map(CourseDeserializer::toMapValue);
+        return root.document(course).get(transaction).map(Document::getFields).map(CourseDeserializer::fromMapValue);
     }
 
     public JsonObject set(String id, Course course) {
