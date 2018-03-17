@@ -106,12 +106,6 @@ type Params = {
 
 const SECTION_PATH =
   'institutions/uchicago/courses/{course}/terms/{term}/sections/{section}';
-export const incrementIndex = functions.firestore
-  .document(SECTION_PATH)
-  .onCreate(event => adjustCardinalityHandler(event.params as Params, 1));
-export const decrementIndex = functions.firestore
-  .document(SECTION_PATH)
-  .onCreate(event => adjustCardinalityHandler(event.params as Params, -1));
 export const watches = functions.firestore
   .document(SECTION_PATH)
   .onWrite(event => {
