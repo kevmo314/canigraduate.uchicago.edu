@@ -14,6 +14,10 @@ public abstract class Enrollment {
 
     public abstract OptionalInt getMaximum();
 
+    public boolean isFull() {
+        return getEnrolled().equals(getMaximum()) && getEnrolled().isPresent();
+    }
+
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setEnrolled(int enrolled);

@@ -6,7 +6,7 @@ import com.canigraduate.uchicago.models.Enrollment;
 import com.canigraduate.uchicago.models.Section;
 import com.canigraduate.uchicago.models.Term;
 import com.canigraduate.uchicago.pipeline.ModelSubtypeCoderProvider;
-import com.canigraduate.uchicago.pipeline.models.Key;
+import com.canigraduate.uchicago.pipeline.models.TermKey;
 import com.canigraduate.uchicago.timeschedules.Timeschedules;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
@@ -38,15 +38,11 @@ class UploadTransformTest {
         Map<String, Course> timeschedules = Timeschedules.getCourses(
                 "http://timeschedules.uchicago.edu/view.php?dept=PHYS&term=81");
         assertThat(timeschedules).containsKeys("PHYS 13300", "PHYS 14300");
-        pipeline.apply(Create.of(KV.of(Key.builder()
-                .setCourse("PHYS 13300")
-                .setTerm(Term.create("Spring 2010"))
-                .setDepartment("PHYS")
-                .build(), timeschedules.get("PHYS 13300")), KV.of(Key.builder()
-                .setCourse("PHYS 14300")
-                .setTerm(Term.create("Spring 2010"))
-                .setDepartment("PHYS")
-                .build(), timeschedules.get("PHYS 14300")))).apply("Upload courses", new UploadTransform());
+        pipeline.apply(Create.of(
+                KV.of(TermKey.builder().setCourse("PHYS 13300").setTerm(Term.create("Spring 2010")).build(),
+                        timeschedules.get("PHYS 13300")),
+                KV.of(TermKey.builder().setCourse("PHYS 14300").setTerm(Term.create("Spring 2010")).build(),
+                        timeschedules.get("PHYS 14300")))).apply("Upload courses", new UploadTransform());
         pipeline.run();
 
         Courses courses = new Courses();

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 class TimeschedulesTransformTest extends PipelineTest {
     @Test
     void processElement() {
-        /*PCollection<KV<Key, Course>> results = this.pipeline.apply(new TimeschedulesTransform());
+        /*PCollection<KV<TermKey, Course>> results = this.pipeline.apply(new TimeschedulesTransform());
         PAssert.that(results).satisfies(records -> {
             assertThat(records).isNotEmpty();
             return null;

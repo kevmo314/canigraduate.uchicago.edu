@@ -16,6 +16,7 @@ import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
@@ -32,6 +33,9 @@ public class FirestoreService {
     private static final ServiceAccountCredentials CREDENTIALS = new ServiceAccountCredentials(
             "https://www.googleapis.com/auth/datastore", "https://www.googleapis.com/auth/devstorage.full_control");
     private static final String FIRESTORE_URL = "https://firestore.googleapis.com/v1beta1/";
+    private static final CloseableHttpClient HTTP_CLIENT = HttpClients.custom()
+            .setConnectionManager(getConnectionManager())
+            .build();
     private static DocumentReference UCHICAGO = new CollectionReference(null, "institutions").document("uchicago");
 
     public static String getBasePath() {
@@ -54,6 +58,13 @@ public class FirestoreService {
         return UCHICAGO;
     }
 
+    private static PoolingHttpClientConnectionManager getConnectionManager() {
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+        cm.setDefaultMaxPerRoute(256);
+        cm.setMaxTotal(256);
+        return cm;
+    }
+
     /**
      * Used only for testing.
      **/
@@ -67,27 +78,26 @@ public class FirestoreService {
 
     private static JsonObject execute(HttpUriRequest request, boolean retry) {
         request.addHeader(CREDENTIALS.getAuthorizationHeader());
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        try {
-            CloseableHttpResponse response = httpclient.execute(request);
+        try (CloseableHttpResponse response = HTTP_CLIENT.execute(request)) {
             HttpEntity entity = response.getEntity();
-            Reader in = new InputStreamReader(entity.getContent());
-            JsonParser parser = new JsonParser();
-            JsonObject obj = parser.parse(in).getAsJsonObject();
-            EntityUtils.consume(entity);
-            in.close();
-            response.close();
-            if (obj.has("error")) {
-                JsonObject err = obj.getAsJsonObject("error");
-                if (err.get("code").getAsInt() == 401 && err.get("status").getAsString().equals("UNAUTHENTICATED")) {
-                    throw new RuntimeException("Error from server: " + obj.toString());
-                } else if (err.get("code").getAsInt() == 404) {
-                    return obj;
-                } else {
-                    throw new RuntimeException("Error from server: " + obj.toString());
+            try (Reader in = new InputStreamReader(entity.getContent())) {
+                JsonParser parser = new JsonParser();
+                JsonObject obj = parser.parse(in).getAsJsonObject();
+                EntityUtils.consume(entity);
+                if (obj.has("error")) {
+                    JsonObject err = obj.getAsJsonObject("error");
+                    if (err.get("code").getAsInt() == 401 && err.get("status")
+                            .getAsString()
+                            .equals("UNAUTHENTICATED")) {
+                        throw new RuntimeException("Error from server: " + obj.toString());
+                    } else if (err.get("code").getAsInt() == 404) {
+                        return obj;
+                    } else {
+                        throw new RuntimeException("Error from server: " + obj.toString());
+                    }
                 }
+                return obj;
             }
-            return obj;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -151,7 +161,7 @@ public class FirestoreService {
         return () -> new Iterator<Document>() {
             boolean finished = false;
             String nextPageToken = null;
-            EvictingQueue<Document> queue = EvictingQueue.create(300);
+            final EvictingQueue<Document> queue = EvictingQueue.create(300);
 
             @Override
             public boolean hasNext() {
@@ -246,8 +256,13 @@ public class FirestoreService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        request.setHeader(HTTP.CONTENT_TYPE, "application/json");
+        if (name.endsWith("json")) {
+            request.setHeader(HTTP.CONTENT_TYPE, "application/json");
+        } else {
+            request.setHeader(HTTP.CONTENT_TYPE, "application/octet-stream");
+        }
         JsonObject response = execute(request);
+        System.out.println(response);
         makeReadable(name);
         return response;
     }

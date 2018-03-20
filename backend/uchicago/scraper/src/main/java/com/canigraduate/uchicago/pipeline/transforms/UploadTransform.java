@@ -6,7 +6,7 @@ import com.canigraduate.uchicago.firestore.Terms;
 import com.canigraduate.uchicago.firestore.models.Write;
 import com.canigraduate.uchicago.models.Course;
 import com.canigraduate.uchicago.pipeline.firestore.SetCourseDoFn;
-import com.canigraduate.uchicago.pipeline.models.Key;
+import com.canigraduate.uchicago.pipeline.models.TermKey;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -19,12 +19,12 @@ import java.util.Objects;
 /**
  * Upload a course to Firestore.
  */
-public class UploadTransform extends PTransform<PCollection<KV<Key, Course>>, PDone> {
+public class UploadTransform extends PTransform<PCollection<KV<TermKey, Course>>, PDone> {
     private static final TypeDescriptor<KV<String, Course>> INTERMEDIATE = TypeDescriptors.kvs(
             TypeDescriptors.strings(), TypeDescriptor.of(Course.class));
 
     @Override
-    public PDone expand(PCollection<KV<Key, Course>> input) {
+    public PDone expand(PCollection<KV<TermKey, Course>> input) {
         // Group by course first to reduce datastore contention.
         input.apply("Remove term association", MapElements.into(INTERMEDIATE)
                 .via(e -> KV.of(Objects.requireNonNull(e.getKey()).getCourse(), e.getValue())))
@@ -36,16 +36,16 @@ public class UploadTransform extends PTransform<PCollection<KV<Key, Course>>, PD
         return PDone.in(input.getPipeline());
     }
 
-    class UploadTermDoFn extends DoFn<KV<Key, Course>, Void> {
+    class UploadTermDoFn extends DoFn<KV<TermKey, Course>, Void> {
         @ProcessElement
         public void processElement(ProcessContext c) {
-            Key key = Objects.requireNonNull(c.element().getKey());
+            TermKey termKey = Objects.requireNonNull(c.element().getKey());
             Course course = c.element().getValue();
             String transaction = FirestoreService.beginTransaction();
-            new Terms(key.getCourse()).set(key.getTerm());
+            new Terms(termKey.getCourse()).set(termKey.getTerm());
             // Tombstones are somewhat of an issue, so we need to pull the sections in the db first and delete them in
             // one transaction.
-            Sections sections = new Sections(key.getCourse(), key.getTerm().getTerm());
+            Sections sections = new Sections(termKey.getCourse(), termKey.getTerm().getTerm());
             ImmutableList.Builder<Write> writeBuilder = new ImmutableList.Builder<>();
             Sets.difference(ImmutableSet.copyOf(sections.list(transaction)), course.getSections().keySet())
                     .forEach(sectionId -> writeBuilder.add(sections.getDeleteWrite(sectionId)));

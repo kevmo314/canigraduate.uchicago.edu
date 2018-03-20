@@ -2,8 +2,8 @@ package com.canigraduate.uchicago.pipeline;
 
 import com.canigraduate.uchicago.models.*;
 import com.canigraduate.uchicago.pipeline.coders.*;
-import com.canigraduate.uchicago.pipeline.models.Key;
 import com.canigraduate.uchicago.pipeline.models.TermAndDepartment;
+import com.canigraduate.uchicago.pipeline.models.TermKey;
 import com.canigraduate.uchicago.pipeline.transforms.CourseSearchTransform;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonArray;
@@ -17,10 +17,11 @@ import java.util.List;
 import java.util.Map;
 
 public class ModelSubtypeCoderProvider extends CoderProvider {
-    private static final Map<Class<?>, Coder> CODER_MAP = new ImmutableMap.Builder<Class<?>, Coder>().put(Key.class,
-            KeyCoder.of())
+    private static final Map<Class<?>, Coder> CODER_MAP = new ImmutableMap.Builder<Class<?>, Coder>().put(TermKey.class,
+            TermKeyCoder.of())
             .put(TermAndDepartment.class, TermAndDepartmentCoder.of())
-            .put(JsonArray.class, JsonArrayCoder.of()).put(JsonObject.class, JsonObjectCoder.of())
+            .put(JsonArray.class, JsonArrayCoder.of())
+            .put(JsonObject.class, JsonObjectCoder.of())
             .put(CourseSearchTransform.Params.class, ParamsCoder.of())
             .put(Course.class, CourseCoder.of())
             .put(Enrollment.class, EnrollmentCoder.of())
