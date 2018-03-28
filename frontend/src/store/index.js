@@ -3,7 +3,21 @@ import Vuex from 'vuex';
 import createPersistedState from 'vuex-persistedstate';
 import createLogRocket from 'logrocket-vuex';
 import LogRocket from 'logrocket';
-import * as modules from './modules';
+import authentication from './modules/authentication';
+import calendar from './modules/calendar';
+import filter from './modules/filter';
+import institution from './modules/institution';
+import search from './modules/search';
+import transcript from './modules/transcript';
+
+const modules = {
+  authentication,
+  calendar,
+  filter,
+  institution,
+  search,
+  transcript,
+};
 
 const PRODUCTION = process.env.NODE_ENV === 'production';
 
@@ -38,14 +52,3 @@ export default new Vuex.Store({
   strict: !PRODUCTION,
   plugins,
 });
-
-if (!PRODUCTION && module.hot) {
-  module.hot.accept(Object.keys(modules).map(m => './modules/' + m), () => {
-    store.hotUpdate({
-      modules: Object.keys(modules).reduce(
-        (obj, m) => (obj[m] = require('./modules/' + m).default),
-        {},
-      ),
-    });
-  });
-}
