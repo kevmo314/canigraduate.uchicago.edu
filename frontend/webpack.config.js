@@ -1,12 +1,16 @@
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
+const history = require('connect-history-api-fallback');
+const convert = require('koa-connect');
 
 module.exports = {
-  entry: ['babel-polyfill', './src/index.js'],
-  devtool: '#cheap-module-eval-source-map',
+  mode: process.env.NODE_ENV,
+  devtool:
+    process.env.NODE_ENV == 'development' ? 'eval-source-map' : 'source-map',
+  entry: ['@babel/polyfill', './src/index.js'],
   resolve: {
-    extensions: ['.js', '.vue', '.json'],
+    extensions: ['.js', '.ts', '.vue', '.json'],
     alias: {
       vue$: 'vue/dist/vue.esm.js',
       '@': __dirname + '/src',
@@ -23,9 +27,9 @@ module.exports = {
         use: [MiniCssExtractPlugin.loader, 'css-loader'],
       },
       {
-        test: /\.js$/,
+        test: /\.(js|ts)$/,
+        exclude: /node_modules/,
         loader: 'babel-loader',
-        include: [__dirname + '/src', __dirname + '/test'],
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
@@ -56,4 +60,9 @@ module.exports = {
       chunkFilename: '[id].css',
     }),
   ],
+  serve: {
+    add(app, middleware, options) {
+      app.use(convert(history()));
+    },
+  },
 };
