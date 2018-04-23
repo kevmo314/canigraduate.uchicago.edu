@@ -56,6 +56,14 @@ class TimeschedulesTest {
         assertThat(courses.get("PHYS 13300").getSection("BB").getSecondaryActivities()).hasSize(4);
     }
 
+    @Test
+    void getCourses_crosslist() throws IOException {
+        Map<String, Course> courses = Timeschedules.getCourses(
+                "http://timeschedules.uchicago.edu/view.php?dept=ECON&term=465");
+        assertThat(courses).containsKey("ECON 17800");
+        assertThat(courses.get("ECON 17800").getCrosslists()).containsExactly("PBPL 22200");
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"http://timeschedules.uchicago.edu/view.php?dept=HIST&term=49", // Long body
             "http://timeschedules.uchicago.edu/view.php?dept=AFAM&term=49", // Regex parsing

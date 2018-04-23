@@ -41,6 +41,6 @@ public abstract class Term implements Comparable<Term> {
     }
 
     public int getOrdinal() {
-        return PERIOD_MAP.get(getPeriod()) + getYear() * PERIOD_MAP.size();
+        return PERIOD_MAP.get(this.getPeriod()) + this.getYear() * PERIOD_MAP.size();
     }
 }

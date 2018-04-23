@@ -15,7 +15,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,7 +31,7 @@ class UploadTransformTest {
     }
 
     @Test
-    void processElement() throws IOException {
+    void processElement() throws Exception {
         TestPipeline pipeline = TestPipeline.create().enableAbandonedNodeEnforcement(false);
         pipeline.getCoderRegistry().registerCoderProvider(new ModelSubtypeCoderProvider());
         Map<String, Course> timeschedules = Timeschedules.getCourses(
@@ -49,24 +48,30 @@ class UploadTransformTest {
         assertThat(courses.list()).containsExactly("PHYS 13300", "PHYS 14300");
         Terms terms = new Terms("PHYS 13300");
         assertThat(terms.list()).containsExactly("Spring 2010");
+        assertThat(terms.listFromParent()).containsExactly("Spring 2010");
         assertThat(terms.get("Spring 2010")).contains(Term.create("Spring 2010"));
         Sections sections = new Sections("PHYS 13300", "Spring 2010");
         assertThat(sections.list()).containsExactly("AA", "BB");
+        assertThat(sections.listFromParent()).containsExactly("AA", "BB");
         assertThat(sections.get("AA")).contains(timeschedules.get("PHYS 13300").getSection("AA"));
 
         // Delete BB.
         sections.delete("BB");
         assertThat(sections.list()).containsExactly("AA");
+        assertThat(sections.listFromParent()).containsExactly("AA");
 
         // Create a fake CC.
         sections.set("CC", Section.builder().setEnrollment(Enrollment.builder().build()).build());
         assertThat(sections.list()).containsExactly("AA", "CC");
+        // Index should not be updated.
+        assertThat(sections.listFromParent()).containsExactly("AA");
 
         // Run again.
         pipeline.run();
 
         // Check that it was recreated.
         assertThat(sections.list()).containsExactly("AA", "BB");
+        assertThat(sections.listFromParent()).containsExactly("AA", "BB");
 
         courses.delete("PHYS 13300");
         courses.delete("PHYS 14300");

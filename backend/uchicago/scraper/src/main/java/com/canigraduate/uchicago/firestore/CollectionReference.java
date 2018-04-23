@@ -19,16 +19,20 @@ public class CollectionReference {
 
     String getUrl() throws UnsupportedEncodingException {
         if (this.parent != null) {
-            return this.parent.getUrl() + "/" + URLEncoder.encode(name, "UTF-8");
+            return this.parent.getUrl() + "/" + URLEncoder.encode(this.name, "UTF-8");
         }
-        return FirestoreService.getBaseUrl() + "/" + URLEncoder.encode(name, "UTF-8");
+        return FirestoreService.getBaseUrl() + "/" + URLEncoder.encode(this.name, "UTF-8");
     }
 
     String getPath() {
         if (this.parent != null) {
-            return this.parent.getPath() + "/" + name;
+            return this.parent.getPath() + "/" + this.name;
         }
-        return name;
+        return this.name;
+    }
+
+    public DocumentReference getParent() {
+        return this.parent;
     }
 
     public DocumentReference document(String name) {
@@ -56,6 +60,8 @@ public class CollectionReference {
     }
 
     public List<DocumentReference> documents() {
-        return Streams.stream(documentIds()).map(id -> new DocumentReference(this, id)).collect(Collectors.toList());
+        return Streams.stream(this.documentIds())
+                .map(id -> new DocumentReference(this, id))
+                .collect(Collectors.toList());
     }
 }

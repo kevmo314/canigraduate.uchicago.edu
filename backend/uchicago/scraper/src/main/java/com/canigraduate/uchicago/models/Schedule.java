@@ -108,7 +108,6 @@ public abstract class Schedule {
         public abstract LocalTime getTo();
 
         public long toLong() {
-            this.getDay().getValue();
             long from = this.getFrom().toSecondOfDay();
             long to = this.getTo().toSecondOfDay();
             return ((this.getDay().getValue() * SECONDS_PER_DAY) + from) * SECONDS_PER_DAY + to;

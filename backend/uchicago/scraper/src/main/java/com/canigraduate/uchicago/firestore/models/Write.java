@@ -17,6 +17,11 @@ public class Write {
         return this.object;
     }
 
+    public Write setUpdateMask(DocumentMask documentMask) {
+        this.object.add("updateMask", documentMask.toJsonObject());
+        return this;
+    }
+
     public Write setUpdate(Document document) {
         this.clearUnionFields();
         this.object.add("update", document.toJsonObject());

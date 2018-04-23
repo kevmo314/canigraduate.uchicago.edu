@@ -26,11 +26,15 @@ public class DocumentReference {
     }
 
     String getUrl() throws UnsupportedEncodingException {
-        return this.parent.getUrl() + "/" + URLEncoder.encode(name, "UTF-8");
+        return this.parent.getUrl() + "/" + URLEncoder.encode(this.name, "UTF-8");
     }
 
     String getPath() {
-        return this.parent.getPath() + "/" + name;
+        return this.parent.getPath() + "/" + this.name;
+    }
+
+    public CollectionReference getParent() {
+        return this.parent;
     }
 
     public CollectionReference collection(String name) {
@@ -42,7 +46,7 @@ public class DocumentReference {
     }
 
     public List<CollectionReference> collections() {
-        return Streams.stream(collectionIds())
+        return Streams.stream(this.collectionIds())
                 .map(id -> new CollectionReference(this, id))
                 .collect(Collectors.toList());
     }
@@ -52,7 +56,7 @@ public class DocumentReference {
     }
 
     public Optional<Document> get() {
-        return get(null);
+        return this.get(null);
     }
 
     public Optional<Document> get(String transaction) {
