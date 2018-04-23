@@ -12,7 +12,9 @@
 
 <script>
 import EventBus from '@/EventBus';
-import { mapState } from 'vuex';
+import { mapGetters } from 'vuex';
+import { map, flatMap } from 'rxjs/operators';
+import { combineLatest } from 'rxjs/observable/combineLatest';
 
 const DAYS = ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
 
@@ -25,7 +27,7 @@ export default {
     },
   },
   computed: {
-    ...mapState('institution', { blocks: state => state.scheduleBlocks }),
+    ...mapGetters('institution', ['institution']),
     tooltip() {
       function formatTime(t) {
         t %= 1440;
@@ -54,23 +56,33 @@ export default {
       }
       return output.join(', ');
     },
-    components() {
-      return this.schedule
-        .concat()
-        .sort((a, b) => a[0] - b[0])
-        .map(time => {
-          const block = Object.keys(this.blocks).find(
-            i =>
-              this.blocks[i][0] <= time[0] % 1440 &&
-              time[0] % 1440 < this.blocks[i][1],
-          );
-          const day = DAYS[Math.floor(time[0] / 1440)];
-          return {
-            day,
-            cssClass: block || 'other',
-          };
-        });
-    },
+  },
+  subscriptions() {
+    return {
+      components: combineLatest(
+        this.$observe(() => this.schedule),
+        this.$observe(() => this.institution).pipe(
+          flatMap(institution => institution.data()),
+          map(institution => institution.scheduleBlocks),
+        ),
+        (schedule, scheduleBlocks) => {
+          return schedule
+            .concat()
+            .sort((a, b) => a[0] - b[0])
+            .map(time => {
+              const block = scheduleBlocks.find(
+                scheduleBlock =>
+                  scheduleBlock.start <= time[0] % 1440 &&
+                  time[0] % 1440 < scheduleBlock.end,
+              );
+              return {
+                day: DAYS[Math.floor(time[0] / 1440)],
+                cssClass: block ? block.cssClass : 'other',
+              };
+            });
+        },
+      ),
+    };
   },
   methods: {
     showScheduleTab() {

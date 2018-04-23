@@ -8,6 +8,7 @@ import VueRx from 'vue-rx';
 import VueTimeago from 'vue-timeago';
 import VueScrollto from 'vue-scrollto';
 import Rx from 'rxjs/Rx';
+import { map } from 'rxjs/operators';
 
 require('../node_modules/vuetify/dist/vuetify.min.css');
 
@@ -22,7 +23,6 @@ Vue.use(Vuetify, {
     success: '#4CAF50',
   },
 });
-Vue.use(VueRx, Rx);
 Vue.use(VueTimeago, {
   locale: 'en-US',
   locales: { 'en-US': require('vue-timeago/locales/en-US.json') },
@@ -30,6 +30,14 @@ Vue.use(VueTimeago, {
 Vue.use(VueScrollto, {
   offset: -75, // Account for header bar.
 });
+
+Vue.prototype.$observe = function(fn) {
+  return this.$watchAsObservable(fn, { immediate: true }).pipe(
+    map(state => state.newValue),
+  );
+};
+
+Vue.use(VueRx, Rx);
 
 const PRODUCTION = process.env.NODE_ENV === 'PRODUCTION';
 

@@ -22,17 +22,14 @@
           <v-subheader class="body-1 user-subheader mb-2">{{user.email}} </v-subheader>
         </template>
         <v-divider></v-divider>
-        <v-list-group>
-          <v-list-tile slot="item">
+        <v-list-group no-action>
+          <v-list-tile slot="activator">
             <v-list-tile-action>
               <v-icon>library_books</v-icon>
             </v-list-tile-action>
             <v-list-tile-content>
               <v-list-tile-title>Degree Programs</v-list-tile-title>
             </v-list-tile-content>
-            <v-list-tile-action>
-              <v-icon>keyboard_arrow_down</v-icon>
-            </v-list-tile-action>
           </v-list-tile>
           <v-list-tile v-for="(program, id) in programs" :key="id" router :to="{name: 'catalog', params: {id}}">
             <v-list-tile-content>

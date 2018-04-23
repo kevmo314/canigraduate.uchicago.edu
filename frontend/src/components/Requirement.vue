@@ -73,9 +73,6 @@ export default {
     };
   },
   computed: {
-    ...mapState('institution', {
-      catalogSequence: state => state.endpoints.catalogSequence,
-    }),
     isComplete() {
       return Boolean(this.progress) && this.progress.remaining == 0;
     },

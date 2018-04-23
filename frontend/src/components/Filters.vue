@@ -79,7 +79,8 @@
 <script>
 import { Observable } from 'rxjs/Observable';
 import { SORT } from '@/store/modules/search';
-import { mapState } from 'vuex';
+import { mapState, mapGetters } from 'vuex';
+import { map } from 'rxjs/operators';
 
 function createComputedProperty(field, namespace = 'filter') {
   return {
@@ -88,8 +89,8 @@ function createComputedProperty(field, namespace = 'filter') {
     },
     set(value) {
       this.$store.commit(namespace + '/update', { [field]: value });
-    }
-  }
+    },
+  };
 }
 
 export default {
@@ -100,16 +101,12 @@ export default {
         { value: SORT.BY_POPULARITY, text: 'By popularity' },
         { value: SORT.ALPHABETICALLY, text: 'Alphabetically' },
       ],
-    }
+    };
   },
   computed: {
+    ...mapGetters('institution', ['institution']),
     ...mapState('institution', {
       endpoints: state => state.endpoints,
-      searchPlaceholder: state => 'Try "' + state.searchPlaceholder + '"',
-      periodName: state => state.periodName,
-      periodItems: state => state.periods.map((period, value) => ({
-        value, text: period.name, abbr: period.shorthand
-      })),
     }),
     query: createComputedProperty.call(this, 'query'),
     periods: createComputedProperty.call(this, 'periods'),
@@ -119,12 +116,26 @@ export default {
     sort: createComputedProperty.call(this, 'sort', 'search'),
   },
   subscriptions() {
+    const institution = this.institution.data();
     return {
+      searchPlaceholder: institution.pipe(
+        map(institution => `Try "${institution.searchPlaceholder}"`),
+      ),
+      periodName: institution.pipe(map(institution => institution.periodName)),
+      periodItems: institution.pipe(
+        map(institution =>
+          institution.periods.map((period, value) => ({
+            value,
+            text: period.name,
+            abbr: period.shorthand,
+          })),
+        ),
+      ),
       departmentItems: Observable.of([]).concat(this.endpoints.departments()),
-      instructorItems: Observable.of([]).concat(this.endpoints.instructors())
-    }
-  }
-}
+      instructorItems: Observable.of([]).concat(this.endpoints.instructors()),
+    };
+  },
+};
 </script>
 
 <style scoped>

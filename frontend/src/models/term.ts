@@ -1,19 +1,37 @@
-import { DocumentReference, DocumentData } from '@firebase/firestore-types';
+import {
+  DocumentReference,
+  DocumentData,
+  DocumentSnapshot,
+} from '@firebase/firestore-types';
 import Terms from './terms';
 import Sections from './sections';
+import { Observable } from 'rxjs/Observable';
+import { map } from 'rxjs/operators';
+import publishDocument from './publishDocument';
+import Institution from './institution';
+import Section from './section';
+
+export interface TermData {
+  readonly period: string;
+  readonly year: number;
+  readonly sections: string[];
+}
 
 export default class Term {
-  public readonly period: string;
-  public readonly year: number;
-  constructor(
-    private readonly ref: DocumentReference,
-    { period, year }: DocumentData,
-  ) {
-    this.period = period;
-    this.year = year;
+  private readonly ref: DocumentReference;
+  constructor(ref: DocumentReference) {
+    this.ref = ref;
+  }
+
+  data(): Observable<TermData> {
+    return publishDocument(this.ref) as Observable<TermData>;
   }
 
   get sections() {
-    return new Sections(this.ref.collection('sections'));
+    return this.data().pipe(map(data => data.sections));
+  }
+
+  section(id: string) {
+    return new Section(this.ref.collection('sections').doc(id));
   }
 }

@@ -1,17 +1,14 @@
 <template>
   <v-card v-if="program">
     <v-card-media>
-      <v-tabs centered v-if="root.extensions">
-        <v-tabs-bar class="white">
-          <v-tabs-slider></v-tabs-slider>
-          <v-tabs-item router exact :to="{name: 'catalog', params: {id, extension: null}}">Major
-            <program-progress :program="root"></program-progress>
-          </v-tabs-item>
-          <v-tabs-item v-for="(extension, name) in root.extensions" :key="name" router :to="{name: 'catalog', params: {id, extension: name}}">
-            {{extension.name}}
-            <program-progress :program="extension"></program-progress>
-          </v-tabs-item>
-        </v-tabs-bar>
+      <v-tabs centered v-if="root.extensions" color="white">
+        <v-tab-item router exact :to="{name: 'catalog', params: {id, extension: null}}">Major
+          <program-progress :program="root"></program-progress>
+        </v-tab-item>
+        <v-tab-item v-for="(extension, name) in root.extensions" :key="name" router :to="{name: 'catalog', params: {id, extension: name}}">
+          {{extension.name}}
+          <program-progress :program="extension"></program-progress>
+        </v-tab-item>
       </v-tabs>
     </v-card-media>
     <v-card-text>
@@ -33,8 +30,8 @@ import Requirement from '@/components/Requirement';
 import ProgramProgress from '@/components/ProgramProgress';
 import EventBus from '@/EventBus';
 import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/combineLatest';
 import { mapState } from 'vuex';
+import { combineLatest } from 'rxjs/observable/combineLatest';
 
 export default {
   components: { Requirement, ProgramProgress },
@@ -51,33 +48,26 @@ export default {
     next();
   },
   subscriptions() {
-    const transcript = this.$watchAsObservable(() => this.transcript, {
-      immediate: true,
-    }).map(x => x.newValue);
-    const id = this.$watchAsObservable(() => this.id, { immediate: true }).map(
-      x => x.newValue,
-    );
-    const extension = this.$watchAsObservable(() => this.extension, {
-      immediate: true,
-    }).map(x => x.newValue);
+    const transcript = this.$observe(() => this.transcript);
+    const id = this.$observe(() => this.id);
+    const extension = this.$observe(() => this.extension);
     const root = this.endpoints
       .programs()
       .combineLatest(id, (programs, id) => programs[id]);
-    const program = root.combineLatest(extension, (root, extension) => {
+    const program = combineLatest(root, extension, (root, extension) => {
       return root && extension ? root.extensions[extension] : root;
     });
     return {
       root: root.do(program => {
         EventBus.$emit('set-title', program.name);
       }),
-      progress: Observable.combineLatest(
-        program,
-        transcript,
-      ).flatMap(([program, transcript]) => {
-        return transcript.length > 0
-          ? program.bindTranscript(transcript)
-          : Promise.resolve();
-      }),
+      progress: combineLatesteLatest(program, transcript).flatMap(
+        ([program, transcript]) => {
+          return transcript.length > 0
+            ? program.bindTranscript(transcript)
+            : Promise.resolve();
+        },
+      ),
       program,
     };
   },

@@ -15,8 +15,9 @@
 </template>
 
 <script>
-import { Observable } from 'rxjs/Observable';
-import { mapState } from 'vuex';
+import { mapGetters } from 'vuex';
+import { map } from 'rxjs/operators';
+import { combineLatest } from 'rxjs/observable/combineLatest';
 
 export default {
   name: 'term-offering-indicator',
@@ -31,36 +32,29 @@ export default {
     },
     serialized: Object,
   },
-  computed: {
-    ...mapState('institution', {
-      converters: state => state.converters,
-      terms: state => state.endpoints.terms,
-      offerings: state => state.endpoints.offerings,
-      periods: state => state.periods,
-    }),
-  },
+  computed: mapGetters('institution', ['institution']),
   subscriptions() {
-    const lastPeriod = this.$watchAsObservable(() => this.serialized, {
-      immediate: true,
-    })
-      .filter(Boolean)
-      .map(x => x.newValue)
-      .flatMap(serialized => this.offerings(this.course, this.serialized))
-      .map(terms => {
-        // Find the most recent relevant offering.
+    const terms = this.institution.course(this.course).terms;
+    const lastPeriod = combineLatest(
+      this.institution.data().pipe(map(institution => institution.periods)),
+      terms,
+      (periods, terms) => {
         for (const term of terms) {
-          if (this.converters.termToPeriod(term).name == this.period.name) {
-            return this.period.name + ' ' + this.converters.termToYear(term);
+          const period = periods.find(period => term.startsWith(period.name));
+          if (period.name == this.period.name) {
+            return term;
           }
         }
-      });
+      },
+    );
     return {
       tooltip: lastPeriod,
-      outline: this.terms().combineLatest(
+      outline: combineLatest(
+        terms,
         lastPeriod,
         (terms, last) => terms.indexOf(last) > 32,
       ),
-      backgroundColor: lastPeriod.map(x => x && this.period.color),
+      backgroundColor: lastPeriod.pipe(map(x => x && this.period.color)),
     };
   },
 };

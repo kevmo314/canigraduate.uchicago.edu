@@ -3,12 +3,11 @@
     <v-slide-x-transition>
       <div v-show="description">
         <p>{{description}}</p>
-        <p v-if="notes">
-          <completion-indicator>{{notes}}</completion-indicator>
+        <p v-for="note in notes" :key="note">
+          <completion-indicator>{{note}}</completion-indicator>
         </p>
-        <p v-if="sequence">This course is part of the
-          <span class="body-2">{{sequence}}</span> sequence which contains:
-          <completion-indicator v-if="sequenceCourses">{{sequenceCourses.join(', ')}}</completion-indicator>
+        <p v-if="sequence">
+          This course is part of the <span class="body-2">{{sequence}}</span> sequence.
         </p>
       </div>
     </v-slide-x-transition>
@@ -22,7 +21,7 @@
                 Enrolled
               </div>
             </div>
-            <section-detail :serialized="serialized" :term="term">{{course}}</section-detail>
+            <term-detail :serialized="serialized" :course="course" :term="term" />
           </div>
           <div class="text-xs-center" v-if="maxTerm < terms.length">
             <v-btn block flat @click="maxTerm += 1">Show {{terms[maxTerm]}}</v-btn>
@@ -30,8 +29,10 @@
         </template>
       </v-spacer>
       <div class="side ml-3" v-sticky>
-        <div class="subheading">Grades</div>
-        <grade-distribution :value="grades"></grade-distribution>
+        <template v-if="grades">
+          <div class="subheading">Grades</div>
+          <grade-distribution :value="grades"></grade-distribution>
+        </template>
         <div class="subheading mt-2">Meta</div>
       </div>
     </v-layout>
@@ -41,37 +42,18 @@
 <script>
 import GradeDistribution from '@/components/GradeDistribution';
 import CompletionIndicator from '@/components/CompletionIndicator';
-import SectionDetail from '@/components/SectionDetail';
+import TermDetail from '@/components/TermDetail';
 import Sticky from '@/directives/Sticky';
-import { Observable } from 'rxjs/Observable';
-import { mapState } from 'vuex';
+import { combineLatest } from 'rxjs/observable/combineLatest';
+import { mapGetters } from 'vuex';
+import { first, map, flatMap } from 'rxjs/operators';
 
 export default {
   name: 'course-detail',
-  components: { GradeDistribution, SectionDetail, CompletionIndicator },
+  components: { GradeDistribution, TermDetail, CompletionIndicator },
   props: { serialized: Object },
   directives: { Sticky },
-  computed: {
-    ...mapState('institution', {
-      endpoints: state => state.endpoints,
-      converters: state => state.converters,
-      periods: state => state.periods,
-      grades(state) {
-        return state.gpas.map(gpa => ({ gpa, count: this.gradeDistribution[gpa] || 0 }));
-      }
-    }),
-    ...mapState('filter', { filter: state => state }),
-    show: {
-      get() {
-        return this.value || this.$store.state.search.expanded.includes(this.course);
-      },
-      set(expanded) {
-        if (!this.value) {
-          this.$store.commit('search/setExpanded', { course: this.course, expanded });
-        }
-      }
-    },
-  },
+  computed: mapGetters('institution', ['institution']),
   data() {
     return {
       course: this.$slots.default[0].text,
@@ -81,22 +63,34 @@ export default {
   },
   subscriptions() {
     // Offerings are filter-invariant.
-    const terms = this.$watchAsObservable(() => this.serialized, { immediate: true })
-      .filter(Boolean)
-      .map(x => x.newValue)
-      .flatMap(serialized => this.endpoints.offerings(this.course, serialized));
-    const description = this.endpoints.description(this.course);
-    const sequence = this.endpoints.courseInfo(this.course).map(data => data && data.sequence).first();
+    const institution$ = this.$observe(() => this.institution);
+    const course$ = this.$observe(() => this.course);
+    const courseModel$ = combineLatest(
+      institution$,
+      course$,
+      (institution, course) => institution.course(course),
+    );
+    const courseData$ = courseModel$.pipe(flatMap(course => course.data()));
     return {
-      description: description.map(data => data && data.description).first(),
-      notes: description.map(data => data && data.notes).first(),
-      sequence,
-      sequenceCourses: sequence.flatMap(sequence => this.endpoints.sequences().map(sequences => sequences[sequence])),
-      terms,
-      gradeDistribution: Observable.of({}).concat(this.endpoints.gradeDistribution().map(grades => grades[this.course] || {}).first()),
-    }
+      description: courseData$.pipe(map(course => course.description)),
+      notes: courseData$.pipe(map(course => course.notes)),
+      sequence: courseData$.pipe(map(course => course.sequence)),
+      terms: courseModel$.pipe(flatMap(course => course.terms)),
+      grades: combineLatest(
+        institution$.pipe(
+          flatMap(institution => institution.data()),
+          map(data => data.gpas),
+        ),
+        institution$.pipe(
+          flatMap(institution => institution.getGradeDistribution()),
+        ),
+        course$,
+        (gpas, grades, course) =>
+          gpas.map(gpa => ({ gpa, count: (grades[course] || {})[gpa] || 0 })),
+      ),
+    };
   },
-}
+};
 </script>
 
 <style scoped>

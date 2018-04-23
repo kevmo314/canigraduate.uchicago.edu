@@ -23,36 +23,41 @@
 <script>
 import CourseName from '@/components/CourseName';
 import TermOfferingIndicator from '@/components/TermOfferingIndicator';
-import { Observable } from 'rxjs/Observable';
-import { mapState } from 'vuex';
+import { mapState, mapGetters } from 'vuex';
+import { map, flatMap } from 'rxjs/operators';
+import { combineLatest } from 'rxjs/observable/combineLatest';
 
 export default {
   name: 'search-result',
   props: { value: Boolean, serialized: Object },
-  components: { CourseName, TermOfferingIndicator, CourseDetail: () => import('@/components/CourseDetail') },
+  components: {
+    CourseName,
+    TermOfferingIndicator,
+    CourseDetail: () => import('@/components/CourseDetail'),
+  },
   computed: {
-    ...mapState('institution', {
-      endpoints: state => state.endpoints,
-      converters: state => state.converters,
-      periods: state => state.periods,
-      grades(state) {
-        return state.gpas.map(gpa => ({ gpa, count: this.gradeDistribution[gpa] || 0 }));
-      }
-    }),
+    ...mapGetters('institution', ['institution']),
     ...mapState('filter', {
       activePeriods(state) {
-        return state.periods.filter(i => i < this.periods.length).map(i => this.periods[i].name)
-      }
+        return state.periods
+          .filter(i => i < this.periods.length)
+          .map(i => this.periods[i].name);
+      },
     }),
     show: {
       get() {
-        return this.value || this.$store.state.search.expanded.includes(this.course);
+        return (
+          this.value || this.$store.state.search.expanded.includes(this.course)
+        );
       },
       set(expanded) {
         if (!this.value) {
-          this.$store.commit('search/setExpanded', { course: this.course, expanded });
+          this.$store.commit('search/setExpanded', {
+            course: this.course,
+            expanded,
+          });
         }
-      }
+      },
     },
   },
   data() {
@@ -62,13 +67,22 @@ export default {
     };
   },
   subscriptions() {
+    const institution = this.$observe(() => this.institution);
+    const course = this.$observe(() => this.course);
     return {
-      crosslists: this.endpoints.crosslists(this.course).map(identifiers => identifiers.join(', ')).first(),
-      description: this.endpoints.description(this.course).first(),
-      gradeDistribution: Observable.of({}).concat(this.endpoints.gradeDistribution().map(grades => grades[this.course] || {}).first()),
-    }
+      periods: institution.pipe(
+        flatMap(institution => institution.data()),
+        map(data => data.periods),
+      ),
+      crosslists: combineLatest(institution, course, (institution, course) =>
+        institution.course(course),
+      ).pipe(
+        flatMap(course => course.data()),
+        map(course => course.crosslists.join(', ')),
+      ),
+    };
   },
-}
+};
 </script>
 
 <style scoped>

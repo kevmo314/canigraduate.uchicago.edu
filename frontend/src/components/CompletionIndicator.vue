@@ -10,55 +10,58 @@
 
 <script>
 import { Subject } from 'rxjs/Subject';
+import { mapGetters } from 'vuex';
+import { map, flatMap } from 'rxjs/operators';
+import { combineLatest } from 'rxjs/observable/combineLatest';
 import Vue from 'vue';
 
 export default {
+  computed: mapGetters('institution', ['institution']),
   subscriptions() {
-    const credits = this.$watchAsObservable(() => this.$store.state.transcript, { immediate: true })
-      .map(x => x.newValue)
-      .map(transcript =>
-        transcript
-          .filter(record => record.credit)
-          .map(record => record.course),
-    );
-    const content = this.$watchAsObservable(() => this.$slots.default[0].text, { immediate: true })
-      .map(x => x.newValue);
     return {
-      blocks: this.$watchAsObservable(() => this.$store.state.institution, { immediate: true })
-        .map(x => x.newValue)
-        .switchMap(institution => institution.endpoints.courses())
-        .combineLatest(credits, (courses, transcript) => {
-          return [
-            new RegExp(courses.join('|'), 'g'),
-            courses.reduce((map, course) => {
-              map[course] = transcript.includes(course);
-              return map;
-            }, {})
-          ];
-        })
-        .combineLatest(content)
-        .map(([[re, taken], content]) => {
+      blocks: combineLatest(
+        this.$observe(() => this.institution).pipe(
+          flatMap(institution => institution.courses),
+        ),
+        this.$observe(() => this.$store.state.transcript).pipe(
+          map(t =>
+            t.filter(record => record.credit).map(record => record.course),
+          ),
+          map(t => new Set(t)),
+        ),
+        this.$observe(() => this.$slots.default[0].text),
+        (courses, transcript, content) => {
+          const regex = new RegExp(courses.join('|'), 'g');
           let match;
           const matches = [];
-          while (match = re.exec(content)) {
+          while ((match = regex.exec(content))) {
             matches.push([match.index, match[0]]);
           }
           const blocks = [];
           let last = 0;
           matches.forEach(([index, match]) => {
             if (index > last) {
-              blocks.push({ offset: last, text: content.substring(last, index), ignore: true });
+              blocks.push({
+                offset: last,
+                text: content.substring(last, index),
+                ignore: true,
+              });
             }
             blocks.push({ offset: index, text: match, state: taken[match] });
             last = index + match.length;
           });
           if (last < content.length) {
-            blocks.push({ offset: last, text: content.substring(last), ignore: true });
+            blocks.push({
+              offset: last,
+              text: content.substring(last),
+              ignore: true,
+            });
           }
           return blocks;
-        })
-    }
-  }
+        },
+      ),
+    };
+  },
 };
 </script>
 

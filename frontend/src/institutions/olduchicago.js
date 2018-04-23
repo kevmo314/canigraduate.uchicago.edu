@@ -296,6 +296,7 @@ const UCHICAGO = {
   /** Used in the search bar, usually a canonical course that all students are familiar with. */
   searchPlaceholder: 'Foucault',
   emailDomain: '@uchicago.edu',
+  transitional: 'uchicago',
   endpoints: {
     transcript(auth) {
       return Observable.fromPromise(

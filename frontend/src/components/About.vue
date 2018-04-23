@@ -35,13 +35,20 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapGetters } from 'vuex';
+import { flatMap, map } from 'rxjs/operators';
 export default {
   data() {
-    return { year: new Date().getFullYear() }
+    return { year: new Date().getFullYear() };
   },
-  computed: mapState({
-    institutionName: state => state.institution.name
-  })
-}
+  computed: mapGetters('institution', ['institution']),
+  subscriptions() {
+    return {
+      institutionName: this.$observe(() => this.institution).pipe(
+        flatMap(institution => institution.data()),
+        map(data => data.name),
+      ),
+    };
+  },
+};
 </script>
