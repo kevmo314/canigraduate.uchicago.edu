@@ -4,7 +4,6 @@ import com.canigraduate.uchicago.models.Course;
 import com.canigraduate.uchicago.models.Section;
 import com.canigraduate.uchicago.models.Term;
 import com.canigraduate.uchicago.timeschedules.Timeschedules;
-import com.google.gson.JsonObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,13 +59,5 @@ class FirestoreServiceTest {
         assertThat(courses.list()).isEmpty();
         assertThat(terms.list()).isEmpty();
         assertThat(courses.get("AKKD 10101")).isEmpty();
-    }
-
-    @Test
-    void writeIndex() {
-        JsonObject object = new JsonObject();
-        object.addProperty("mookey", "cowvalue");
-        JsonObject result = FirestoreService.writeIndex("test.json", object.toString());
-        assertThat(result.has("id")).isTrue();
     }
 }

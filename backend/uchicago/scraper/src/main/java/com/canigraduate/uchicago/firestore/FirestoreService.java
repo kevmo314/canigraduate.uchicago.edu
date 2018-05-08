@@ -13,6 +13,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.*;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -58,18 +59,18 @@ public class FirestoreService {
         return UCHICAGO;
     }
 
-    private static PoolingHttpClientConnectionManager getConnectionManager() {
-        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-        cm.setDefaultMaxPerRoute(256);
-        cm.setMaxTotal(256);
-        return cm;
-    }
-
     /**
      * Used only for testing.
      **/
     public static void setUChicago(DocumentReference ref) {
         UCHICAGO = ref;
+    }
+
+    private static PoolingHttpClientConnectionManager getConnectionManager() {
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+        cm.setDefaultMaxPerRoute(256);
+        cm.setMaxTotal(256);
+        return cm;
     }
 
     static JsonObject execute(HttpUriRequest request) {
@@ -159,20 +160,20 @@ public class FirestoreService {
     private static Iterable<Document> listDocuments(CollectionReference collection, String transaction,
                                                     boolean includeFields) {
         return () -> new Iterator<Document>() {
+            final EvictingQueue<Document> queue = EvictingQueue.create(300);
             boolean finished = false;
             String nextPageToken = null;
-            final EvictingQueue<Document> queue = EvictingQueue.create(300);
 
             @Override
             public boolean hasNext() {
-                if (queue.isEmpty()) {
-                    repopulateQueue();
+                if (this.queue.isEmpty()) {
+                    this.repopulateQueue();
                 }
-                return !finished || !queue.isEmpty();
+                return !this.finished || !this.queue.isEmpty();
             }
 
             private void repopulateQueue() {
-                if (finished) {
+                if (this.finished) {
                     return;
                 }
                 try {
@@ -184,21 +185,24 @@ public class FirestoreService {
                     if (transaction != null) {
                         params += "&transaction=" + URLEncoder.encode(transaction, "UTF-8");
                     }
-                    if (nextPageToken != null) {
-                        params += "&pageToken=" + URLEncoder.encode(nextPageToken, "UTF-8");
+                    if (this.nextPageToken != null) {
+                        params += "&pageToken=" + URLEncoder.encode(this.nextPageToken, "UTF-8");
                     }
                     JsonObject obj = execute(new HttpGet(collection.getUrl() + "?" + params));
                     JsonArray documents = obj.getAsJsonArray("documents");
                     if (documents == null) {
-                        finished = true;
+                        this.finished = true;
                         return;
                     }
-                    Streams.stream(documents).map(JsonElement::getAsJsonObject).map(Document::new).forEach(queue::add);
-                    nextPageToken = Optional.ofNullable(obj.get("nextPageToken"))
+                    Streams.stream(documents)
+                            .map(JsonElement::getAsJsonObject)
+                            .map(Document::new)
+                            .forEach(this.queue::add);
+                    this.nextPageToken = Optional.ofNullable(obj.get("nextPageToken"))
                             .map(JsonElement::getAsString)
                             .orElse(null);
-                    if (nextPageToken == null) {
-                        finished = true;
+                    if (this.nextPageToken == null) {
+                        this.finished = true;
                     }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -207,13 +211,13 @@ public class FirestoreService {
 
             @Override
             public Document next() {
-                if (!hasNext()) {
+                if (!this.hasNext()) {
                     throw new NoSuchElementException();
                 }
-                if (queue.isEmpty()) {
-                    repopulateQueue();
+                if (this.queue.isEmpty()) {
+                    this.repopulateQueue();
                 }
-                return queue.poll();
+                return this.queue.poll();
             }
         };
     }
@@ -246,49 +250,47 @@ public class FirestoreService {
         return execute(request);
     }
 
-    public static JsonObject writeIndex(String name, String payload) {
+    private static byte[] gzip(byte[] uncompressed) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(
+                uncompressed.length); GZIPOutputStream gzipOS = new GZIPOutputStream(bos)) {
+            gzipOS.write(uncompressed);
+            gzipOS.close();
+            return bos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static JsonObject writeIndex(JsonObject payload) {
         String bucket = UCHICAGO.getName();
         HttpPost request;
         try {
             request = new HttpPost(String.format("https://www.googleapis.com/upload/storage/v1/b/%s/o?name=%s", bucket,
-                    URLEncoder.encode("indexes/" + name, "UTF-8")));
-            request.setEntity(new StringEntity(payload));
+                    URLEncoder.encode("indexes.json.gz", "UTF-8")));
+            request.setEntity(new ByteArrayEntity(gzip(payload.toString().getBytes())));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (name.endsWith("json")) {
-            request.setHeader(HTTP.CONTENT_TYPE, "application/json");
-        } else {
-            request.setHeader(HTTP.CONTENT_TYPE, "application/octet-stream");
-        }
+        request.setHeader(HTTP.CONTENT_TYPE, "application/json");
         JsonObject response = execute(request);
         System.out.println(response);
-        makeReadable(name);
+        System.out.println(makeReadable());
         return response;
     }
 
-
-    private static JsonObject makeReadable(String name) {
+    private static JsonObject makeReadable() {
         String bucket = UCHICAGO.getName();
         HttpPatch request;
         try {
             request = new HttpPatch(String.format("https://www.googleapis.com/storage/v1/b/%s/o/%s", bucket,
-                    URLEncoder.encode("indexes/" + name, "UTF-8")));
-            request.setEntity(new StringEntity("{\"acl\":[{\"entity\":\"allUsers\",\"role\":\"READER\"}]}"));
+                    URLEncoder.encode("indexes.json.gz", "UTF-8")));
+            request.setEntity(new StringEntity(
+                    "{\"acl\":[{\"entity\":\"allUsers\",\"role\":\"READER\"}],\"contentEncoding\":\"gzip\"}"));
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
         request.setHeader(HTTP.CONTENT_TYPE, "application/json");
         return execute(request);
-    }
-
-    private static byte[] compress(String data) throws IOException {
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(data.length())) {
-            try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
-                gzipOutputStream.write(data.getBytes());
-            }
-            return byteArrayOutputStream.toByteArray();
-        }
     }
 }
 

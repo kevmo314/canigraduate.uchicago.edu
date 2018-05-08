@@ -12,9 +12,12 @@ import com.canigraduate.uchicago.models.*;
 import com.canigraduate.uchicago.pipeline.models.TermKey;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
-import com.google.common.primitives.Chars;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.YearMonth;
 import java.util.*;
@@ -30,14 +33,17 @@ import java.util.stream.Stream;
 public class Indexer {
     private static final Logger LOGGER = Logger.getLogger(Indexer.class.getName());
 
-    private static String pack(List<Integer> values) {
-        char[] bytes = new char[values.size() * 2];
-        int i = 0;
-        for (int value : values) {
-            bytes[i++] = Chars.checkedCast((value & 0xFFFF0000) >> 16);
-            bytes[i++] = Chars.checkedCast((value & 0x0000FFFF));
+    private static byte[] pack(List<Integer> values) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(values.size() * 4);
+        DataOutputStream dos = new DataOutputStream(bos);
+        try {
+            for (int value : values) {
+                dos.writeInt(value);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return new String(bytes);
+        return bos.toByteArray();
     }
 
     private static int totalCardinality(Table<String, Term, SortedMap<String, Section>> sections) {
@@ -123,8 +129,6 @@ public class Indexer {
                 } else if (reference.equals(course)) {
                     // The two states are equal so remove the state to prevent it from being updated.
                     desiredState.remove(key);
-                } else {
-                    System.out.println("Need to update: " + reference + " " + course);
                 }
             });
             // Perform the deletions.
@@ -134,83 +138,115 @@ public class Indexer {
             // Then update to the desired state.
             LOGGER.info(String.format("Updating Algolia with %d entries.", desiredState.size()));
             algoliaIndex.saveObjects(ImmutableList.copyOf(desiredState.values()));
-            System.exit(0);
         }
+        JsonObject index = new JsonObject();
+        // Atomicity is a little more important for the indexes, so the indexes are in one giant file.
         {
-            // Build the cardinality table.
-            ImmutableList.Builder<Integer> builder = new ImmutableList.Builder<>();
+            LOGGER.info("Building cardinality table.");
+            HashMap<Integer, ArrayList<Integer>> mappings = new HashMap<>();
             for (int i = 0; i < courseKeys.length; i++) {
                 for (int j = 0; j < termKeys.length; j++) {
                     int size = Optional.ofNullable(sections.get(courseKeys[i], termKeys[j])).map(Map::size).orElse(0);
                     if (size > 0) {
-                        builder.add(i * termKeys.length + j);
-                        builder.add(size);
+                        mappings.computeIfAbsent(size, ArrayList::new).add(i * termKeys.length + j);
                     }
                 }
             }
+            ImmutableList.Builder<Integer> builder = new ImmutableList.Builder<>();
+            mappings.forEach((key, values) -> {
+                builder.add(key);
+                builder.add(values.size());
+                builder.addAll(values);
+            });
             JsonArray coursesJson = new JsonArray();
-            courses.keySet().forEach(coursesJson::add);
+            Arrays.stream(courseKeys).forEach(coursesJson::add);
             JsonArray termsJson = new JsonArray();
-            terms.stream().map(Term::getTerm).forEach(termsJson::add);
-            FirestoreService.writeIndex("cardinalities/cardinality.bin", pack(builder.build()));
-            FirestoreService.writeIndex("cardinalities/courses.json", coursesJson.toString());
-            FirestoreService.writeIndex("cardinalities/terms.json", termsJson.toString());
+            Arrays.stream(termKeys).map(Term::getTerm).forEach(termsJson::add);
+            index.add("courses", coursesJson);
+            index.add("terms", termsJson);
+            index.addProperty("cardinalities", Base64.getEncoder().encodeToString(pack(builder.build())));
         }
         {
-            // Build the department index.
+            LOGGER.info("Building department index.");
+            JsonObject departmentsJson = new JsonObject();
             service.invokeAll(Arrays.stream(courseKeys)
                     .collect(Collectors.groupingBy(course -> course.substring(0, 4)))
                     .entrySet()
                     .stream()
-                    .map(entry -> (Callable<Void>) () -> {
-                        String department = entry.getKey();
-                        List<String> matchedCourses = entry.getValue();
-                        FirestoreService.writeIndex("departments/" + department + ".course.sparse.bin",
-                                pack(matchedCourses.stream()
-                                        .map(matchedCourse -> Arrays.binarySearch(courseKeys, matchedCourse))
-                                        .collect(Collectors.toList())));
-                        return null;
-                    })
-                    .collect(Collectors.toList()));
+                    .map(entry -> (Callable<Map.Entry<String, String>>) () -> new AbstractMap.SimpleEntry<>(
+                            entry.getKey(), Base64.getEncoder()
+                            .encodeToString(pack(entry.getValue()
+                                    .stream()
+                                    .map(matchedCourse -> Arrays.binarySearch(courseKeys, matchedCourse))
+                                    .collect(Collectors.toList())))))
+                    .collect(Collectors.toList())).stream().map(future -> {
+                try {
+                    return future.get();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }).forEach(entry -> departmentsJson.addProperty(entry.getKey(), entry.getValue()));
+            JsonObject metadata = new JsonObject();
+            metadata.addProperty("dimension", "course");
+            departmentsJson.add("_metadata", metadata);
+            index.add("departments", departmentsJson);
         }
         {
-            // Build the period index.
-            Arrays.stream(termKeys).map(Term::getPeriod).distinct().forEach(period -> {
-                BitSet dense = new BitSet(courseKeys.length * termKeys.length);
-                for (int i = 0; i < courseKeys.length; i++) {
-                    for (int j = 0; j < termKeys.length; j++) {
-                        if (!termKeys[j].getPeriod().equals(period)) {
-                            continue;
-                        }
-                        dense.set(i * termKeys.length + j, Optional.ofNullable(sections.get(courseKeys[i], termKeys[j]))
-                                .map(Map::size)
-                                .orElse(0) > 0);
+            LOGGER.info("Building sequence index.");
+            JsonObject sequencesJson = new JsonObject();
+            courses.entrySet()
+                    .stream()
+                    .filter(entry -> entry.getValue().getParent().isPresent())
+                    .collect(Collectors.groupingBy(entry -> entry.getValue().getParent().get()))
+                    .forEach((sequence, entries) -> sequencesJson.addProperty(sequence, Base64.getEncoder()
+                            .encodeToString(pack(entries.stream()
+                                    .map(Map.Entry::getKey)
+                                    .map(course -> Arrays.binarySearch(courseKeys, course))
+                                    .collect(Collectors.toList())))));
+            JsonObject metadata = new JsonObject();
+            metadata.addProperty("dimension", "course");
+            sequencesJson.add("_metadata", metadata);
+            index.add("sequences", sequencesJson);
+        }
+        {
+            LOGGER.info("Building period index.");
+            JsonObject periodsJson = new JsonObject();
+            Arrays.stream(termKeys).map(Term::getPeriod).distinct().sorted().forEach(period -> {
+                ImmutableList.Builder<Integer> builder = new ImmutableList.Builder<>();
+                for (int i = 0; i < termKeys.length; i++) {
+                    if (termKeys[i].getPeriod().equals(period)) {
+                        builder.add(i);
                     }
                 }
-                FirestoreService.writeIndex("periods/" + period + ".term.dense.bin", new String(dense.toByteArray()));
+                periodsJson.addProperty(period, Base64.getEncoder().encodeToString(pack(builder.build())));
             });
+            JsonObject metadata = new JsonObject();
+            metadata.addProperty("dimension", "term");
+            periodsJson.add("_metadata", metadata);
+            index.add("periods", periodsJson);
         }
         {
-            // Build the year index.
-            Arrays.stream(termKeys).map(Term::getYear).distinct().forEach(year -> {
-                BitSet dense = new BitSet(courseKeys.length * termKeys.length);
-                for (int i = 0; i < courseKeys.length; i++) {
-                    for (int j = 0; j < termKeys.length; j++) {
-                        if (termKeys[j].getYear() != year) {
-                            continue;
-                        }
-                        dense.set(i * termKeys.length + j, Optional.ofNullable(sections.get(courseKeys[i], termKeys[j]))
-                                .map(Map::size)
-                                .orElse(0) > 0);
+            LOGGER.info("Building year index.");
+            JsonObject yearsJson = new JsonObject();
+            Arrays.stream(termKeys).map(Term::getYear).distinct().sorted().forEach(year -> {
+                ImmutableList.Builder<Integer> builder = new ImmutableList.Builder<>();
+                for (int i = 0; i < termKeys.length; i++) {
+                    if (termKeys[i].getYear() == year) {
+                        builder.add(i);
                     }
                 }
-                FirestoreService.writeIndex("years/" + year + ".term.dense.bin", new String(dense.toByteArray()));
+                yearsJson.addProperty(String.valueOf(year), Base64.getEncoder().encodeToString(pack(builder.build())));
             });
+            JsonObject metadata = new JsonObject();
+            metadata.addProperty("dimension", "term");
+            yearsJson.add("_metadata", metadata);
+            index.add("years", yearsJson);
         }
         {
-            // Build the instructors index.
+            LOGGER.info("Building instructors index.");
+            JsonObject instructorsJson = new JsonObject();
             Map<String, List<Integer>> instructors = new HashMap<>();
-            AtomicInteger index = new AtomicInteger();
+            AtomicInteger checksum = new AtomicInteger();
             for (String courseKey : courseKeys) {
                 for (Term termKey : termKeys) {
                     Optional.ofNullable(sections.get(courseKey, termKey))
@@ -223,38 +259,47 @@ public class Indexer {
                                         .map(SecondaryActivity::getInstructors)
                                         .flatMap(Collection::stream))
                                         .distinct()
+                                        .filter(instructor -> !instructor.isEmpty())
                                         .forEach(instructor -> instructors.computeIfAbsent(instructor,
-                                                key -> new ArrayList<>()).add(index.get()));
-                                index.getAndIncrement();
+                                                key -> new ArrayList<>()).add(checksum.get()));
+                                checksum.getAndIncrement();
                             }));
                 }
             }
-            Preconditions.checkState(index.get() == totalCardinality, "Some sections were dropped maybe...");
-            service.invokeAll(instructors.entrySet().stream().map(entry -> (Callable<Void>) () -> {
-                FirestoreService.writeIndex("instructors/" + entry.getKey() + ".section.sparse.bin",
-                        pack(entry.getValue()));
-                return null;
-            }).collect(Collectors.toList()));
+            Preconditions.checkState(checksum.get() == totalCardinality, "Some sections were dropped maybe...");
+            instructors.forEach((instructor, indexes) -> instructorsJson.addProperty(instructor,
+                    Base64.getEncoder().encodeToString(pack(indexes))));
+            JsonObject metadata = new JsonObject();
+            metadata.addProperty("dimension", "section");
+            instructorsJson.add("_metadata", metadata);
+            index.add("instructors", instructorsJson);
         }
         {
-            // Build the enrollment index.
+            LOGGER.info("Building enrollment index.");
+            JsonObject enrollmentsJson = new JsonObject();
             Map<String, List<Integer>> enrollments = new HashMap<>();
-            AtomicInteger index = new AtomicInteger();
+            AtomicInteger checksum = new AtomicInteger();
             for (String courseKey : courseKeys) {
                 for (Term termKey : termKeys) {
                     Optional.ofNullable(sections.get(courseKey, termKey))
                             .ifPresent(map -> map.forEach((sectionId, section) -> {
                                 if (section.getEnrollment().isFull()) {
-                                    enrollments.computeIfAbsent("full", key -> new ArrayList<>()).add(index.get());
+                                    enrollments.computeIfAbsent("full", key -> new ArrayList<>()).add(checksum.get());
                                 }
-                                index.getAndIncrement();
+                                checksum.getAndIncrement();
                             }));
                 }
             }
-            Preconditions.checkState(index.get() == totalCardinality, "Some sections were dropped maybe...");
-            enrollments.forEach((enrollment, sparse) -> FirestoreService.writeIndex(
-                    "enrollments/" + enrollment + ".section.sparse.bin", pack(sparse)));
+            Preconditions.checkState(checksum.get() == totalCardinality, "Some sections were dropped maybe...");
+            enrollments.forEach((enrollment, sparse) -> enrollmentsJson.addProperty(enrollment,
+                    Base64.getEncoder().encodeToString(pack(sparse))));
+            JsonObject metadata = new JsonObject();
+            metadata.addProperty("dimension", "section");
+            enrollmentsJson.add("_metadata", metadata);
+            index.add("enrollments", enrollmentsJson);
         }
+
+        FirestoreService.writeIndex(index);
 
         service.shutdown();
     }
@@ -267,29 +312,29 @@ public class Indexer {
         AlgoliaCourse() {
         }
 
-        String getDescription() {
-            return description;
+        public String getDescription() {
+            return this.description;
         }
 
-        AlgoliaCourse setDescription(String description) {
+        public AlgoliaCourse setDescription(String description) {
             this.description = description;
             return this;
         }
 
-        String getName() {
-            return name;
+        public String getName() {
+            return this.name;
         }
 
-        AlgoliaCourse setName(String name) {
+        public AlgoliaCourse setName(String name) {
             this.name = name;
             return this;
         }
 
-        String getObjectID() {
-            return objectID;
+        public String getObjectID() {
+            return this.objectID;
         }
 
-        AlgoliaCourse setObjectID(String objectID) {
+        public AlgoliaCourse setObjectID(String objectID) {
             this.objectID = objectID;
             return this;
         }
@@ -301,12 +346,14 @@ public class Indexer {
                     .compare(this, that) == 0;
         }
 
+        @Override
         public int hashCode() {
-            return getDescription().hashCode() ^ getName().hashCode() ^ getObjectID().hashCode();
+            return this.getDescription().hashCode() ^ this.getName().hashCode() ^ this.getObjectID().hashCode();
         }
 
+        @Override
         public String toString() {
-            return String.format("%s %s %s", getObjectID(), getName(), getDescription());
+            return String.format("%s %s %s", this.getObjectID(), this.getName(), this.getDescription());
         }
     }
 
@@ -323,17 +370,17 @@ public class Indexer {
 
         @Override
         public String getRowKey() {
-            return row;
+            return this.row;
         }
 
         @Override
         public Term getColumnKey() {
-            return col;
+            return this.col;
         }
 
         @Override
         public SortedMap<String, Section> getValue() {
-            return value;
+            return this.value;
         }
     }
 }

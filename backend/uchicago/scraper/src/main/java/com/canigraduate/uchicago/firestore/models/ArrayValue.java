@@ -13,7 +13,7 @@ public class ArrayValue {
     public ArrayValue(Iterable<Value> elements) {
         JsonArray array = new JsonArray();
         this.object = new JsonObject();
-        object.add("values", array);
+        this.object.add("values", array);
         elements.forEach(value -> array.add(value.toJsonObject()));
     }
 
@@ -22,7 +22,7 @@ public class ArrayValue {
     }
 
     public JsonObject toJsonObject() {
-        return object;
+        return this.object;
     }
 
     public List<Value> toList() {
@@ -32,5 +32,14 @@ public class ArrayValue {
         return new ImmutableList.Builder<Value>().addAll(
                 Iterators.transform(this.object.getAsJsonArray("values").iterator(),
                         value -> new Value(value.getAsJsonObject()))).build();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof ArrayValue)) {
+            return false;
+        }
+        ArrayValue that = (ArrayValue) obj;
+        return this.toList().equals(that.toList());
     }
 }

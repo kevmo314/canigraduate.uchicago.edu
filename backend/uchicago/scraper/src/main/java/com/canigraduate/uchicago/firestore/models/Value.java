@@ -3,6 +3,8 @@ package com.canigraduate.uchicago.firestore.models;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
 
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 
@@ -30,6 +32,11 @@ public class Value {
         this.object.addProperty("doubleValue", value);
     }
 
+    public Value(byte[] value) {
+        this.object = new JsonObject();
+        this.object.addProperty("bytesValue", Base64.getEncoder().encodeToString(value));
+    }
+
     public Value(String value) {
         this.object = new JsonObject();
         this.object.addProperty("stringValue", value);
@@ -46,7 +53,7 @@ public class Value {
     }
 
     public JsonObject toJsonObject() {
-        return object;
+        return this.object;
     }
 
     private boolean getBoolean() {
@@ -63,6 +70,10 @@ public class Value {
 
     public String getString() {
         return this.object.get("stringValue").getAsString();
+    }
+
+    public byte[] getBytes() {
+        return Base64.getDecoder().decode(this.object.get("bytesValue").getAsString());
     }
 
     public ArrayValue getArray() {
@@ -91,6 +102,8 @@ public class Value {
                     return this.getDouble() == that.getDouble();
                 case "stringValue":
                     return this.getString().equals(that.getString());
+                case "bytesValue":
+                    return Arrays.equals(this.getBytes(), that.getBytes());
                 case "arrayValue":
                     return this.getArray().equals(that.getArray());
                 case "mapValue":

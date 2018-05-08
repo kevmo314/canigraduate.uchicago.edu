@@ -15,7 +15,7 @@ public class MapValue {
     private MapValue(Map<String, ? extends Value> entries) {
         this.object = new JsonObject();
         JsonObject fields = new JsonObject();
-        object.add("fields", fields);
+        this.object.add("fields", fields);
         entries.forEach((key, value) -> fields.add(key, value.toJsonObject()));
     }
 
@@ -28,7 +28,7 @@ public class MapValue {
     }
 
     public JsonObject toJsonObject() {
-        return object;
+        return this.object;
     }
 
     private JsonObject getFields() {
@@ -37,8 +37,10 @@ public class MapValue {
     }
 
     public Map<String, Value> toMap() {
-        return new ImmutableMap.Builder<String, Value>().putAll(
-                this.getFields().entrySet().stream().map(entry -> new AbstractMap.SimpleEntry<>(entry.getKey(),
+        return new ImmutableMap.Builder<String, Value>().putAll(this.getFields()
+                .entrySet()
+                .stream()
+                .map(entry -> new AbstractMap.SimpleEntry<>(entry.getKey(),
                         new Value(entry.getValue().getAsJsonObject())))
                 .collect(Collectors.toList())).build();
     }
@@ -80,5 +82,14 @@ public class MapValue {
     public MapValue put(String key, MapValue value) {
         this.getFields().add(key, new Value(value).toJsonObject());
         return this;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof ArrayValue)) {
+            return false;
+        }
+        MapValue that = (MapValue) obj;
+        return this.toMap().equals(that.toMap());
     }
 }
