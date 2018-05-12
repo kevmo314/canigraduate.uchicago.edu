@@ -49,6 +49,7 @@ module.exports = {
       },
     ],
   },
+  output: { publicPath: '/' },
   plugins: [
     new webpack.EnvironmentPlugin(['NODE_ENV']),
     new HtmlWebpackPlugin({
