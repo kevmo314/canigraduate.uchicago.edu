@@ -7,7 +7,8 @@
 
 <script>
 import { mapState } from 'vuex';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { map } from 'rxjs/operators';
+import { combineLatest } from 'rxjs';
 
 export default {
   name: 'program-progress',
@@ -18,8 +19,7 @@ export default {
       progress: combineLatest(
         this.$observe(() => this.program),
         this.$observe(() => this.transcript),
-        (root, transcript) => root.bindTranscript(transcript),
-      ),
+      ).pipe(map(([root, transcript]) => root.bindTranscript(transcript))),
     };
   },
 };

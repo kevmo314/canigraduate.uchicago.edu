@@ -1,10 +1,10 @@
-import { DocumentReference, DocumentSnapshot } from '@firebase/firestore-types';
+import { CollectionReference, QuerySnapshot } from '@firebase/firestore-types';
 import { Observable } from 'rxjs';
 import { publishReplay, refCount, map } from 'rxjs/operators';
 
-const CACHE = new Map<string, Observable<any>>();
+const CACHE = new Map<string, Observable<string[]>>();
 
-export default function(ref: DocumentReference): Observable<any> {
+export default function(ref: CollectionReference): Observable<string[]> {
   const result = CACHE.get(ref.path);
   if (result) {
     return result;
@@ -12,7 +12,11 @@ export default function(ref: DocumentReference): Observable<any> {
   const observable = Observable.create(observer =>
     ref.onSnapshot(observer),
   ).pipe(
-    map((snapshot: DocumentSnapshot) => snapshot.data()),
+    map((snapshot: QuerySnapshot) => {
+      const ids: string[] = [];
+      snapshot.forEach(doc => ids.push(doc.id));
+      return ids;
+    }),
     publishReplay(1),
     refCount(),
   );

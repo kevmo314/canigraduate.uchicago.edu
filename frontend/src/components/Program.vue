@@ -29,9 +29,9 @@
 import Requirement from '@/components/Requirement';
 import ProgramProgress from '@/components/ProgramProgress';
 import EventBus from '@/EventBus';
-import { Observable } from 'rxjs/Observable';
-import { mapState } from 'vuex';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { mapState, mapGetters } from 'vuex';
+import { map, flatMap, tap } from 'rxjs/operators';
+import { combineLatest } from 'rxjs';
 
 export default {
   components: { Requirement, ProgramProgress },
@@ -41,7 +41,7 @@ export default {
   },
   computed: {
     ...mapState('transcript', { transcript: state => state }),
-    ...mapState('institution', { endpoints: state => state.endpoints }),
+    ...mapGetters('institution', ['institution']),
   },
   beforeRouteLeave(to, from, next) {
     EventBus.$emit('set-title', null);
@@ -51,22 +51,28 @@ export default {
     const transcript = this.$observe(() => this.transcript);
     const id = this.$observe(() => this.id);
     const extension = this.$observe(() => this.extension);
-    const root = this.endpoints
-      .programs()
-      .combineLatest(id, (programs, id) => programs[id]);
-    const program = combineLatest(root, extension, (root, extension) => {
-      return root && extension ? root.extensions[extension] : root;
-    });
-    return {
-      root: root.do(program => {
-        EventBus.$emit('set-title', program.name);
+    const root = combineLatest(
+      this.$observe(() => this.institution),
+      this.$observe(() => this.id),
+    ).pipe(
+      flatMap(([institution, id]) => institution.program(id)),
+      flatMap(program => program.data()),
+    );
+    const program = combineLatest(root, extension).pipe(
+      map(([root, extension]) => {
+        return root && extension ? root.extensions[extension] : root;
       }),
-      progress: combineLatesteLatest(program, transcript).flatMap(
-        ([program, transcript]) => {
+    );
+    return {
+      root: root.pipe(
+        tap(program => EventBus.$emit('set-title', program.name)),
+      ),
+      progress: combineLatest(program, transcript).pipe(
+        flatMap(([program, transcript]) => {
           return transcript.length > 0
             ? program.bindTranscript(transcript)
             : Promise.resolve();
-        },
+        }),
       ),
       program,
     };

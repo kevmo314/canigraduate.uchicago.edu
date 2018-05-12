@@ -25,7 +25,7 @@ import CourseName from '@/components/CourseName';
 import TermOfferingIndicator from '@/components/TermOfferingIndicator';
 import { mapState, mapGetters } from 'vuex';
 import { map, flatMap } from 'rxjs/operators';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { combineLatest } from 'rxjs';
 
 export default {
   name: 'search-result',

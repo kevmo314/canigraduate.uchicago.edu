@@ -3,14 +3,30 @@ import {
   DocumentData,
   DocumentSnapshot,
 } from '@firebase/firestore-types';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { map, filter } from 'rxjs/operators';
 import publishDocument from './publishDocument';
+
+export enum DayOfWeek {
+  SUNDAY = 0,
+  MONDAY = 1,
+  TUESDAY = 2,
+  WEDNESDAY = 3,
+  THURSDAY = 4,
+  FRIDAY = 5,
+  SATURDAY = 6,
+}
+
+interface ScheduleData {
+  readonly day: DayOfWeek;
+  readonly start: number;
+  readonly end: number;
+}
 
 interface PrimaryActivityData {
   readonly instructors: string[];
   readonly location: string;
-  readonly schedule: [number, number][];
+  readonly schedule: ScheduleData[];
   readonly type: string;
 }
 
@@ -18,7 +34,7 @@ interface SecondaryActivityData {
   readonly id: string;
   readonly instructors: string[];
   readonly location: string;
-  readonly schedule: [number, number][];
+  readonly schedule: ScheduleData[];
   readonly type: string;
   readonly enrollment: EnrollmentData;
 }
@@ -39,9 +55,11 @@ const SECONDS_PER_DAY = 86400;
 
 function parseSchedule(blocks: number[]) {
   return blocks.map(block => {
-    const from = Math.floor(block / (86400 * 60));
-    const to = Math.floor((block % 86400) / 60);
-    return [from, to] as [number, number];
+    const end = block % SECONDS_PER_DAY;
+    block = Math.floor(block / SECONDS_PER_DAY);
+    const start = block % SECONDS_PER_DAY;
+    block = Math.floor(block / SECONDS_PER_DAY);
+    return { day: block, start, end } as ScheduleData;
   });
 }
 

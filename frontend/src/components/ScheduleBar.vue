@@ -14,7 +14,7 @@
 import EventBus from '@/EventBus';
 import { mapGetters } from 'vuex';
 import { map, flatMap } from 'rxjs/operators';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { combineLatest } from 'rxjs';
 
 const DAYS = ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
 

@@ -17,7 +17,7 @@
 <script>
 import { mapGetters } from 'vuex';
 import { map } from 'rxjs/operators';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { combineLatest } from 'rxjs';
 
 export default {
   name: 'term-offering-indicator',

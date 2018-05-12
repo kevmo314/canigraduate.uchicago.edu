@@ -7,7 +7,7 @@
 <script>
 import SectionDetail from '@/components/SectionDetail';
 import { mapActions, mapGetters } from 'vuex';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { combineLatest } from 'rxjs';
 import { flatMap, map } from 'rxjs/operators';
 
 export default {

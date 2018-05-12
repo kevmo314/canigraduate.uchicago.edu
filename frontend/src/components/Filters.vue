@@ -77,7 +77,7 @@
 </template>
 
 <script>
-import { Observable } from 'rxjs/Observable';
+import { Observable, of } from 'rxjs';
 import { SORT } from '@/store/modules/search';
 import { mapState, mapGetters } from 'vuex';
 import { map } from 'rxjs/operators';
@@ -105,9 +105,6 @@ export default {
   },
   computed: {
     ...mapGetters('institution', ['institution']),
-    ...mapState('institution', {
-      endpoints: state => state.endpoints,
-    }),
     query: createComputedProperty.call(this, 'query'),
     periods: createComputedProperty.call(this, 'periods'),
     days: createComputedProperty.call(this, 'days'),
@@ -116,13 +113,21 @@ export default {
     sort: createComputedProperty.call(this, 'sort', 'search'),
   },
   subscriptions() {
-    const institution = this.institution.data();
+    const institution = this.$observe(() => this.institution);
+    const institutionData = institution.pipe(
+      flatMap(institution => institution.data()),
+    );
+    const indexes = institution.pipe(
+      flatMap(institution => institution.getIndexes()),
+    );
     return {
-      searchPlaceholder: institution.pipe(
+      searchPlaceholder: institutionData.pipe(
         map(institution => `Try "${institution.searchPlaceholder}"`),
       ),
-      periodName: institution.pipe(map(institution => institution.periodName)),
-      periodItems: institution.pipe(
+      periodName: institutionData.pipe(
+        map(institution => institution.periodName),
+      ),
+      periodItems: institutionData.pipe(
         map(institution =>
           institution.periods.map((period, value) => ({
             value,
@@ -131,8 +136,8 @@ export default {
           })),
         ),
       ),
-      departmentItems: Observable.of([]).concat(this.endpoints.departments()),
-      instructorItems: Observable.of([]).concat(this.endpoints.instructors()),
+      departmentItems: indexes.pipe(map(index => index.getDepartments())),
+      instructorItems: indexes.pipe(map(index => index.getInstructors())),
     };
   },
 };

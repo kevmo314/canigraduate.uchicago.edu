@@ -3,9 +3,7 @@ import {
   DocumentData,
   DocumentSnapshot,
 } from '@firebase/firestore-types';
-import Terms from './terms';
-import Sections from './sections';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import publishDocument from './publishDocument';
 import Institution from './institution';

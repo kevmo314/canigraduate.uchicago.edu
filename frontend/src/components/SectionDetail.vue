@@ -36,7 +36,7 @@ import ScheduleBar from '@/components/ScheduleBar';
 import IntervalTree from '@/lib/interval-tree';
 import { Observable } from 'rxjs/Observable';
 import { mapState, mapActions, mapGetters } from 'vuex';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { combineLatest } from 'rxjs';
 import { flatMap, map } from 'rxjs/operators';
 
 export default {

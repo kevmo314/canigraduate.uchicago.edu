@@ -1,6 +1,5 @@
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { DocumentReference } from '@firebase/firestore-types';
-import Terms from './terms';
 import publishDocument from './publishDocument';
 
 interface SequenceData {

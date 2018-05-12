@@ -7,7 +7,7 @@ import store from './store';
 import VueRx from 'vue-rx';
 import VueTimeago from 'vue-timeago';
 import VueScrollto from 'vue-scrollto';
-import Rx from 'rxjs/Rx';
+import { Observable, Subscription, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 require('../node_modules/vuetify/dist/vuetify.min.css');
@@ -37,7 +37,7 @@ Vue.prototype.$observe = function(fn) {
   );
 };
 
-Vue.use(VueRx, Rx);
+Vue.use(VueRx, { Observable, Subscription, Subject });
 
 const PRODUCTION = process.env.NODE_ENV === 'PRODUCTION';
 

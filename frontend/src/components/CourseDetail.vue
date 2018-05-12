@@ -44,7 +44,7 @@ import GradeDistribution from '@/components/GradeDistribution';
 import CompletionIndicator from '@/components/CompletionIndicator';
 import TermDetail from '@/components/TermDetail';
 import Sticky from '@/directives/Sticky';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { combineLatest } from 'rxjs';
 import { mapGetters } from 'vuex';
 import { first, map, flatMap } from 'rxjs/operators';
 
@@ -65,10 +65,8 @@ export default {
     // Offerings are filter-invariant.
     const institution$ = this.$observe(() => this.institution);
     const course$ = this.$observe(() => this.course);
-    const courseModel$ = combineLatest(
-      institution$,
-      course$,
-      (institution, course) => institution.course(course),
+    const courseModel$ = combineLatest(institution$, course$).pipe(
+      map(([institution, course]) => institution.course(course)),
     );
     const courseData$ = courseModel$.pipe(flatMap(course => course.data()));
     return {
@@ -85,8 +83,10 @@ export default {
           flatMap(institution => institution.getGradeDistribution()),
         ),
         course$,
-        (gpas, grades, course) =>
+      ).pipe(
+        map(([gpas, grades, course]) =>
           gpas.map(gpa => ({ gpa, count: (grades[course] || {})[gpa] || 0 })),
+        ),
       ),
     };
   },

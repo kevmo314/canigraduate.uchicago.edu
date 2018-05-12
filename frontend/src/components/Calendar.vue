@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="schedules">
     <svg width="100%" :height="height * 32 / 60" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="grid" width="1" height="32" patternUnits="userSpaceOnUse">
@@ -15,9 +15,11 @@
           <rect width="100%" height="100%" fill="url(#grid)" />
           <text text-anchor="end" x="80%" :y="(index * 32 + 16)" class="caption" v-for="(time, index) of times"
             :key="time">{{time}}</text>
-          <rect v-for="[cssClass, range] of scheduleHints" width="4" :style="{transform: 'translate(0, '+ (range[0] * 32 / 60) + 'px)'}"
-            :height="(range[1] - range[0]) * 32 / 60" :key="cssClass" :class="cssClass"
-          />
+          <template v-if="scheduleHints">
+            <rect v-for="{cssClass, start, end} of scheduleHints" width="4" :style="{transform: 'translate(0, '+ (start * 32 / 60) + 'px)'}"
+              :height="(end - start) * 32 / 60" :key="cssClass" :class="cssClass"
+            />
+          </template>
         </g>
       </svg>
       <svg width="92%" height="100%" x="8%">
@@ -26,10 +28,10 @@
             <rect width="100%" height="100%" fill="url(#grid)" />
             <rect width="100%" height="100%" fill="url(#subgrid)" />
             <transition-group name="fade-transition" tag="g">
-              <svg v-for="({course, schedule, type, color}, index) of schedules" v-if="schedule[0] >= 1440 && schedule[0] < 1440 * 6"
-                :key="course + ' ' + color + ' ' + schedule[0]" :x="(Math.floor(schedule[0] / 1440) * 20 - 20 + (index > 0 && schedule[0] < schedules[index - 1].schedule[1] ? 2 : 0)) + '%'"
-                :width="index > 0 && schedule[0] < schedules[index - 1].schedule[1] ? '17%' : '19%'"
-                :y="(schedule[0] % 1440) * 32 / 60" :height="(schedule[1] - schedule[0]) * 32 / 60"
+              <svg v-for="({course, schedule, type, color}, index) of schedules" v-if="schedule.day >= DayOfWeek.MONDAY && schedule.day < DayOfWeek.SATURDAY"
+                :key="course + ' ' + color + ' ' + schedule.start" :x="(schedule.day * 20 - 20 + (index > 0 && overlaps(schedule, schedules[index - 1].schedule) ? 2 : 0)) + '%'"
+                :width="index > 0 && overlaps(schedule, schedules[index - 1].schedule) ? '17%' : '19%'"
+                :y="schedule.start * 32 / 60 / 60" :height="(schedule.end - schedule.start) * 32 / 60 / 60"
                 class="block" @click="reset({query: course})" role="link">
                 <rect width="100%" height="100%" :style="{fill: color, strokeWidth: 1, stroke: 'black'}"
                 />
@@ -75,12 +77,28 @@
 </template>
 
 <script>
-import { Observable } from 'rxjs/Observable';
+import { combineLatest, of } from 'rxjs';
 import CourseName from '@/components/CourseName';
-import { mapState, mapActions } from 'vuex';
+import { mapState, mapActions, mapGetters } from 'vuex';
+import {
+  map,
+  debounceTime,
+  switchMap,
+  tap,
+  flatMap,
+  concat,
+} from 'rxjs/operators';
+import { DayOfWeek } from '@/models/section';
 import TWEEN from '@tweenjs/tween.js';
 
-const COLORS = ['#CDDC39', '#F44336', '#2196F3', '#FF9800', '#009688', '#795548']
+const COLORS = [
+  '#CDDC39',
+  '#F44336',
+  '#2196F3',
+  '#FF9800',
+  '#009688',
+  '#795548',
+];
 
 export default {
   name: 'calendar',
@@ -92,47 +110,67 @@ export default {
     },
     term: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
-    const clock = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    const clock = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     return {
       topShift: 480,
       height: 600,
-      times: [...clock.map(v => v + 'a'), ...clock.map(v => v + 'p')]
-    }
+      times: [...clock.map(v => v + 'a'), ...clock.map(v => v + 'p')],
+      DayOfWeek,
+    };
   },
   computed: {
     ...mapState('calendar', { temporary: state => state.temporary }),
-    ...mapState('institution', { scheduleHints: state => Object.entries(state.scheduleBlocks) }),
+    ...mapGetters('institution', ['institution']),
     earliest() {
-      return (this.schedules || []).length > 0 ?
-        (Math.floor(Math.min(...this.schedules.map(x => x.schedule[0] % 1440)) / 30) * 30) : 360;
+      if (this.schedules.length == 0) {
+        return 360;
+      }
+      return (
+        Math.floor(
+          Math.min(...this.schedules.map(x => (x.schedule.end / 60) | 0)) / 30,
+        ) * 30
+      );
     },
     latest() {
-      return (this.schedules || []).length > 0 ?
-        (Math.ceil(Math.max(...this.schedules.map(x => x.schedule[1] % 1440)) / 30) * 30) : 1260;
+      if (this.schedules.length == 0) {
+        return 1260;
+      }
+      return (
+        Math.ceil(
+          Math.max(...this.schedules.map(x => (x.schedule.end / 60) | 0)) / 30,
+        ) * 30
+      );
     },
     legend() {
-      return Object.values(this.schedules.reduce((a, b) => Object.assign(a, { [b.color]: b }), {}))
-        .sort((a, b) => {
-          if (a.course == b.course) {
-            return a.section < b.section ? -1 : 1
-          }
-          return a.course < b.course ? -1 : 1
-        })
-    }
+      return Object.values(
+        this.schedules.reduce((a, b) => Object.assign(a, { [b.color]: b }), {}),
+      ).sort((a, b) => {
+        if (a.course == b.course) {
+          return a.section < b.section ? -1 : 1;
+        }
+        return a.course < b.course ? -1 : 1;
+      });
+    },
   },
   methods: {
     ...mapActions('filter', ['reset']),
+    overlaps(schedule, previous) {
+      return schedule.day == previous.day && schedule.start < previous.end;
+    },
     flattenToSchedules(section, activity) {
       function parseSchedule(activity) {
         return (activity.schedule || []).map(schedule => ({
-          schedule, type: activity.type
-        }))
+          schedule,
+          type: activity.type,
+        }));
       }
-      const results = (section.primaries || []).map(parseSchedule).reduce((a, b) => a.concat(b), []);
+      const results = (section.primaries || [])
+        .map(parseSchedule)
+        .reduce((a, b) => a.concat(b), []);
       if (section.secondaries && activity && section.secondaries[activity]) {
         results.push(...parseSchedule(section.secondaries[activity]));
       }
@@ -141,68 +179,100 @@ export default {
     tween() {
       function animate() {
         if (TWEEN.update()) {
-          requestAnimationFrame(animate)
+          requestAnimationFrame(animate);
         }
       }
       this.$nextTick(() => {
-        const state = { topShift: this.topShift, height: this.height }
+        const state = { topShift: this.topShift, height: this.height };
         const height = Math.max(600, this.latest - this.earliest + 120);
-        const topShift = this.earliest - (height - this.latest + this.earliest) / 2;
+        const topShift =
+          this.earliest - (height - this.latest + this.earliest) / 2;
         new TWEEN.Tween(state)
           .easing(TWEEN.Easing.Quadratic.Out)
           .to({ topShift, height }, 500)
           .onUpdate(() => {
-            this.topShift = state.topShift
-            this.height = state.height
+            this.topShift = state.topShift;
+            this.height = state.height;
           })
-          .start()
-        animate()
-      })
-    }
+          .start();
+        animate();
+      });
+    },
   },
   subscriptions() {
-    const watch = f => {
-      return this.$watchAsObservable(f, { immediate: true }).map(x => x.newValue)
-    }
-    const schedules =
-      Observable.combineLatest(
-        watch(() => this.records),
-        watch(() => this.term),
-        watch(() => this.temporary).map(temporary => temporary.course && Object.assign(temporary, {
-          color: 'rgba(255, 235, 59, 0.8)',
-          temporary: true,
-        })),
-      ).debounceTime(50).switchMap(
-        ([records, term, temporary]) => {
-          if (temporary) {
-            records.push(temporary);
-          }
-          if (records.length == 0) {
-            return Observable.of([]);
-          }
-          return Observable.combineLatest(records.map(record =>
-            this.$store.state.institution.endpoints.schedules(
-              record.course, term)
-              // Pick the section.
-              .map(schedule => schedule[record.section])
+    const institution$ = this.$observe(() => this.institution);
+    const scheduleHints = institution$.pipe(
+      flatMap(institution => institution.data()),
+      map(data => data.scheduleBlocks),
+    );
+    const schedules = combineLatest(
+      this.$observe(() => this.records),
+      this.$observe(() => this.term),
+      this.$observe(() => this.temporary).pipe(
+        map(temporary => {
+          return (
+            temporary.course &&
+            Object.assign(temporary, {
+              color: 'rgba(255, 235, 59, 0.8)',
+              temporary: true,
+            })
+          );
+        }),
+      ),
+    ).pipe(
+      debounceTime(50),
+      switchMap(([records, term, temporary]) => {
+        if (temporary) {
+          records.push(temporary);
+        }
+        if (records.length == 0) {
+          return of([]);
+        }
+        return combineLatest(
+          // Get the course data for each transcript record.
+          records.map(record => {
+            return institution$.pipe(
+              map(institution =>
+                institution
+                  .course(record.course)
+                  .term(term)
+                  .section(record.section),
+              ),
+              flatMap(section => section.data()),
               // Pull the schedules.
-              .map(schedule => this.flattenToSchedules(schedule, record.activity))
+              map(schedule =>
+                this.flattenToSchedules(schedule, record.activity),
+              ),
               // Add the course id.
-              .map(schedule => schedule.map(s => Object.assign(s, record)))))
-            // Flatten the array and assign a color.
-            .map(schedule => schedule.reduce((accumulator, value, index) => {
-              return accumulator.concat(value.map(block => {
-                return Object.assign(block, { color: block.color || COLORS[index] });
-              }))
-            }, []))
-            // Sort by time desc.
-            .map(schedule => schedule.sort((a, b) => a.schedule[0] - b.schedule[0]))
-            .map(Object.freeze)
-            .do(() => this.tween())
-        })
-    return { schedules: Observable.of([]).concat(schedules) }
-  }
-}
+              map(schedule => schedule.map(s => Object.assign(s, record))),
+            );
+          }),
+        ).pipe(
+          // Flatten the array and assign a color.
+          map(schedule => {
+            return schedule.reduce((accumulator, value, index) => {
+              return accumulator.concat(
+                value.map(block => {
+                  return Object.assign(block, {
+                    color: block.color || COLORS[index],
+                  });
+                }),
+              );
+            }, []);
+          }),
+          // Sort by time desc.
+          map(schedule =>
+            schedule.sort((a, b) => a.schedule[0] - b.schedule[0]),
+          ),
+          map(Object.freeze),
+          tap(() => this.tween()),
+        );
+      }),
+    );
+
+    return { schedules, scheduleHints };
+  },
+};
 </script>
 
 <style scoped>

@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "lib": ["es6", "es2017", "dom"]
   }
 }

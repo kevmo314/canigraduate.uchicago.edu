@@ -5,9 +5,9 @@
 
 <script>
 import { mapGetters } from 'vuex';
-import { map, flatMap } from 'rxjs/operators';
+import { map, flatMap, filter } from 'rxjs/operators';
 import models from '@/models';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { combineLatest } from 'rxjs';
 
 export default {
   name: 'course-name',
@@ -16,11 +16,14 @@ export default {
     return {
       name: combineLatest(
         this.$observe(() => this.institution),
-        this.$observe(() => this.$slots.default[0].text).filter(
-          x => x.length > 0,
+        this.$observe(() => this.$slots.default[0].text).pipe(
+          filter(x => x.length > 0),
         ),
-        (institution, course) => institution.course(course),
-      ).pipe(flatMap(course => course.data()), map(data => data.name)),
+      ).pipe(
+        map(([institution, course]) => institution.course(course)),
+        flatMap(course => course.data()),
+        map(data => data.name),
+      ),
     };
   },
 };

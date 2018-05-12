@@ -1,9 +1,9 @@
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { DocumentReference } from '@firebase/firestore-types';
 import publishDocument from './publishDocument';
 import Institution from './institution';
 import { map } from 'rxjs/operators';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { combineLatest } from 'rxjs';
 import Term from './term';
 
 interface CourseData {

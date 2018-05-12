@@ -47,8 +47,7 @@
         <v-tab-item id="schedule" class="px-3 item">
           <v-select :items="allTerms" :value="scheduleTerm" label="Term" bottom @change="setActiveTerm"
             :disabled="temporaryTerm != null" auto></v-select>
-          <calendar :records="transcript.filter(record => record.term == scheduleTerm)" :term="scheduleTerm"
-          />
+          <calendar :records="transcript.filter(record => record.term == scheduleTerm)" :term="scheduleTerm" />
         </v-tab-item>
       </v-tabs>
     </v-card-media>
@@ -58,9 +57,9 @@
 <script>
 import CourseName from '@/components/CourseName.vue';
 import Calendar from '@/components/Calendar.vue';
-import { mapState, mapActions, mapMutations } from 'vuex';
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/combineLatest';
+import { mapState, mapActions, mapMutations, mapGetters } from 'vuex';
+import { map, flatMap, tap, publishReplay, refCount } from 'rxjs/operators';
+import { combineLatest } from 'rxjs';
 import EventBus from '@/EventBus';
 
 function mean(x) {
@@ -83,9 +82,7 @@ export default {
       terms: state => Array.from(new Set(state.map(record => record.term))),
       transcript: state => state,
     }),
-    ...mapState('institution', {
-      endpoints: state => state.endpoints,
-    }),
+    ...mapGetters('institution', ['institution']),
     ...mapState('calendar', {
       activeTerm: state => state.activeTerm,
       temporaryTerm: state => state.temporary.term,
@@ -120,31 +117,39 @@ export default {
     ...mapMutations('calendar', ['setActiveTerm']),
   },
   subscriptions() {
-    const quality = this.$watchAsObservable(() => this.transcript, {
-      immediate: true,
-    })
-      .map(x => x.newValue)
-      .map(transcript => transcript.filter(record => record.quality));
-    const terms = this.$watchAsObservable(() => this.terms, {
-      immediate: true,
-    }).map(x => x.newValue);
-    const egpa = this.endpoints.gradeDistribution().map(gradeDistribution => {
-      return Object.keys(gradeDistribution).reduce(
-        (state, key) => ({
-          ...state,
-          [key]: frequencyMean(gradeDistribution[key]),
-        }),
-        {},
-      );
-    });
-    return {
-      allTerms: this.endpoints.terms().do(terms => {
+    const institution$ = this.$observe(() => this.institution);
+    const egpa = institution$.pipe(
+      flatMap(institution => institution.getGradeDistribution()),
+      map(gradeDistribution => {
+        return Object.keys(gradeDistribution).reduce(
+          (state, key) => ({
+            ...state,
+            [key]: frequencyMean(gradeDistribution[key]),
+          }),
+          {},
+        );
+      }),
+      publishReplay(1),
+      refCount(),
+    );
+    const terms = this.$observe(() => this.terms);
+    const quality = this.$observe(() => this.transcript).pipe(
+      map(transcript => transcript.filter(record => record.quality)),
+    );
+    const allTerms = institution$.pipe(
+      flatMap(institution => institution.getIndexes()),
+      map(indexes => indexes.getTerms()),
+      map(terms => terms.slice().reverse()),
+      tap(terms => {
         if (!this.$store.state.calendar.activeTerm) {
           this.$store.commit('calendar/setActiveTerm', terms[0]);
         }
       }),
-      quarterEgpa: Observable.combineLatest(quality, egpa, terms).map(
-        ([quality, egpa, terms]) => {
+    );
+    return {
+      allTerms,
+      quarterEgpa: combineLatest(quality, egpa, terms).pipe(
+        map(([quality, egpa, terms]) => {
           const qualityTerms = quality.map(record => record.term);
           const grades = quality.map(record => egpa[record.course]);
           return terms.map(term => {
@@ -152,16 +157,16 @@ export default {
             const to = qualityTerms.lastIndexOf(term) + 1;
             return mean(grades.slice(from, to));
           });
-        },
+        }),
       ),
-      cumulativeEgpa: Observable.combineLatest(quality, egpa, terms).map(
-        ([quality, egpa, terms]) => {
+      cumulativeEgpa: combineLatest(quality, egpa, terms).pipe(
+        map(([quality, egpa, terms]) => {
           const qualityTerms = quality.map(record => record.term);
           const grades = quality.map(record => egpa[record.course]);
           return terms.map(term => {
             return mean(grades.slice(0, qualityTerms.lastIndexOf(term) + 1));
           });
-        },
+        }),
       ),
       egpa,
     };

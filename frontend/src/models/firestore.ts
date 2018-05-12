@@ -1,6 +1,5 @@
 import firebase from 'firebase/app';
 import 'firebase/firestore';
-import Institutions from './institutions';
 
 firebase.initializeApp({
   apiKey: 'AIzaSyCjBDyhwbXcp9kEIA2pMHLDGxmCM4Sn6Eg',
@@ -8,4 +7,7 @@ firebase.initializeApp({
   projectId: 'canigraduate-43286',
 });
 
-export default firebase.firestore();
+const firestore = firebase.firestore();
+firestore.settings({ timestampsInSnapshots: true });
+
+export default firestore;

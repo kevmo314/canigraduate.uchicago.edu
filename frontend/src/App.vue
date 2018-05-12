@@ -31,9 +31,9 @@
               <v-list-tile-title>Degree Programs</v-list-tile-title>
             </v-list-tile-content>
           </v-list-tile>
-          <v-list-tile v-for="(program, id) in programs" :key="id" router :to="{name: 'catalog', params: {id}}">
+          <v-list-tile v-for="program in programs" :key="program" router :to="{name: 'catalog', params: {id: program}}">
             <v-list-tile-content>
-              <v-list-tile-title>{{program.name}}</v-list-tile-title>
+              <v-list-tile-title>{{program}}</v-list-tile-title>
             </v-list-tile-content>
           </v-list-tile>
         </v-list-group>
@@ -117,9 +117,10 @@
 import Authentication from '@/components/Authentication.vue';
 import Sidebar from '@/components/Sidebar.vue';
 import { AuthenticationStatus } from '@/store/modules/authentication';
-import { mapState, mapActions } from 'vuex';
+import { mapState, mapActions, mapGetters } from 'vuex';
 import EventBus from '@/EventBus';
 import Sticky from '@/directives/Sticky';
+import { flatMap, map, tap } from 'rxjs/operators';
 
 export default {
   name: 'app',
@@ -133,10 +134,7 @@ export default {
         state.status == AuthenticationStatus.EDUCATOR_AUTHENTICATED,
       user: state => state.data,
     }),
-    ...mapState('institution', {
-      institutionName: state => state.name,
-      endpoints: state => state.endpoints,
-    }),
+    ...mapGetters('institution', ['institution']),
   },
   data() {
     return { drawer: !this.$vuetify.breakpoint.mdAndDown, title: null };
@@ -153,7 +151,14 @@ export default {
     },
   },
   subscriptions() {
-    return { programs: this.endpoints.programs() };
+    const institution$ = this.$observe(() => this.institution);
+    return {
+      programs: institution$.pipe(flatMap(institution => institution.programs)),
+      institutionName: institution$.pipe(
+        flatMap(institution => institution.data()),
+        map(institution => institution.name),
+      ),
+    };
   },
 };
 </script>

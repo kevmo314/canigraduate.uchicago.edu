@@ -12,7 +12,7 @@
 import { Subject } from 'rxjs/Subject';
 import { mapGetters } from 'vuex';
 import { map, flatMap } from 'rxjs/operators';
-import { combineLatest } from 'rxjs/observable/combineLatest';
+import { combineLatest } from 'rxjs';
 import Vue from 'vue';
 
 export default {
@@ -30,7 +30,8 @@ export default {
           map(t => new Set(t)),
         ),
         this.$observe(() => this.$slots.default[0].text),
-        (courses, transcript, content) => {
+      ).pipe(
+        map(([courses, transcript, content]) => {
           const regex = new RegExp(courses.join('|'), 'g');
           let match;
           const matches = [];
@@ -58,7 +59,7 @@ export default {
             });
           }
           return blocks;
-        },
+        }),
       ),
     };
   },
