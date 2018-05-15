@@ -1,7 +1,8 @@
 <template>
-  <div v-if="progress"
-    class="ml-2 caption" :class="{'green--text': progress.remaining == 0, 'grey--text': progress.remaining > 0}">
-    {{progress.completed}}/{{progress.remaining+progress.completed}}
+  <div class="ml-2 wrapper caption">
+    <div v-if="progress" :class="{'green--text': progress.remaining == 0, 'grey--text': progress.remaining > 0}">
+      {{progress.completed}}/{{progress.remaining+progress.completed}}
+    </div>
   </div>
 </template>
 
@@ -39,3 +40,10 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.wrapper {
+  min-width: 32px;
+  text-align: right;
+}
+</style>

@@ -1,28 +1,27 @@
 <template>
-  <div v-if="isMetadata">
-    Some unknown notes node atm.
+  <div v-if="isMetadata" class="ml-2">
+    <v-icon class="state-icon mr-2">indeterminate_check_box</v-icon>
+    {{lifted.display}}
   </div>
-  <div v-else-if="isLeaf && progress.remaining > 0" class="display-flex py-1" :class="{'red--text': !prune}">
-    <v-icon class="state-icon">check_box_outline_blank</v-icon>
+  <v-layout v-else-if="isLeaf && progress.remaining > 0" row align-center class="ml-2 py-1" :class="{'red--text': !prune}">
+    <v-icon class="state-icon mr-2">check_box_outline_blank</v-icon>
     <div class="id">{{program.split(':')[0]}}</div>
     <course-name class="ml-2" v-if="isExact">{{program}}</course-name>
     <div class="ml-2" v-else>Elective</div>
-  </div>
-  <div v-else-if="isLeaf" class="display-flex py-1 green--text">
-    <v-icon class="state-icon">check_box</v-icon>
+  </v-layout>
+  <v-layout v-else-if="isLeaf" row align-center class="ml-2 py-1 green--text">
+    <v-icon class="state-icon mr-2">check_box</v-icon>
     <div class="id">
       {{lifted.satisfier}}
     </div>
     <course-name class="ml-2">{{lifted.satisfier}}</course-name>
-  </div>
+  </v-layout>
   <div v-else>
     <div @click="collapse = !collapse"
-      class="summary body-2 py-1"
+      class="ml-2 summary body-2 py-1"
       :class="{'collapsed': collapse, 'green--text': isComplete}"
       v-if="program.display">
-      <v-icon class="icon" v-if="lifted.requirements">expand_more</v-icon>
-      <v-icon class="state-icon" v-else>indeterminate_check_box</v-icon>
-      {{program.display}}
+      <v-icon class="icon mr-2">expand_more</v-icon>{{program.display}}
     </div>
     <v-slide-x-transition>
       <div v-if="!collapse || !program.display" :class="{'ml-4': program.display}">
@@ -80,7 +79,7 @@ export default {
       return this.isLeaf && this.program.indexOf(':') == -1;
     },
     isMetadata() {
-      return this.isLeaf && !this.program;
+      return !this.isLeaf && !this.program.requirements;
     },
     isShortened() {
       return this.isShortenedOr || this.isShortenedAll;
@@ -114,7 +113,10 @@ export default {
 
 .or {
   flex: 0 0 1px;
-  margin: 12px 12px 12px 11px;
+  margin-left: -4px;
+  margin-right: 3px;
+  margin-top: 12px;
+  margin-bottom: 12px;
   align-self: stretch;
   display: flex;
   align-items: center;

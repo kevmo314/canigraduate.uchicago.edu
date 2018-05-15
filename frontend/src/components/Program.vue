@@ -1,7 +1,7 @@
 <template>
   <v-card>
     <v-card-media>
-      <v-tabs fixed-tabs v-model="active" v-if="extensions" color="white">
+      <v-tabs grow v-model="active" v-if="extensions" color="white">
         <v-tab ripple exact :to="{name: 'catalog', params: {program, extension: null}}">
           Major
           <program-progress :program="program" />
