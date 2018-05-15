@@ -14,21 +14,16 @@ export default {
   },
   actions: {
     reset(context, params = {}) {
-      context.commit(
-        'update',
-        Object.assign(
-          {
-            query: '',
-            periods: Array(context.rootState.institution.periods.length)
-              .fill(0)
-              .map((x, y) => x + y),
-            days: [0, 1, 2, 3, 4, 5, 6],
-            departments: [],
-            instructors: [],
-          },
-          params,
-        ),
-      );
+      context.commit('update', {
+        query: '',
+        periods: Array(context.rootState.institution.periods.length)
+          .fill(0)
+          .map((x, y) => x + y),
+        days: [0, 1, 2, 3, 4, 5, 6],
+        departments: [],
+        instructors: [],
+        ...params,
+      });
     },
   },
 };

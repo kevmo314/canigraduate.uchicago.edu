@@ -12,7 +12,7 @@ export const AuthenticationType = {
   STUDENT: 'student',
   EDUCATOR: 'educator',
   EDUCATOR_REGISTER: 'educator register',
-}
+};
 
 const DEFAULT_STATE = {
   username: '',
@@ -85,7 +85,7 @@ export default {
                 : error.message,
               status: AuthenticationStatus.REJECTED,
             });
-          }
+          },
         );
     },
     createEducatorAccount(context, data = {}) {
@@ -101,7 +101,7 @@ export default {
           response => {
             context.commit('update', {
               status: AuthenticationStatus.UNAUTHENTICATED,
-              message: "A verification email has been sent.",
+              message: 'A verification email has been sent.',
             });
           },
           error => {
@@ -111,7 +111,7 @@ export default {
                 : error.message,
               status: AuthenticationStatus.REJECTED,
             });
-          }
+          },
         );
     },
     reset(context, status = AuthenticationStatus.UNAUTHENTICATED) {

@@ -147,7 +147,7 @@ export default {
     },
     legend() {
       return Object.values(
-        this.schedules.reduce((a, b) => Object.assign(a, { [b.color]: b }), {}),
+        this.schedules.reduce((a, b) => ({ ...a, [b.color]: b }), {}),
       ).sort((a, b) => {
         if (a.course == b.course) {
           return a.section < b.section ? -1 : 1;
@@ -211,11 +211,11 @@ export default {
       this.$observe(() => this.temporary).pipe(
         map(temporary => {
           return (
-            temporary.course &&
-            Object.assign(temporary, {
+            temporary.course && {
+              ...temporary,
               color: 'rgba(255, 235, 59, 0.8)',
               temporary: true,
-            })
+            }
           );
         }),
       ),
@@ -244,7 +244,7 @@ export default {
                 this.flattenToSchedules(schedule, record.activity),
               ),
               // Add the course id.
-              map(schedule => schedule.map(s => Object.assign(s, record))),
+              map(schedule => schedule.map(s => ({ ...s, ...record }))),
             );
           }),
         ).pipe(
@@ -253,9 +253,10 @@ export default {
             return schedule.reduce((accumulator, value, index) => {
               return accumulator.concat(
                 value.map(block => {
-                  return Object.assign(block, {
+                  return {
+                    ...block,
                     color: block.color || COLORS[index],
-                  });
+                  };
                 }),
               );
             }, []);

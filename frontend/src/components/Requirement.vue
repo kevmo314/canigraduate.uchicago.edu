@@ -61,10 +61,11 @@ export default {
   },
   computed: {
     progress() {
-      return Object.assign(
-        { completed: 0, remaining: 1 },
-        this.lifted.progress,
-      );
+      return {
+        completed: 0,
+        remaining: 1,
+        ...this.lifted.progress,
+      };
     },
     program() {
       return this.lifted.program;

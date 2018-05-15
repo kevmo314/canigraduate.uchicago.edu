@@ -108,11 +108,12 @@ function leafResolver(node: LiftedData, courses: string[][]): LiftedData {
   const i = courses.findIndex(crosslists =>
     crosslists.some(c => satisfies(node.program, c)),
   );
-  return Object.assign(node, {
+  return {
+    ...node,
     progress:
       i > -1 ? { completed: 1, remaining: 0 } : { completed: 0, remaining: 1 },
     satisfier: i > -1 ? courses.splice(i, 1)[0][0] : null,
-  });
+  };
 }
 
 function nodeResolver(node: LiftedData, courses: string[][]): LiftedData {
@@ -142,12 +143,13 @@ function nodeResolver(node: LiftedData, courses: string[][]): LiftedData {
   const completed = minimumRequirements
     .map(child => child.progress.completed)
     .reduce((a, b) => a + b, 0);
-  return Object.assign(node, {
+  return {
+    ...node,
     progress: {
       remaining: node.force ? 0 : remaining,
       completed,
     },
-  });
+  };
 }
 
 function resolve(node: LiftedData, courses: string[][]): LiftedData {
@@ -156,7 +158,7 @@ function resolve(node: LiftedData, courses: string[][]): LiftedData {
   } else if (node.requirements) {
     return nodeResolver(node, courses);
   } else {
-    return Object.assign(node, { progress: { completed: 0, remaining: 0 } });
+    return { ...node, progress: { completed: 0, remaining: 0 } };
   }
 }
 
