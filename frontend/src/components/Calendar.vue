@@ -29,7 +29,7 @@
             <rect width="100%" height="100%" fill="url(#subgrid)" />
             <transition-group name="fade-transition" tag="g">
               <svg v-for="({course, schedule, type, color}, index) of schedules" v-if="schedule.day >= DayOfWeek.MONDAY && schedule.day < DayOfWeek.SATURDAY"
-                :key="course + ' ' + color + ' ' + schedule.start" :x="(schedule.day * 20 - 20 + (index > 0 && overlaps(schedule, schedules[index - 1].schedule) ? 2 : 0)) + '%'"
+                :key="course + ' ' + color + ' ' + schedule.day + ' ' + schedule.start" :x="(schedule.day * 20 - 20 + (index > 0 && overlaps(schedule, schedules[index - 1].schedule) ? 2 : 0)) + '%'"
                 :width="index > 0 && overlaps(schedule, schedules[index - 1].schedule) ? '17%' : '19%'"
                 :y="schedule.start * 32 / 60 / 60" :height="(schedule.end - schedule.start) * 32 / 60 / 60"
                 class="block" @click="reset({query: course})" role="link">

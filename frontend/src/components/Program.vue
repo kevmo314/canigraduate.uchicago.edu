@@ -1,19 +1,16 @@
 <template>
-  <v-card v-if="program">
+  <v-card>
     <v-card-media>
-      <v-tabs centered v-if="root.extensions" color="white">
-        <v-tab-item router exact :to="{name: 'catalog', params: {id, extension: null}}">Major
-          <program-progress :program="root"></program-progress>
-        </v-tab-item>
-        <v-tab-item v-for="(extension, name) in root.extensions" :key="name" router :to="{name: 'catalog', params: {id, extension: name}}">
-          {{extension.name}}
-          <program-progress :program="extension"></program-progress>
-        </v-tab-item>
+      <v-tabs fixed-tabs v-model="active" v-if="extensions" color="white">
+        <v-tab ripple exact :to="{name: 'catalog', params: {id, extension: null}}">Major</v-tab>
+        <v-tab ripple :to="{name: 'catalog', params: {id, extension}}" v-for="extension in extensions" :key="extension">
+          {{extension}}
+        </v-tab>
       </v-tabs>
     </v-card-media>
-    <v-card-text>
+    <v-card-text v-if="lifted">
       <div class="subheading">Program requirements</div>
-      <requirement :requirement="program" :progress="progress" :prune="!progress || progress.remaining == 0"></requirement>
+      <requirement :lifted="lifted" :prune="!lifted.progress || lifted.progress.remaining == 0"></requirement>
       <div class="metadata">
         <div class="subheading">Meta</div>
         <p v-if="program.metadata.catalog">
@@ -30,7 +27,7 @@ import Requirement from '@/components/Requirement';
 import ProgramProgress from '@/components/ProgramProgress';
 import EventBus from '@/EventBus';
 import { mapState, mapGetters } from 'vuex';
-import { map, flatMap, tap } from 'rxjs/operators';
+import { map, flatMap, tap, forkJoin } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
 
 export default {
@@ -38,6 +35,9 @@ export default {
   props: {
     id: { type: String, required: true },
     extension: { type: String, required: false },
+  },
+  data() {
+    return { active: null };
   },
   computed: {
     ...mapState('transcript', { transcript: state => state }),
@@ -49,32 +49,28 @@ export default {
   },
   subscriptions() {
     const transcript = this.$observe(() => this.transcript);
-    const id = this.$observe(() => this.id);
-    const extension = this.$observe(() => this.extension);
-    const root = combineLatest(
-      this.$observe(() => this.institution),
-      this.$observe(() => this.id),
-    ).pipe(
-      flatMap(([institution, id]) => institution.program(id)),
-      flatMap(program => program.data()),
+    const id = this.$observe(() => this.id).pipe(
+      tap(id => EventBus.$emit('set-title', id)),
     );
+    const root = combineLatest(this.$observe(() => this.institution), id).pipe(
+      map(([institution, id]) => institution.program(id)),
+    );
+    const extensions = root.pipe(flatMap(program => program.extensions));
+    const extension = this.$observe(() => this.extension);
     const program = combineLatest(root, extension).pipe(
       map(([root, extension]) => {
-        return root && extension ? root.extensions[extension] : root;
+        return root && extension ? root.extension(extension) : root;
+      }),
+    );
+    const lifted = combineLatest(program, transcript).pipe(
+      flatMap(([program, transcript]) => {
+        return program.bindTranscript(transcript);
       }),
     );
     return {
-      root: root.pipe(
-        tap(program => EventBus.$emit('set-title', program.name)),
-      ),
-      progress: combineLatest(program, transcript).pipe(
-        flatMap(([program, transcript]) => {
-          return transcript.length > 0
-            ? program.bindTranscript(transcript)
-            : Promise.resolve();
-        }),
-      ),
-      program,
+      extensions,
+      program: program.pipe(flatMap(program => program.data())),
+      lifted,
     };
   },
 };

@@ -100,6 +100,7 @@ export default class Institution {
 
   program(id: string) {
     return new Program(
+      this,
       this.ref.collection('programs').doc(id),
       this.ref.collection('subprograms'),
     );
