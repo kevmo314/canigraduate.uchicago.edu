@@ -13,7 +13,7 @@
 <script>
 import EventBus from '@/EventBus';
 import { mapGetters } from 'vuex';
-import { map, flatMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
 
 const DAYS = ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
@@ -62,7 +62,7 @@ export default {
       components: combineLatest(
         this.$observe(() => this.schedule),
         this.$observe(() => this.institution).pipe(
-          flatMap(institution => institution.data()),
+          switchMap(institution => institution.data()),
           map(institution => institution.scheduleBlocks),
         ),
         (schedule, scheduleBlocks) => {

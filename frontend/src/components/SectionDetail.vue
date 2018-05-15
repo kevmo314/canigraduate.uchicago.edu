@@ -37,7 +37,7 @@ import IntervalTree from '@/lib/interval-tree';
 import { Observable } from 'rxjs/Observable';
 import { mapState, mapActions, mapGetters } from 'vuex';
 import { combineLatest } from 'rxjs';
-import { flatMap, map } from 'rxjs/operators';
+import { switchMap, map } from 'rxjs/operators';
 
 export default {
   name: 'section-detail',
@@ -71,7 +71,7 @@ export default {
             .term(term)
             .section(section);
         },
-      ).pipe(flatMap(section => section.data())),
+      ).pipe(switchMap(section => section.data())),
     };
   },
   methods: {

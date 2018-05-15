@@ -46,7 +46,7 @@ import TermDetail from '@/components/TermDetail';
 import Sticky from '@/directives/Sticky';
 import { combineLatest } from 'rxjs';
 import { mapGetters } from 'vuex';
-import { first, map, flatMap } from 'rxjs/operators';
+import { first, map, switchMap } from 'rxjs/operators';
 
 export default {
   name: 'course-detail',
@@ -68,19 +68,19 @@ export default {
     const courseModel$ = combineLatest(institution$, course$).pipe(
       map(([institution, course]) => institution.course(course)),
     );
-    const courseData$ = courseModel$.pipe(flatMap(course => course.data()));
+    const courseData$ = courseModel$.pipe(switchMap(course => course.data()));
     return {
       description: courseData$.pipe(map(course => course.description)),
       notes: courseData$.pipe(map(course => course.notes)),
       sequence: courseData$.pipe(map(course => course.sequence)),
-      terms: courseModel$.pipe(flatMap(course => course.terms)),
+      terms: courseModel$.pipe(switchMap(course => course.terms)),
       grades: combineLatest(
         institution$.pipe(
-          flatMap(institution => institution.data()),
+          switchMap(institution => institution.data()),
           map(data => data.gpas),
         ),
         institution$.pipe(
-          flatMap(institution => institution.getGradeDistribution()),
+          switchMap(institution => institution.getGradeDistribution()),
         ),
         course$,
       ).pipe(

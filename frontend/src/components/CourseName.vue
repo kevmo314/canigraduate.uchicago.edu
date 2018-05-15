@@ -5,7 +5,7 @@
 
 <script>
 import { mapGetters } from 'vuex';
-import { map, flatMap, filter } from 'rxjs/operators';
+import { map, switchMap, filter } from 'rxjs/operators';
 import models from '@/models';
 import { combineLatest } from 'rxjs';
 
@@ -21,7 +21,7 @@ export default {
         ),
       ).pipe(
         map(([institution, course]) => institution.course(course)),
-        flatMap(course => course.data()),
+        switchMap(course => course.data()),
         map(data => data.name),
       ),
     };

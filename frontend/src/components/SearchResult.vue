@@ -24,7 +24,7 @@
 import CourseName from '@/components/CourseName';
 import TermOfferingIndicator from '@/components/TermOfferingIndicator';
 import { mapState, mapGetters } from 'vuex';
-import { map, flatMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
 
 export default {
@@ -71,13 +71,13 @@ export default {
     const course = this.$observe(() => this.course);
     return {
       periods: institution.pipe(
-        flatMap(institution => institution.data()),
+        switchMap(institution => institution.data()),
         map(data => data.periods),
       ),
       crosslists: combineLatest(institution, course, (institution, course) =>
         institution.course(course),
       ).pipe(
-        flatMap(course => course.data()),
+        switchMap(course => course.data()),
         map(course => course.crosslists.join(', ')),
       ),
     };

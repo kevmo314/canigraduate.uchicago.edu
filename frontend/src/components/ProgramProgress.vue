@@ -7,7 +7,7 @@
 
 <script>
 import { mapState } from 'vuex';
-import { map } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
 
 export default {
@@ -19,7 +19,9 @@ export default {
       progress: combineLatest(
         this.$observe(() => this.program),
         this.$observe(() => this.transcript),
-      ).pipe(map(([root, transcript]) => root.bindTranscript(transcript))),
+      ).pipe(
+        switchMap(([root, transcript]) => root.bindTranscript(transcript)),
+      ),
     };
   },
 };

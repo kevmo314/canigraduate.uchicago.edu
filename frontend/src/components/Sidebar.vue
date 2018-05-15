@@ -58,7 +58,7 @@
 import CourseName from '@/components/CourseName.vue';
 import Calendar from '@/components/Calendar.vue';
 import { mapState, mapActions, mapMutations, mapGetters } from 'vuex';
-import { map, flatMap, tap, publishReplay, refCount } from 'rxjs/operators';
+import { map, switchMap, tap, publishReplay, refCount } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
 import EventBus from '@/EventBus';
 
@@ -119,7 +119,7 @@ export default {
   subscriptions() {
     const institution$ = this.$observe(() => this.institution);
     const egpa = institution$.pipe(
-      flatMap(institution => institution.getGradeDistribution()),
+      switchMap(institution => institution.getGradeDistribution()),
       map(gradeDistribution => {
         return Object.keys(gradeDistribution).reduce(
           (state, key) => ({
@@ -137,7 +137,7 @@ export default {
       map(transcript => transcript.filter(record => record.quality)),
     );
     const allTerms = institution$.pipe(
-      flatMap(institution => institution.getIndexes()),
+      switchMap(institution => institution.getIndexes()),
       map(indexes => indexes.getTerms()),
       map(terms => terms.slice().reverse()),
       tap(terms => {

@@ -80,7 +80,7 @@
 import { Observable, of } from 'rxjs';
 import { SORT } from '@/store/modules/search';
 import { mapState, mapGetters } from 'vuex';
-import { map } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 
 function createComputedProperty(field, namespace = 'filter') {
   return {
@@ -115,10 +115,10 @@ export default {
   subscriptions() {
     const institution = this.$observe(() => this.institution);
     const institutionData = institution.pipe(
-      flatMap(institution => institution.data()),
+      switchMap(institution => institution.data()),
     );
     const indexes = institution.pipe(
-      flatMap(institution => institution.getIndexes()),
+      switchMap(institution => institution.getIndexes()),
     );
     return {
       searchPlaceholder: institutionData.pipe(

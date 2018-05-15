@@ -8,7 +8,7 @@
 import SectionDetail from '@/components/SectionDetail';
 import { mapActions, mapGetters } from 'vuex';
 import { combineLatest } from 'rxjs';
-import { flatMap, map } from 'rxjs/operators';
+import { switchMap, map } from 'rxjs/operators';
 
 export default {
   name: 'term-detail',
@@ -33,7 +33,7 @@ export default {
         this.$observe(() => this.term),
         (institution, course, term) =>
           this.institution.course(course).term(term),
-      ).pipe(flatMap(term => term.sections)),
+      ).pipe(switchMap(term => term.sections)),
     };
   },
   methods: mapActions('calendar', ['clearTemporary']),

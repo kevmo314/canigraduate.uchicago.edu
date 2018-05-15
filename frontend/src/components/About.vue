@@ -36,7 +36,7 @@
 
 <script>
 import { mapGetters } from 'vuex';
-import { flatMap, map } from 'rxjs/operators';
+import { switchMap, map } from 'rxjs/operators';
 export default {
   data() {
     return { year: new Date().getFullYear() };
@@ -45,7 +45,7 @@ export default {
   subscriptions() {
     return {
       institutionName: this.$observe(() => this.institution).pipe(
-        flatMap(institution => institution.data()),
+        switchMap(institution => institution.data()),
         map(data => data.name),
       ),
     };

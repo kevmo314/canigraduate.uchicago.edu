@@ -49,10 +49,6 @@ export default {
   },
   computed: {
     ...mapGetters('institution', ['institution']),
-    ...mapState('institution', {
-      search: state => state.endpoints.search,
-      courseRanking: state => state.endpoints.courseRanking,
-    }),
     page: {
       get() {
         return this.$store.state.search.page;
@@ -85,7 +81,7 @@ export default {
       refCount());
     }));
     const sortedResults = sortEvents.pipe(
-      flatMap(sort => {
+      switchMap(sort => {
         const sortAlphabetically = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
         if (sort == SORT.BY_POPULARITY) {
           return this.courseRanking().map(rankings => {
@@ -139,7 +135,7 @@ export default {
       eventTime: filterEvents.pipe(map(() => performance.now())),
       resultTime: filterEvents.pipe(
         switchMap(() => sortedResults.first()),
-        flatMap(() => this.$nextTick()),
+        switchMap(() => this.$nextTick()),
         map(() => performance.now())),
       resultCount: results.pipe(map(results => results.courses.length)),
     };

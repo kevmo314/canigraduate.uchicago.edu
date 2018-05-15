@@ -27,7 +27,7 @@ import Requirement from '@/components/Requirement';
 import ProgramProgress from '@/components/ProgramProgress';
 import EventBus from '@/EventBus';
 import { mapState, mapGetters } from 'vuex';
-import { map, flatMap, tap, forkJoin } from 'rxjs/operators';
+import { map, flatMap, tap, switchMap } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
 
 export default {
@@ -55,7 +55,7 @@ export default {
     const root = combineLatest(this.$observe(() => this.institution), id).pipe(
       map(([institution, id]) => institution.program(id)),
     );
-    const extensions = root.pipe(flatMap(program => program.extensions));
+    const extensions = root.pipe(switchMap(program => program.extensions));
     const extension = this.$observe(() => this.extension);
     const program = combineLatest(root, extension).pipe(
       map(([root, extension]) => {
@@ -63,13 +63,13 @@ export default {
       }),
     );
     const lifted = combineLatest(program, transcript).pipe(
-      flatMap(([program, transcript]) => {
+      switchMap(([program, transcript]) => {
         return program.bindTranscript(transcript);
       }),
     );
     return {
       extensions,
-      program: program.pipe(flatMap(program => program.data())),
+      program: program.pipe(switchMap(program => program.data())),
       lifted,
     };
   },

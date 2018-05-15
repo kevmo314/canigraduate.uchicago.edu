@@ -11,7 +11,7 @@
 <script>
 import { Subject } from 'rxjs/Subject';
 import { mapGetters } from 'vuex';
-import { map, flatMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
 import Vue from 'vue';
 
@@ -21,7 +21,7 @@ export default {
     return {
       blocks: combineLatest(
         this.$observe(() => this.institution).pipe(
-          flatMap(institution => institution.courses),
+          switchMap(institution => institution.courses),
         ),
         this.$observe(() => this.$store.state.transcript).pipe(
           map(t =>
