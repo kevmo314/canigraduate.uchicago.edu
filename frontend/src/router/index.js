@@ -12,7 +12,7 @@ export default new VueRouter({
   mode: 'history',
   routes: [
     {
-      path: '/catalog/:id/:extension?',
+      path: '/catalog/:program/:extension?',
       name: 'catalog',
       component: Program,
       props: true,

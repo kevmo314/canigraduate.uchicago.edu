@@ -31,9 +31,12 @@
               <v-list-tile-title>Degree Programs</v-list-tile-title>
             </v-list-tile-content>
           </v-list-tile>
-          <v-list-tile v-for="program in programs" :key="program" router :to="{name: 'catalog', params: {id: program}}">
+          <v-list-tile v-for="program in programs" :key="program" router :to="{name: 'catalog', params: {program}}">
             <v-list-tile-content>
-              <v-list-tile-title>{{program}}</v-list-tile-title>
+              <v-list-tile-title class="d-flex">
+                {{program}}
+                <program-progress :program="program" />
+              </v-list-tile-title>
             </v-list-tile-content>
           </v-list-tile>
         </v-list-group>
@@ -116,6 +119,7 @@
 <script>
 import Authentication from '@/components/Authentication.vue';
 import Sidebar from '@/components/Sidebar.vue';
+import ProgramProgress from '@/components/ProgramProgress.vue';
 import { AuthenticationStatus } from '@/store/modules/authentication';
 import { mapState, mapActions, mapGetters } from 'vuex';
 import EventBus from '@/EventBus';
@@ -124,7 +128,7 @@ import { flatMap, map, tap } from 'rxjs/operators';
 
 export default {
   name: 'app',
-  components: { Authentication, Sidebar },
+  components: { Authentication, Sidebar, ProgramProgress },
   directives: { Sticky },
   computed: {
     ...mapState('authentication', {

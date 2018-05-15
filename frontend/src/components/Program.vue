@@ -2,9 +2,13 @@
   <v-card>
     <v-card-media>
       <v-tabs fixed-tabs v-model="active" v-if="extensions" color="white">
-        <v-tab ripple exact :to="{name: 'catalog', params: {id, extension: null}}">Major</v-tab>
-        <v-tab ripple :to="{name: 'catalog', params: {id, extension}}" v-for="extension in extensions" :key="extension">
+        <v-tab ripple exact :to="{name: 'catalog', params: {program, extension: null}}">
+          Major
+          <program-progress :program="program" />
+        </v-tab>
+        <v-tab ripple :to="{name: 'catalog', params: {program, extension}}" v-for="extension in extensions" :key="extension">
           {{extension}}
+          <program-progress :program="program" :extension="extension" />
         </v-tab>
       </v-tabs>
     </v-card-media>
@@ -13,9 +17,9 @@
       <requirement :lifted="lifted" :prune="!lifted.progress || lifted.progress.remaining == 0"></requirement>
       <div class="metadata">
         <div class="subheading">Meta</div>
-        <p v-if="program.metadata.catalog">
+        <p v-if="lifted.program.metadata.catalog">
           View the
-          <a :href="program.metadata.catalog">college catalog page</a>.
+          <a :href="lifted.program.metadata.catalog">college catalog page</a>.
         </p>
       </div>
     </v-card-text>
@@ -33,7 +37,7 @@ import { combineLatest } from 'rxjs';
 export default {
   components: { Requirement, ProgramProgress },
   props: {
-    id: { type: String, required: true },
+    program: { type: String, required: true },
     extension: { type: String, required: false },
   },
   data() {
@@ -49,12 +53,12 @@ export default {
   },
   subscriptions() {
     const transcript = this.$observe(() => this.transcript);
-    const id = this.$observe(() => this.id).pipe(
-      tap(id => EventBus.$emit('set-title', id)),
-    );
-    const root = combineLatest(this.$observe(() => this.institution), id).pipe(
-      map(([institution, id]) => institution.program(id)),
-    );
+    const root = combineLatest(
+      this.$observe(() => this.institution),
+      this.$observe(() => this.program).pipe(
+        tap(program => EventBus.$emit('set-title', program)),
+      ),
+    ).pipe(map(([institution, program]) => institution.program(program)));
     const extensions = root.pipe(switchMap(program => program.extensions));
     const extension = this.$observe(() => this.extension);
     const program = combineLatest(root, extension).pipe(
@@ -67,11 +71,7 @@ export default {
         return program.bindTranscript(transcript);
       }),
     );
-    return {
-      extensions,
-      program: program.pipe(switchMap(program => program.data())),
-      lifted,
-    };
+    return { extensions, lifted };
   },
 };
 </script>
