@@ -31,8 +31,8 @@ Vue.use(VueScrollto, {
   offset: -75, // Account for header bar.
 });
 
-Vue.prototype.$observe = function(fn) {
-  return this.$watchAsObservable(fn, { immediate: true }).pipe(
+Vue.prototype.$observe = function(fn, options = {}) {
+  return this.$watchAsObservable(fn, { immediate: true, ...options }).pipe(
     map(state => state.newValue),
   );
 };
