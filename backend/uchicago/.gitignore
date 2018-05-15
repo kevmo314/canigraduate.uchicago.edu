@@ -1,4 +1,5 @@
 service_account_key.json
+algolia.properties
 
 # Ignore built eggs.
 canigraduate_backend_uchicago.egg-info
