@@ -39,8 +39,15 @@ import IntervalTree from '@/lib/interval-tree';
 import partialSort from '@/lib/partial-sort';
 import { mapState, mapActions, mapGetters } from 'vuex';
 import { SORT } from '@/store/modules/search';
-import {flatMap, switchMap, map, publishReplay, refCount, let} from 'rxjs/operators';
-import { Observable, fromEventPattern, combineLatest } from 'rxjs';
+import {
+  switchMap,
+  map,
+  publishReplay,
+  refCount,
+  tap,
+  first,
+} from 'rxjs/operators';
+import { fromEventPattern, combineLatest, of } from 'rxjs';
 
 export default {
   components: { Filters, SearchResult },
@@ -59,84 +66,92 @@ export default {
     },
   },
   subscriptions() {
+    const institution$ = this.$observe(() => this.institution);
     const page = this.$observe(() => this.page);
     const resultsPerPage = this.$observe(() => this.resultsPerPage);
-    const filterEvents = this.$watchAsObservable(
-      () => this.$store.state.filter,
-      { immediate: true, deep: true },
-    );
+    const filterEvents = this.$observe(() => this.$store.state.filter, {
+      deep: true,
+    });
     const sortEvents = this.$observe(() => this.$store.state.search.sort);
-    const results = this.$observe(() => this.institution).pipe(switchMap(institution => {
-      return filterEvents.pipe(
-      map(x => x.newValue),
-      map(x =>
-        ({...x,
-          days: x.days
-            .map(day => [1440 * day, 1440 * (day + 1)])
-            .reduce((tree, interval) => tree.add(interval), new IntervalTree()),
-        }),
-      ),
-      institution.search,
-      publishReplay(1),
-      refCount());
-    }));
-    const sortedResults = sortEvents.pipe(
-      switchMap(sort => {
-        const sortAlphabetically = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
-        if (sort == SORT.BY_POPULARITY) {
-          return this.courseRanking().map(rankings => {
-            return (a, b) => {
-              return (
-                (rankings[b] | 0) - (rankings[a] | 0) ||
-                sortAlphabetically(a, b)
-              );
-            };
-          });
-        } else if (sort == SORT.ALPHABETICALLY) {
-          return Observable.of(sortAlphabetically);
-        }
-      }),
-      switchMap(sortFn => {
-        let sortLeft = 0;
-        return results
-          .do(results => {
+    const results = institution$.pipe(
+      switchMap(institution => {
+        return filterEvents.pipe(
+          map(x => ({
+            ...x,
+            days: x.days
+              .map(day => [1440 * day, 1440 * (day + 1)])
+              .reduce(
+                (tree, interval) => tree.add(interval),
+                new IntervalTree(),
+              ),
+          })),
+          obs => institution.search(obs),
+          tap(results => {
             const maxPage = Math.ceil(
               results.courses.length / this.resultsPerPage,
             );
             if (this.$store.state.search.page > maxPage && maxPage > 0) {
               this.$store.commit('search/setPage', maxPage);
             }
-          })
-          .combineLatest(
-            page,
-            resultsPerPage,
-            (results, page, resultsPerPage) => {
-              if (sortLeft < page * resultsPerPage) {
-                // Indicate to future calls the left boundary has been sorted.
-                partialSort(
-                  results.courses,
-                  sortLeft,
-                  (sortLeft = page * resultsPerPage),
-                  sortFn,
+          }),
+          publishReplay(1),
+          refCount(),
+        );
+      }),
+    );
+    let sortLeft = 0;
+    const sortedResults = combineLatest(
+      // Reset the sortLeft boundary.
+      results.pipe(tap(() => (sortLeft = 0))),
+      page,
+      resultsPerPage,
+      combineLatest(institution$, sortEvents).pipe(
+        switchMap(([institution, sort]) => {
+          const sortAlphabetically = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+          if (sort == SORT.BY_POPULARITY) {
+            return institution.getCourseRanking().pipe(
+              map(rankings => (a, b) => {
+                return (
+                  (rankings[b] | 0) - (rankings[a] | 0) ||
+                  sortAlphabetically(a, b)
                 );
-              }
-              return results.courses.slice(
-                (page - 1) * resultsPerPage,
-                page * resultsPerPage,
-              );
-            },
+              }),
+            );
+          } else if (sort == SORT.ALPHABETICALLY) {
+            return of(sortAlphabetically);
+          }
+        }),
+      ),
+    ).pipe(
+      map(([results, page, resultsPerPage, sortFn]) => {
+        if (sortLeft < page * resultsPerPage) {
+          // Indicate to future calls the left boundary has been sorted.
+          partialSort(
+            results.courses,
+            sortLeft,
+            (sortLeft = page * resultsPerPage),
+            sortFn,
           );
+        }
+        return results.courses.slice(
+          (page - 1) * resultsPerPage,
+          page * resultsPerPage,
+        );
       }),
       publishReplay(1),
-      refCount());
+      refCount(),
+    );
     return {
       results: sortedResults,
-      serialized: results.pipe(map(results => Object.freeze(results.serialized))),
+      serialized: results.pipe(
+        map(results => Object.freeze(results.serialized)),
+      ),
       eventTime: filterEvents.pipe(map(() => performance.now())),
       resultTime: filterEvents.pipe(
-        switchMap(() => sortedResults.first()),
+        switchMap(() => sortedResults.pipe(first())),
         switchMap(() => this.$nextTick()),
-        map(() => performance.now())),
+        map(() => performance.now()),
+      ),
       resultCount: results.pipe(map(results => results.courses.length)),
     };
   },

@@ -124,7 +124,7 @@ import { AuthenticationStatus } from '@/store/modules/authentication';
 import { mapState, mapActions, mapGetters } from 'vuex';
 import EventBus from '@/EventBus';
 import Sticky from '@/directives/Sticky';
-import { flatMap, map, tap } from 'rxjs/operators';
+import { switchMap, map, tap } from 'rxjs/operators';
 
 export default {
   name: 'app',
@@ -157,9 +157,11 @@ export default {
   subscriptions() {
     const institution$ = this.$observe(() => this.institution);
     return {
-      programs: institution$.pipe(flatMap(institution => institution.programs)),
+      programs: institution$.pipe(
+        switchMap(institution => institution.programs),
+      ),
       institutionName: institution$.pipe(
-        flatMap(institution => institution.data()),
+        switchMap(institution => institution.data()),
         map(institution => institution.name),
       ),
     };

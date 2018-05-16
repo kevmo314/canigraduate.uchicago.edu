@@ -5,7 +5,7 @@ export default function(arr, value) {
   let right = arr.length; // exclusive
   let found;
   while (left < right) {
-    let middle = (left + right) >> 1;
+    let middle = ((right - left) >> 1) + left;
     if (value > arr[middle]) {
       left = middle + 1;
     } else {

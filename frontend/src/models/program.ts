@@ -5,7 +5,7 @@ import {
 } from '@firebase/firestore-types';
 import publishDocument from './publishDocument';
 import publishIndex from './publishIndex';
-import { map, flatMap, tap } from 'rxjs/operators';
+import { map, tap, switchMap } from 'rxjs/operators';
 import Institution from './institution';
 
 interface ProgramData {
@@ -181,7 +181,7 @@ export default class Program {
     return combineLatest(
       data,
       data.pipe(
-        flatMap(({ requirements }) => this.parse(JSON.parse(requirements))),
+        switchMap(({ requirements }) => this.parse(JSON.parse(requirements))),
       ),
     ).pipe(
       map(([data, requirements]) => {
@@ -241,7 +241,7 @@ export default class Program {
             return publishDocument(
               this.subprogramsRef.doc(node.split('/')[1]),
             ).pipe(
-              flatMap(result => {
+              switchMap(result => {
                 if (!result) {
                   console.error('Could not resolve subprogram: ' + node);
                   return of({ display: 'Specification error' });

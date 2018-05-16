@@ -1,5 +1,5 @@
 import { defer, Observable } from 'rxjs';
-import { map, flatMap } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import Axios from 'axios';
 import { MapOperator } from 'rxjs/internal/operators/map';
 import TypedFastBitSet from 'fastbitset';
@@ -74,6 +74,12 @@ function getOrUnpack(
   return value;
 }
 
+function keysWithoutMetadata<V>(map: Map<string, V>) {
+  return Array.from(map.keys())
+    .sort()
+    .filter(key => key != '_metadata');
+}
+
 export default class Indexes {
   private readonly courses: string[];
   private readonly terms: string[];
@@ -85,6 +91,7 @@ export default class Indexes {
   private readonly years: Map<string, TypedFastBitSet | string>;
   private readonly periods: Map<string, TypedFastBitSet | string>;
   private readonly cardinalityTable: number[][];
+  private readonly courseOffsets: number[];
   private readonly totalCardinality: number;
   constructor(data: any) {
     this.courses = data.courses as string[];
@@ -102,7 +109,7 @@ export default class Indexes {
       Object.entries(data.departments),
     );
     this.instructors = new Map<string, TypedFastBitSet | string>(
-      Object.entries(data.sequences),
+      Object.entries(data.instructors),
     );
     this.years = new Map<string, TypedFastBitSet | string>(
       Object.entries(data.years),
@@ -116,6 +123,12 @@ export default class Indexes {
       unpack(data.cardinalities),
     );
     this.totalCardinality = toTotalCardinality(this.cardinalityTable);
+    this.courseOffsets = this.cardinalityTable.map(row =>
+      row.reduce((a, b) => a + b, 0),
+    );
+    for (let i = 1; i < this.courseOffsets.length; i++) {
+      this.courseOffsets[i] += this.courseOffsets[i - 1];
+    }
   }
 
   getTotalCardinality() {
@@ -128,6 +141,26 @@ export default class Indexes {
 
   getTerms(): string[] {
     return this.terms;
+  }
+
+  getCourseOffsets(): number[] {
+    return this.courseOffsets;
+  }
+
+  getBitSetForCourses(courses: string[]) {
+    const result = new TypedFastBitSet();
+    result.resize(this.getTotalCardinality());
+    const indices = courses
+      .map(course => this.courses.indexOf(course))
+      .filter(index => index >= 0)
+      .forEach(index => {
+        const from = index > 0 ? this.courseOffsets[index - 1] : 0;
+        const to = this.courseOffsets[index];
+        for (let i = from; i < to; i++) {
+          result.add(i);
+        }
+      });
+    return result;
   }
 
   private unpackCourseIndex(data: string): TypedFastBitSet {
@@ -169,7 +202,7 @@ export default class Indexes {
   }
 
   getSequences(): string[] {
-    return Array.from(this.sequences.keys());
+    return keysWithoutMetadata(this.sequences);
   }
 
   sequence(key: string): TypedFastBitSet {
@@ -177,7 +210,7 @@ export default class Indexes {
   }
 
   getDepartments(): string[] {
-    return Array.from(this.departments.keys());
+    return keysWithoutMetadata(this.departments);
   }
 
   department(key: string): TypedFastBitSet {
@@ -185,7 +218,7 @@ export default class Indexes {
   }
 
   getInstructors(): string[] {
-    return Array.from(this.instructors.keys());
+    return keysWithoutMetadata(this.instructors);
   }
 
   instructor(key: string): TypedFastBitSet {
@@ -193,15 +226,19 @@ export default class Indexes {
   }
 
   getPeriods(): string[] {
-    return Array.from(this.periods.keys());
+    return keysWithoutMetadata(this.periods);
   }
 
   period(key: string): TypedFastBitSet {
     return getOrUnpack(this.periods, x => this.unpackTermIndex(x), key);
   }
 
+  periodIndex(key: number): TypedFastBitSet {
+    return this.period(this.getPeriods()[key]);
+  }
+
   getYears(): number[] {
-    return Array.from(this.years.keys()).map(x => parseInt(x, 10));
+    return keysWithoutMetadata(this.years).map(x => parseInt(x, 10));
   }
 
   year(key: number): TypedFastBitSet {

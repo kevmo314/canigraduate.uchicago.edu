@@ -31,7 +31,7 @@ import Requirement from '@/components/Requirement';
 import ProgramProgress from '@/components/ProgramProgress';
 import EventBus from '@/EventBus';
 import { mapState, mapGetters } from 'vuex';
-import { map, flatMap, tap, switchMap } from 'rxjs/operators';
+import { map, tap, switchMap } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
 
 export default {

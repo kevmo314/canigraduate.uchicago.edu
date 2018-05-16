@@ -4,14 +4,7 @@ import {
   DocumentSnapshot,
 } from '@firebase/firestore-types';
 import { defer, of, combineLatest, Observable } from 'rxjs';
-import {
-  map,
-  flatMap,
-  publishReplay,
-  refCount,
-  switchMap,
-  tap,
-} from 'rxjs/operators';
+import { map, publishReplay, refCount, switchMap, tap } from 'rxjs/operators';
 import firestore from './firestore';
 import publishDocument from './publishDocument';
 import Grades from './grades';
@@ -23,8 +16,9 @@ import Indexes from './indexes';
 import { HOST } from './functions';
 import Watch from './watch';
 import Program from './program';
-import algoliasearch from 'algoliasearch';
+import * as algoliasearch from 'algoliasearch';
 import publishIndex from './publishIndex';
+import binarySearch from '../lib/binary-search';
 
 interface Period {
   readonly name: string;
@@ -41,21 +35,26 @@ export interface InstitutionData {
   readonly indexesUrl: string;
 }
 
-interface Distribution {
-  [gpa: number]: number;
+interface FilterState {
+  query: string;
+  periods: number[];
+  days: any;
+  departments: string[];
+  instructors: string[];
 }
 
 export default class Institution {
   private readonly ref: DocumentReference;
-  private readonly gradeDistribution: Observable<Distribution>;
+  private readonly gradeDistribution: Observable<{ [gpa: number]: number }>;
   private readonly indexes: Observable<Indexes>;
-  private readonly algolia: Observable<any>;
+  private readonly algolia: Observable<algoliasearch.Index>;
+  private readonly courseRanking: Observable<{ [course: string]: number }>;
   constructor(ref: DocumentReference) {
     this.ref = ref;
     this.gradeDistribution = defer(() => Axios.get(HOST + '/api/grades')).pipe(
       map(
         (response: { data: any }) =>
-          Object.freeze(response.data) as Distribution,
+          Object.freeze(response.data) as { [gpa: number]: number },
       ),
       publishReplay(1),
       refCount(),
@@ -69,9 +68,15 @@ export default class Institution {
       refCount(),
     );
     this.algolia = combineLatest(
-      defer(() =>
-        algoliasearch('BF6BT6JP9W', '52677be23c182ca96eb2ccfd7c9c459f'),
-      ),
+      defer(() => {
+        return of(
+          // Not sure why this is necessary...
+          algoliasearch.default(
+            'BF6BT6JP9W',
+            '52677be23c182ca96eb2ccfd7c9c459f',
+          ) as algoliasearch.Client,
+        );
+      }),
       this.data(),
     ).pipe(
       map(([algolia, institution]) =>
@@ -80,6 +85,30 @@ export default class Institution {
       publishReplay(1),
       refCount(),
     );
+    this.courseRanking = combineLatest(
+      this.getGradeDistribution().pipe(
+        map(distribution => {
+          return Object.entries(distribution).reduce((obj, [course, data]) => {
+            return {
+              ...obj,
+              [course]: 2 * Object.values(data).reduce((a, b) => a + b),
+            };
+          }, {});
+        }),
+      ),
+      this.getIndexes(),
+      (courseRanking, indexes) => {
+        Object.values(indexes.sequences).forEach(sequence => {
+          // Promote the rank of each course in the sequence to the max.
+          const max =
+            sequence
+              .map(course => courseRanking[course] | 0)
+              .reduce((a, b) => Math.max(a, b)) + 1;
+          sequence.forEach(course => (courseRanking[course] = max));
+        });
+        return courseRanking;
+      },
+    ).pipe(publishReplay(1), refCount());
   }
 
   data(): Observable<InstitutionData> {
@@ -123,35 +152,12 @@ export default class Institution {
   }
 
   getCourseRanking(): Observable<any> {
-    return combineLatest(
-      this.getGradeDistribution().pipe(
-        map(distribution => {
-          return Object.entries(distribution).reduce((obj, [course, data]) => {
-            return {
-              ...obj,
-              [course]: 2 * Object.values(data).reduce((a, b) => a + b),
-            };
-          }, {});
-        }),
-      ),
-      this.getIndexes(),
-      (courseRanking, indexes) => {
-        Object.values(indexes.sequences).forEach(sequence => {
-          // Promote the rank of each course in the sequence to the max.
-          const max =
-            sequence
-              .map(course => courseRanking[course] | 0)
-              .reduce((a, b) => Math.max(a, b)) + 1;
-          sequence.forEach(course => (courseRanking[course] = max));
-        });
-        return courseRanking;
-      },
-    ).pipe(publishReplay(1), refCount());
+    return this.courseRanking;
   }
 
-  search(filter$) {
-    return combineLatest(filter$, this.indexes).pipe(
-      flatMap(([filter, indexes]) => {
+  search(filter$: Observable<FilterState>) {
+    return combineLatest(filter$, this.getIndexes()).pipe(
+      switchMap(([filter, indexes]) => {
         function filterAny(values, getter) {
           if (values.length == 0) {
             return results => new TypedFastBitSet();
@@ -162,21 +168,39 @@ export default class Institution {
           return results => results.intersection(mask);
         }
 
-        function* generateSubsetters(filter, indexes) {
-          if (filter.query) {
-          }
-          if (filter.departments.length) {
-            yield of(filterAny(filter.departments, x => indexes.department(x)));
-          }
-          if (filter.instructors.length) {
-            yield of(filterAny(filter.instructors, x => indexes.instructor(x)));
-          }
-          yield of(filterAny(filter.periods, x => indexes.period(x)));
-
-          // This is a rather expensive filter...
-          if (filter.days) {
-          }
+        const subsetters = [];
+        if (filter.query) {
+          subsetters.push(
+            this.algolia.pipe(
+              switchMap(index =>
+                index.search({ query: filter.query, attributesToRetrieve: [] }),
+              ),
+              map(results => results.hits.map(result => result.objectID)),
+              // Map the list of course identifiers to the corresponding bitset.
+              map(courses => indexes.getBitSetForCourses(courses)),
+              map(mask => results => results.intersection(mask)),
+            ),
+          );
         }
+        if (filter.departments.length) {
+          subsetters.push(
+            of(filterAny(filter.departments, x => indexes.department(x))),
+          );
+        }
+        if (filter.instructors.length) {
+          subsetters.push(
+            of(filterAny(filter.instructors, x => indexes.instructor(x))),
+          );
+        }
+        subsetters.push(
+          of(filterAny(filter.periods, x => indexes.periodIndex(x))),
+        );
+
+        // This is a rather expensive filter...
+        if (filter.days) {
+        }
+
+        console.log(subsetters, indexes.getTotalCardinality());
 
         // Generate a full state.
         const state = new TypedFastBitSet();
@@ -186,23 +210,23 @@ export default class Institution {
         }
 
         // Generate the subsetters.
-        return combineLatest([...generateSubsetters(filters, indexes)]).pipe(
-          map(subsetters => {
-            return subsetters.reduce((state, f) => f(state), state);
-          }),
+        return combineLatest(subsetters).pipe(
+          map(s => s.reduce((state, f) => f(state), state)),
           map(data => {
+            console.log(data);
             let lowerBound = 0;
-            const results = [];
+            const courses = [];
             data.forEach(index => {
               if (index < lowerBound) {
                 return;
               }
+              const courseOffsets = indexes.getCourseOffsets();
               const location = binarySearch(courseOffsets, index);
               const courseIndex = location < 0 ? ~location - 1 : location;
-              results.push(courses[courseIndex]);
+              courses.push(indexes.getCourses()[courseIndex]);
               lowerBound = courseOffsets[courseIndex + 1];
             });
-            return { courses: results, serialized: data };
+            return { courses, serialized: data };
           }),
         );
       }),

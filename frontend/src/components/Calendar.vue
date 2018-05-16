@@ -80,14 +80,7 @@
 import { combineLatest, of } from 'rxjs';
 import CourseName from '@/components/CourseName';
 import { mapState, mapActions, mapGetters } from 'vuex';
-import {
-  map,
-  debounceTime,
-  switchMap,
-  tap,
-  flatMap,
-  concat,
-} from 'rxjs/operators';
+import { map, debounceTime, switchMap, tap, concat } from 'rxjs/operators';
 import { DayOfWeek } from '@/models/section';
 import TWEEN from '@tweenjs/tween.js';
 
@@ -202,7 +195,7 @@ export default {
   subscriptions() {
     const institution$ = this.$observe(() => this.institution);
     const scheduleHints = institution$.pipe(
-      flatMap(institution => institution.data()),
+      switchMap(institution => institution.data()),
       map(data => data.scheduleBlocks),
     );
     const schedules = combineLatest(
@@ -238,7 +231,7 @@ export default {
                   .term(term)
                   .section(record.section),
               ),
-              flatMap(section => section.data()),
+              switchMap(section => section.data()),
               // Pull the schedules.
               map(schedule =>
                 this.flattenToSchedules(schedule, record.activity),
