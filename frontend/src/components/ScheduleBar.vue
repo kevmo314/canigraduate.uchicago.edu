@@ -18,6 +18,13 @@ import { combineLatest } from 'rxjs';
 
 const DAYS = ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
 
+function formatTime(t) {
+  const hour = (Math.floor(t / (60 * 60)) + 11) % 12 + 1;
+  const minute = Math.floor(t / 60) % 60;
+  const beforeNoon = t * 2 < 86400;
+  return hour + (minute < 10 ? ':0' : ':') + minute + (beforeNoon ? 'a' : 'p');
+}
+
 export default {
   name: 'schedule-bar',
   props: {
@@ -29,30 +36,26 @@ export default {
   computed: {
     ...mapGetters('institution', ['institution']),
     tooltip() {
-      function formatTime(t) {
-        t %= 1440;
-        return (
-          (Math.floor(t / 60) + 11) % 12 +
-          1 +
-          (t % 60 < 10 ? ':0' : ':') +
-          t % 60 +
-          (t < 720 ? 'a' : 'p')
-        );
-      }
-      const blocks = this.schedule.concat().sort((a, b) => a[0] - b[0]);
+      const blocks = this.schedule.slice().sort((a, b) => a.day - b.day);
       const output = [];
       for (let i = 0; i < blocks.length; i++) {
-        const days = [DAYS[Math.floor(blocks[i][0] / 1440)]];
+        const days = [DAYS[blocks[i].day]];
         for (let j = i + 1; j < blocks.length; j++) {
           if (
-            blocks[i][0] % 1440 == blocks[j][0] % 1440 &&
-            blocks[i][1] % 1440 == blocks[j][1] % 1440
+            blocks[i].start == blocks[j].start &&
+            blocks[i].end == blocks[j].end
           ) {
-            days.push(DAYS[Math.floor(blocks[j][0] / 1440)]);
+            days.push(DAYS[blocks[j].day]);
             blocks.splice(j, 1);
           }
         }
-        output.push(days.join(' ') + ' ' + blocks[i].map(formatTime).join('-'));
+        output.push(
+          days.join(' ') +
+            ' ' +
+            formatTime(blocks[i].start) +
+            '-' +
+            formatTime(blocks[i].end),
+        );
       }
       return output.join(', ');
     },
@@ -66,17 +69,18 @@ export default {
           map(institution => institution.scheduleBlocks),
         ),
         (schedule, scheduleBlocks) => {
+          console.log(scheduleBlocks);
           return schedule
             .concat()
-            .sort((a, b) => a[0] - b[0])
+            .sort((a, b) => a.day - b.day)
             .map(time => {
               const block = scheduleBlocks.find(
                 scheduleBlock =>
-                  scheduleBlock.start <= time[0] % 1440 &&
-                  time[0] % 1440 < scheduleBlock.end,
+                  scheduleBlock.start * 60 <= time.start &&
+                  time.end < scheduleBlock.end * 60,
               );
               return {
-                day: DAYS[Math.floor(time[0] / 1440)],
+                day: DAYS[time.day],
                 cssClass: block ? block.cssClass : 'other',
               };
             });
