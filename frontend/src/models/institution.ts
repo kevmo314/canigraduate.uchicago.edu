@@ -91,21 +91,24 @@ export default class Institution {
           return Object.entries(distribution).reduce((obj, [course, data]) => {
             return {
               ...obj,
-              [course]: 2 * Object.values(data).reduce((a, b) => a + b),
+              [course]: 2 * Object.values(data).reduce((a, b) => a + b, 0),
             };
           }, {});
         }),
       ),
       this.getIndexes(),
       (courseRanking, indexes) => {
-        Object.values(indexes.sequences).forEach(sequence => {
-          // Promote the rank of each course in the sequence to the max.
-          const max =
-            sequence
-              .map(course => courseRanking[course] | 0)
-              .reduce((a, b) => Math.max(a, b)) + 1;
-          sequence.forEach(course => (courseRanking[course] = max));
-        });
+        indexes
+          .getSequences()
+          .map(sequence => indexes.getSparseSequence(sequence))
+          .forEach(sequence => {
+            // Promote the rank of each course in the sequence to the max.
+            const max =
+              sequence
+                .map(course => courseRanking[course] | 0)
+                .reduce((a, b) => Math.max(a, b)) + 1;
+            sequence.forEach(course => (courseRanking[course] = max));
+          });
         return courseRanking;
       },
     ).pipe(publishReplay(1), refCount());

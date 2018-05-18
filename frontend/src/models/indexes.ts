@@ -205,6 +205,12 @@ export default class Indexes {
     return keysWithoutMetadata(this.sequences);
   }
 
+  getSparseSequence(key: string): string[] {
+    return Array.from(new Set<number>(unpack(this.sequences.get(key)))).map(
+      i => this.courses[i],
+    );
+  }
+
   sequence(key: string): TypedFastBitSet {
     return getOrUnpack(this.sequences, x => this.unpackCourseIndex(x), key);
   }
