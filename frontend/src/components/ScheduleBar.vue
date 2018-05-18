@@ -69,7 +69,6 @@ export default {
           map(institution => institution.scheduleBlocks),
         ),
         (schedule, scheduleBlocks) => {
-          console.log(scheduleBlocks);
           return schedule
             .concat()
             .sort((a, b) => a.day - b.day)

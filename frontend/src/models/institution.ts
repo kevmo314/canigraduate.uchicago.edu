@@ -169,15 +169,27 @@ export default class Institution {
         }
 
         const subsetters = [];
-        if (filter.query) {
+        if (filter.query && filter.query.length > 0) {
           subsetters.push(
             this.algolia.pipe(
               switchMap(index =>
-                index.search({ query: filter.query, attributesToRetrieve: [] }),
+                index.search({
+                  query: filter.query,
+                  attributesToRetrieve: [],
+                  attributesToHighlight: [],
+                  allowTyposOnNumericTokens: false,
+                }),
               ),
               map(results => results.hits.map(result => result.objectID)),
               // Map the list of course identifiers to the corresponding bitset.
               map(courses => indexes.getBitSetForCourses(courses)),
+              // Apply the exact query match mask.
+              map(mask => {
+                const course = filter.query.toUpperCase();
+                return indexes.getCourses().includes(course)
+                  ? mask.union(indexes.getBitSetForCourses([course]))
+                  : mask;
+              }),
               map(mask => results => results.intersection(mask)),
             ),
           );
@@ -200,8 +212,6 @@ export default class Institution {
         if (filter.days) {
         }
 
-        console.log(subsetters, indexes.getTotalCardinality());
-
         // Generate a full state.
         const state = new TypedFastBitSet();
         state.resize(indexes.getTotalCardinality());
@@ -222,9 +232,9 @@ export default class Institution {
               }
               const courseOffsets = indexes.getCourseOffsets();
               const location = binarySearch(courseOffsets, index);
-              const courseIndex = location < 0 ? ~location - 1 : location;
+              const courseIndex = location < 0 ? ~location - 1 : location + 1;
               courses.push(indexes.getCourses()[courseIndex]);
-              lowerBound = courseOffsets[courseIndex + 1];
+              lowerBound = courseOffsets[courseIndex];
             });
             return { courses, serialized: data };
           }),

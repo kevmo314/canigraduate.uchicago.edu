@@ -30,6 +30,9 @@ export default class Course {
       publishDocument(this.ref),
       this.institution.data().pipe(map(institution => institution.periods)),
       (courseData: CourseData, periods) => {
+        if (!courseData) {
+          return null;
+        }
         function termToOrdinal(term: string) {
           const index = periods.findIndex(period =>
             term.startsWith(period.name),
