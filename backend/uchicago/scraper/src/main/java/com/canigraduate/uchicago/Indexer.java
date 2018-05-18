@@ -56,11 +56,25 @@ public class Indexer {
                 .sum();
     }
 
+    public static SortedMap<String, Course> getCourses() {
+        Map<String, Course> courses = ImmutableMap.copyOf(new Courses().all());
+        LOGGER.info(String.format("Found %d courses", courses.size()));
+        // For some reason, sequences get added to the course sets. This is kind of odd, and I'm not sure where the bug
+        // is, so just manually delete them...
+        courses.keySet().stream().filter(key -> key.length() > 10).forEach(sequence -> {
+            System.err.println("Deleting " + sequence);
+            new Courses().delete(sequence);
+        });
+        return ImmutableSortedMap.copyOf(courses.keySet()
+                .stream()
+                .filter(key -> key.length() == 10)
+                .collect(Collectors.toMap(Function.identity(), courses::get)));
+    }
+
     public static void main(String[] args) throws Exception {
         ExecutorService service = Executors.newFixedThreadPool(256);
         LOGGER.info("Starting...");
-        SortedMap<String, Course> courses = ImmutableSortedMap.copyOf(new Courses().all());
-        LOGGER.info(String.format("Found %d courses", courses.size()));
+        SortedMap<String, Course> courses = getCourses();
         List<TermKey> keys = service.invokeAll(courses.keySet()
                 .stream()
                 .map(course -> (Callable<List<TermKey>>) () -> Streams.stream(new Terms(course).list())
