@@ -19,7 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.YearMonth;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -33,12 +33,26 @@ import java.util.stream.Stream;
 public class Indexer {
     private static final Logger LOGGER = Logger.getLogger(Indexer.class.getName());
 
+    private static int bytesRequired(int value) {
+        for (int i = 1; i <= 4; i++) {
+            if ((value >> (8 * i)) == 0) {
+                return i;
+            }
+        }
+        throw new RuntimeException("wat");
+    }
+
     private static byte[] pack(List<Integer> values) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream(values.size() * 4);
+        // Figure out how many bits are required for each.
+        int bits = values.stream().map(Indexer::bytesRequired).reduce(0, Math::max);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(values.size() * bits + 1);
         DataOutputStream dos = new DataOutputStream(bos);
         try {
+            dos.writeByte(bits);
             for (int value : values) {
-                dos.writeInt(value);
+                for (int i = 0; i < bits; i++, value >>= 8) {
+                    dos.writeByte(value & 0xFF);
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -122,8 +136,7 @@ public class Indexer {
                     // Only include courses offered within the last year, otherwise we'll never meet Algolia's quotas.
                     .filter(entry -> sections.row(entry.getKey())
                             .keySet()
-                            .stream()
-                            .filter(term -> term.getYear() >= YearMonth.now().getYear() - 1)
+                            .stream().filter(term -> term.getYear() >= LocalDate.now().getYear() - 1)
                             .iterator()
                             .hasNext())
                     .filter(entry -> entry.getValue().getDescription().isPresent())
@@ -158,10 +171,26 @@ public class Indexer {
         {
             LOGGER.info("Building cardinality table.");
             HashMap<Integer, ArrayList<Integer>> mappings = new HashMap<>();
+            Set<String> sectionIdsSet = new HashSet<>();
+            for (int i = 0; i < courseKeys.length; i++) {
+                for (int j = 0; j < termKeys.length; j++) {
+                    Optional.ofNullable(sections.get(courseKeys[i], termKeys[j]))
+                            .map(Map::keySet)
+                            .ifPresent(sectionIdsSet::addAll);
+                }
+            }
+            List<String> sectionIds = new ArrayList<>(sectionIdsSet);
+            Collections.sort(sectionIds);
+            ImmutableList.Builder<Integer> idsBuilder = new ImmutableList.Builder<>();
             for (int i = 0; i < courseKeys.length; i++) {
                 for (int j = 0; j < termKeys.length; j++) {
                     int size = Optional.ofNullable(sections.get(courseKeys[i], termKeys[j])).map(Map::size).orElse(0);
                     if (size > 0) {
+                        sections.get(courseKeys[i], termKeys[j])
+                                .keySet()
+                                .stream()
+                                .map(id -> Collections.binarySearch(sectionIds, id))
+                                .forEach(idsBuilder::add);
                         mappings.computeIfAbsent(size, ArrayList::new).add(i * termKeys.length + j);
                     }
                 }
@@ -176,9 +205,13 @@ public class Indexer {
             Arrays.stream(courseKeys).forEach(coursesJson::add);
             JsonArray termsJson = new JsonArray();
             Arrays.stream(termKeys).map(Term::getTerm).forEach(termsJson::add);
+            JsonArray sectionsJson = new JsonArray();
+            sectionIds.forEach(sectionsJson::add);
             index.add("courses", coursesJson);
             index.add("terms", termsJson);
+            index.add("sections", sectionsJson);
             index.addProperty("cardinalities", Base64.getEncoder().encodeToString(pack(builder.build())));
+            index.addProperty("sectionIds", Base64.getEncoder().encodeToString(pack(idsBuilder.build())));
         }
         {
             LOGGER.info("Building department index.");
@@ -221,6 +254,20 @@ public class Indexer {
             metadata.addProperty("dimension", "course");
             sequencesJson.add("_metadata", metadata);
             index.add("sequences", sequencesJson);
+        }
+        {
+            LOGGER.info("Building age index.");
+            JsonObject agesJson = new JsonObject();
+            agesJson.addProperty("old", Base64.getEncoder()
+                    .encodeToString(pack(keys.stream()
+                            .filter(termKey -> termKey.getTerm().getAge() > 16)
+                            .map(TermKey::getCourse)
+                            .map(course -> Arrays.binarySearch(courseKeys, course))
+                            .collect(Collectors.toList()))));
+            JsonObject metadata = new JsonObject();
+            metadata.addProperty("dimension", "course");
+            agesJson.add("_metadata", metadata);
+            index.add("ages", agesJson);
         }
         {
             LOGGER.info("Building period index.");

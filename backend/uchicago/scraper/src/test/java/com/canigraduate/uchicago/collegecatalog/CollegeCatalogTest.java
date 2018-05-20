@@ -22,11 +22,10 @@ class CollegeCatalogTest {
         Map<String, Course> courses = CollegeCatalog.getCoursesAndSequences(
                 "http://collegecatalog.uchicago.edu/thecollege/anthropology/");
         assertThat(courses).isNotEmpty();
-        assertThat(courses).containsKey("ANTH 11730");
-        assertThat(courses.get("ANTH 11730").getName()).isEqualTo(
-                "Decolonizing Anthropology: Africana Critical Theory and the Social Sciences");
-        assertThat(courses.get("ANTH 11730").getDescription()).isNotEmpty();
-        assertThat(courses.get("ANTH 11730").getParent()).isNotPresent();
+        assertThat(courses).containsKey("ANTH 20003");
+        assertThat(courses.get("ANTH 20003").getName()).isEqualTo("Discovering Anthropology: Reading Race");
+        assertThat(courses.get("ANTH 20003").getDescription()).isNotEmpty();
+        assertThat(courses.get("ANTH 20003").getParent()).isNotPresent();
     }
 
     @Test

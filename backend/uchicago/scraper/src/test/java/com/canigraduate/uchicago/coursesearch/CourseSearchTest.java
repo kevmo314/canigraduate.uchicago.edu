@@ -47,6 +47,14 @@ class CourseSearchTest {
     }
 
     @Test
+    void getCourses_MATH15100() {
+        Map<String, Course> courses = CourseSearch.getCourses("2178", "MATH");
+        assertThat(courses).containsKeys("MATH 15100");
+        assertThat(courses.get("MATH 15100").getSections()).containsOnlyKeys("10", "11", "20", "21", "31", "40", "41",
+                "42", "43", "50", "51");
+    }
+
+    @Test
     void getCourses_crosslists() {
         Map<String, Course> courses = CourseSearch.getCourses("2184", "EALC");
         assertThat(courses).containsKeys("EALC 11000");

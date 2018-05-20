@@ -10,6 +10,7 @@ import org.apache.beam.sdk.transforms.FlatMapElements;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.values.*;
+import org.apache.logging.log4j.ThreadContext;
 
 import java.io.IOException;
 import java.util.Map;
@@ -49,8 +50,10 @@ public class CourseSearchTransform extends PTransform<PBegin, PCollection<KV<Ter
                                             .map(entry -> KV.of(e.getKey(), entry))
                                             .collect(Collectors.toList())))
                     .apply("Get courses", MapElements.into(TypeDescriptors.kvs(KEY, COURSE)).via(e -> {
-                        Map.Entry<String, Course> entry = CourseSearch.getCourseEntry(e.getValue());
                         TermAndDepartment key = Objects.requireNonNull(e.getKey());
+                        ThreadContext.push(key.toString());
+                        Map.Entry<String, Course> entry = CourseSearch.getCourseEntry(e.getValue());
+                        ThreadContext.pop();
                         return KV.of(TermKey.builder().setTerm(key.getTerm()).setCourse(entry.getKey()).build(),
                                 entry.getValue());
                     }));

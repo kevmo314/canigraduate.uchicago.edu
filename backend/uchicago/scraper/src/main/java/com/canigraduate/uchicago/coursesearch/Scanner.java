@@ -2,6 +2,7 @@ package com.canigraduate.uchicago.coursesearch;
 
 import com.canigraduate.uchicago.models.*;
 import com.google.common.collect.ImmutableMap;
+import org.apache.logging.log4j.ThreadContext;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -32,15 +33,6 @@ class Scanner {
                 ImmutableMap.of("UC_CLSRCH_WRK2_SUBJECT", department)));
     }
 
-    public Scanner setShard(int shard) {
-        this.shard = shard;
-        return this;
-    }
-
-    public boolean hasNext() {
-        return this.activePage != null && this.activePage.select("tr[id^='DESCR100']").size() > this.shard;
-    }
-
     private static Optional<String> selectFirstText(Document page, String query) {
         return Optional.ofNullable(page.selectFirst(query))
                 .map(element -> element.text().trim())
@@ -49,18 +41,19 @@ class Scanner {
 
     public static Map.Entry<String, Course> toCourseEntry(String html) {
         Document page = Jsoup.parse(html);
-        String name = selectFirstText(page, "span[id='UC_CLS_DTL_WRK_UC_CLASS_TITLE$0']")
-                .orElseThrow(() -> new IllegalStateException("Missing course name."));
-        String descriptor = selectFirstText(page, "div[id='win0divUC_CLS_DTL_WRK_HTMLAREA$0']")
-                .orElseThrow(() -> new IllegalStateException("Missing course descriptor."));
+        String name = selectFirstText(page, "span[id='UC_CLS_DTL_WRK_UC_CLASS_TITLE$0']").orElseThrow(
+                () -> new IllegalStateException("Missing course name."));
+        String descriptor = selectFirstText(page, "div[id='win0divUC_CLS_DTL_WRK_HTMLAREA$0']").orElseThrow(
+                () -> new IllegalStateException("Missing course descriptor."));
         Matcher descriptorMatcher = DESCRIPTOR_REGEX.matcher(descriptor);
         if (!descriptorMatcher.matches()) {
             LOGGER.log(Level.WARNING, "Could not match course descriptor: " + descriptor);
         }
         String courseId = descriptorMatcher.group("id");
+        ThreadContext.push(courseId);
         String sectionId = descriptorMatcher.group("section");
-        List<String> components = selectFirstText(page, "div[id='win0divUC_CLS_DTL_WRK_SSR_COMPONENT_LONG$0']")
-                .map(text -> Stream.of(text.split(",")).map(String::trim).collect(Collectors.toList()))
+        List<String> components = selectFirstText(page, "div[id='win0divUC_CLS_DTL_WRK_SSR_COMPONENT_LONG$0']").map(
+                text -> Stream.of(text.split(",")).map(String::trim).collect(Collectors.toList()))
                 .orElse(new ArrayList<>());
         Section.Builder sectionBuilder = Section.builder()
                 .setPrerequisites(selectFirstText(page, "span[id='UC_CLS_DTL_WRK_SSR_REQUISITE_LONG$0']"))
@@ -76,8 +69,7 @@ class Scanner {
                 LOGGER.warning("Secondary component " + component + " not recognized.");
             }
             for (Element secondaryRow : table.getElementsByTag("tr")) {
-                toSecondaryActivity(secondaryRow)
-                        .map(activity -> activity.setType(component).build())
+                toSecondaryActivity(secondaryRow).map(activity -> activity.setType(component).build())
                         .ifPresent(sectionBuilder::addSecondaryActivity);
             }
         });
@@ -96,10 +88,13 @@ class Scanner {
             sectionBuilder.addPrimaryActivity(
                     toPrimaryActivity(primaryRows.get(i)).setType(Optional.ofNullable(primaryComponent)).build());
         }
-
+        ThreadContext.pop();
         return new AbstractMap.SimpleEntry<>(courseId, Course.builder()
-                .setName(name).setDescription(selectFirstText(page, "span[id='UC_CLS_DTL_WRK_DESCRLONG$0']"))
-                .putSection(sectionId, sectionBuilder.build()).addAllCrosslists(nextCrosslists(page)).build());
+                .setName(name)
+                .setDescription(selectFirstText(page, "span[id='UC_CLS_DTL_WRK_DESCRLONG$0']"))
+                .putSection(sectionId, sectionBuilder.build())
+                .addAllCrosslists(nextCrosslists(page))
+                .build());
     }
 
     private static PrimaryActivity.Builder toPrimaryActivity(Element row) {
@@ -135,9 +130,8 @@ class Scanner {
 
     private static Enrollment nextEnrollment(Document page) {
         String[] tokens = selectFirstText(page, "span[id='UC_CLS_DTL_WRK_DESCR3$0']").orElseGet(
-                () -> selectFirstText(page, "span[id='UC_CLS_DTL_WRK_DESCR1$0']")
-                        .orElseThrow(() -> new IllegalStateException("Could not resolve enrollment.")))
-                .split(" ");
+                () -> selectFirstText(page, "span[id='UC_CLS_DTL_WRK_DESCR1$0']").orElseThrow(
+                        () -> new IllegalStateException("Could not resolve enrollment."))).split(" ");
         String[] enrollment = tokens[tokens.length - 1].split("/");
         return Enrollment.builder()
                 .setEnrolled(Integer.parseInt(enrollment[0]))
@@ -151,6 +145,15 @@ class Scanner {
                 .map(element -> element.text().split("/")[0].trim())
                 .filter(value -> !value.isEmpty())
                 .collect(Collectors.toList());
+    }
+
+    public Scanner setShard(int shard) {
+        this.shard = shard;
+        return this;
+    }
+
+    public boolean hasNext() {
+        return this.activePage != null && this.activePage.select("tr[id^='DESCR100']").size() > this.shard;
     }
 
     private void nextPage() throws IOException {

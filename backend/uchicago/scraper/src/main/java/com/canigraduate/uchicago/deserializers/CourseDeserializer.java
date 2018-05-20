@@ -24,9 +24,9 @@ public class CourseDeserializer {
 
     public static Course fromMapValue(MapValue fields) {
         return Course.builder()
-                .setName(fields.get("name").map(Value::getString).get())
+                .setName(fields.get("name").map(Value::getString).orElse("Unknown"))
                 .setDescription(fields.get("description").map(Value::getString))
-                .setPriority(fields.get("priority").map(Value::getInteger).map(Ints::checkedCast).get())
+                .setPriority(fields.get("priority").map(Value::getInteger).map(Ints::checkedCast).orElse(-1))
                 .setParent(fields.get("sequence").map(Value::getString))
                 .addAllCrosslists(fields.get("crosslists")
                         .map(Value::getArray)

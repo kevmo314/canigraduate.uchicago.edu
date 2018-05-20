@@ -4,6 +4,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 @AutoValue
@@ -21,6 +22,11 @@ public abstract class Term implements Comparable<Term> {
     }
 
     public abstract String getTerm();
+
+    public int getAge() {
+        int reference = 4 * LocalDate.now().getYear() + (LocalDate.now().getMonthValue() - 1) / 4;
+        return reference - this.hashCode();
+    }
 
     @Override
     public int hashCode() {

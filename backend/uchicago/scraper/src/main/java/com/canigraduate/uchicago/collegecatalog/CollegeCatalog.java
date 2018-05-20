@@ -39,11 +39,7 @@ public class CollegeCatalog {
 
     public static Map<String, Course> getCoursesAndSequences(String url) throws IOException {
         Document doc = Jsoup.parse(new BrowsingSession().get(url));
-        Element courses = doc.selectFirst("div.courses");
-        if (courses == null) {
-            return ImmutableMap.of();
-        }
-        List<Element> courseBlocks = courses.select("div.courseblock");
+        List<Element> courseBlocks = doc.select("div.courseblock");
         Map<String, Course.Builder> courseMap = new HashMap<>();
         Optional<String> previousCourse = Optional.empty();
         for (Element block : courseBlocks) {

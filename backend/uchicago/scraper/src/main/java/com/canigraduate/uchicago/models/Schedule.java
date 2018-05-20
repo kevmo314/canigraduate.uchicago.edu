@@ -12,11 +12,13 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @AutoValue
 public abstract class Schedule {
+    private static final Logger LOGGER = Logger.getLogger(Schedule.class.getName());
     private static final Pattern PATTERN = Pattern.compile("([^:]+?):?(\\d[\\d: APM]+)-(\\d[\\d: APM]+)");
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("h:ma");
     private static final String[][] SEARCH_SPACE = new String[][]{{"sun"},
@@ -38,7 +40,8 @@ public abstract class Schedule {
         }
         Matcher tokens = PATTERN.matcher(s.replaceAll("\\s", ""));
         if (!tokens.matches()) {
-            throw new IllegalArgumentException("Regex didn't match: " + s);
+            LOGGER.warning("Schedule regex didn't match: " + s);
+            return new AutoValue_Schedule(ImmutableSet.of());
         }
         String days = tokens.group(1);
         if (days.equals("M-F")) {

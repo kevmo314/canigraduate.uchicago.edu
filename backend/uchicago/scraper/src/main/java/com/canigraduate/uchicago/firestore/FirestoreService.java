@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.zip.Deflater;
 import java.util.zip.GZIPOutputStream;
 
 public class FirestoreService {
@@ -252,7 +253,7 @@ public class FirestoreService {
 
     private static byte[] gzip(byte[] uncompressed) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(
-                uncompressed.length); GZIPOutputStream gzipOS = new GZIPOutputStream(bos)) {
+                uncompressed.length); GZIPOutputStream gzipOS = new MaxCompressionOutputStream(bos)) {
             gzipOS.write(uncompressed);
             gzipOS.close();
             return bos.toByteArray();
@@ -291,6 +292,13 @@ public class FirestoreService {
         }
         request.setHeader(HTTP.CONTENT_TYPE, "application/json");
         return execute(request);
+    }
+
+    static class MaxCompressionOutputStream extends GZIPOutputStream {
+        MaxCompressionOutputStream(OutputStream out) throws IOException {
+            super(out);
+            this.def.setLevel(Deflater.BEST_COMPRESSION);
+        }
     }
 }
 
