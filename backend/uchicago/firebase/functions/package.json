@@ -5,9 +5,11 @@
     "clean":
       "rimraf lib && rimraf node_modules/base64url/typings && rimraf node_modules/base64url/dist/base64url.d.ts",
     "build": "tsc",
-    "serve": "build && firebase serve --only functions",
-    "shell": "build && firebase experimental:functions:shell",
-    "deploy": "clean && firebase deploy --only functions",
+    "serve": "npm run build && firebase serve --only functions",
+    "shell": "npm run build && firebase experimental:functions:shell",
+    "lint": "tslint src/**/*.ts",
+    "start": "npm run shell",
+    "deploy": "npm run clean && firebase deploy --only functions",
     "logs": "firebase functions:log",
     "test":
       "cross-env GCLOUD_PROJECT=canigraduate-43826 mocha -r ts-node/register test/**/*Test.ts"
