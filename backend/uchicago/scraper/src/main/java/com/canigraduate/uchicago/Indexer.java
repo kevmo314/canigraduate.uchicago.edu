@@ -173,9 +173,9 @@ public class Indexer {
             LOGGER.info("Building cardinality table.");
             HashMap<Integer, ArrayList<Integer>> mappings = new HashMap<>();
             Set<String> sectionIdsSet = new HashSet<>();
-            for (int i = 0; i < courseKeys.length; i++) {
-                for (int j = 0; j < termKeys.length; j++) {
-                    Optional.ofNullable(sections.get(courseKeys[i], termKeys[j]))
+            for (String courseKey : courseKeys) {
+                for (Term termKey : termKeys) {
+                    Optional.ofNullable(sections.get(courseKey, termKey))
                             .map(Map::keySet)
                             .ifPresent(sectionIdsSet::addAll);
                 }

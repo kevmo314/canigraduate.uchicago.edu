@@ -1,6 +1,5 @@
 package com.canigraduate.uchicago.pipeline.transforms;
 
-import com.canigraduate.uchicago.coursesearch.CourseSearch;
 import com.canigraduate.uchicago.firestore.*;
 import com.canigraduate.uchicago.models.Course;
 import com.canigraduate.uchicago.models.Enrollment;
@@ -78,18 +77,5 @@ class UploadTransformTest {
         courses.delete("PHYS 14300");
 
         assertThat(courses.list()).isEmpty();
-    }
-
-    @Test
-    void test_MATH15100() throws Exception {
-        FirestoreService.setUChicago(new CollectionReference(null, "institutions").document("uchicago"));
-        TestPipeline pipeline = TestPipeline.create().enableAbandonedNodeEnforcement(false);
-        pipeline.getCoderRegistry().registerCoderProvider(new ModelSubtypeCoderProvider());
-        Map<String, Course> courses = CourseSearch.getCourses("2188", "MATH");
-        pipeline.apply(Create.of(
-                KV.of(TermKey.builder().setCourse("MATH 15100").setTerm(Term.create("Autumn 2018")).build(),
-                        courses.get("MATH 15100").withPriority(Term.create("Autumn 2018").getOrdinal()))))
-                .apply("Upload courses", new UploadTransform());
-        pipeline.run();
     }
 }
