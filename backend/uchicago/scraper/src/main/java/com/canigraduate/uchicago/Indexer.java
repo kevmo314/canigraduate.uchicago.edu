@@ -136,7 +136,8 @@ public class Indexer {
                     // Only include courses offered within the last year, otherwise we'll never meet Algolia's quotas.
                     .filter(entry -> sections.row(entry.getKey())
                             .keySet()
-                            .stream().filter(term -> term.getYear() >= LocalDate.now().getYear() - 1)
+                            .stream()
+                            .filter(term -> term.getYear() >= LocalDate.now().getYear() - 1)
                             .iterator()
                             .hasNext())
                     .filter(entry -> entry.getValue().getDescription().isPresent())
