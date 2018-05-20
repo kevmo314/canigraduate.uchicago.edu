@@ -26,22 +26,18 @@ public class UploadTransform extends PTransform<PCollection<KV<TermKey, Course>>
     @Override
     public PDone expand(PCollection<KV<TermKey, Course>> input) {
         // Group by course first to reduce datastore contention.
-        PCollection<KV<TermKey, Course>> merged = input.apply("Group by key", GroupByKey.create())
-                .apply("Merge courses", MapElements.into(
-                        TypeDescriptors.kvs(TypeDescriptor.of(TermKey.class), TypeDescriptor.of(Course.class)))
-                        .via(kv -> KV.of(kv.getKey(), Streams.stream(kv.getValue()).reduce(null, Course::create))));
-        merged.apply("Remove term association", MapElements.into(INTERMEDIATE)
+        input.apply("Remove term association", MapElements.into(INTERMEDIATE)
                 .via(e -> KV.of(Objects.requireNonNull(e.getKey()).getCourse(), e.getValue())))
                 .apply("Group by key", GroupByKey.create())
                 .apply("Merge courses", MapElements.into(INTERMEDIATE)
                         .via(kv -> KV.of(kv.getKey(), Streams.stream(kv.getValue()).reduce(null, Course::create))))
                 .apply("Upload courses to Firestore", ParDo.of(new PatchCourseDoFn()));
-        merged.apply("Upload terms to Firestore", ParDo.of(new UploadTermDoFn()));
-        merged.apply("Map to section ids", MapElements.into(TypeDescriptors.kvs(TypeDescriptor.of(TermKey.class),
+        input.apply("Upload terms to Firestore", ParDo.of(new UploadTermDoFn()));
+        input.apply("Map to section ids", MapElements.into(TypeDescriptors.kvs(TypeDescriptor.of(TermKey.class),
                 TypeDescriptors.iterables(TypeDescriptors.strings())))
                 .via(e -> KV.of(Objects.requireNonNull(e.getKey()), e.getValue().getSections().keySet())))
                 .apply("Set section index", ParDo.of(new SetSectionIndexDoFn()));
-        merged.apply("Map to course term",
+        input.apply("Map to course term",
                 MapElements.into(TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptor.of(Term.class)))
                         .via(e -> {
                             TermKey termKey = Objects.requireNonNull(e.getKey());

@@ -5,10 +5,8 @@ import com.canigraduate.uchicago.models.Course;
 import com.canigraduate.uchicago.pipeline.models.TermAndDepartment;
 import com.canigraduate.uchicago.pipeline.models.TermKey;
 import com.google.auto.value.AutoValue;
-import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.FlatMapElements;
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.transforms.PTransform;
+import com.google.common.collect.Streams;
+import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.*;
 import org.apache.logging.log4j.ThreadContext;
 
@@ -56,7 +54,12 @@ public class CourseSearchTransform extends PTransform<PBegin, PCollection<KV<Ter
                         ThreadContext.pop();
                         return KV.of(TermKey.builder().setTerm(key.getTerm()).setCourse(entry.getKey()).build(),
                                 entry.getValue());
-                    }));
+                    }))
+                    // Merge the courses, as CourseSearch produces one Course per section.
+                    .apply("Group by key", GroupByKey.create())
+                    .apply("Merge courses", MapElements.into(
+                            TypeDescriptors.kvs(TypeDescriptor.of(TermKey.class), TypeDescriptor.of(Course.class)))
+                            .via(kv -> KV.of(kv.getKey(), Streams.stream(kv.getValue()).reduce(null, Course::create))));
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
