@@ -119,6 +119,12 @@ describe('UChicago Watches', () => {
 
       chai.expect(sent).to.have.length(0);
     });
+
+    it('should not notify from null diff', async () => {
+      await notifyWatch(params, null, previous);
+
+      chai.expect(sent).to.have.length(0);
+    });
   });
 
   describe('secondaries notifications', () => {

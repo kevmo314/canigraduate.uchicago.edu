@@ -2,21 +2,22 @@
   "name": "functions",
   "description": "Cloud Functions for Firebase",
   "scripts": {
-    "clean": "rimraf lib && rimraf node_modules/base64url/typings && rimraf node_modules/base64url/dist/base64url.d.ts",
+    "clean":
+      "rimraf lib && rimraf node_modules/base64url/typings && rimraf node_modules/base64url/dist/base64url.d.ts",
     "build": "tsc",
-    "serve": "npm run build && firebase serve --only functions",
-    "shell": "npm run build && firebase experimental:functions:shell",
-    "lint": "tslint src/**/*.ts",
-    "start": "npm run shell",
-    "deploy": "npm run clean && firebase deploy --only functions",
+    "serve": "build && firebase serve --only functions",
+    "shell": "build && firebase experimental:functions:shell",
+    "deploy": "clean && firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "test": "cross-env GCLOUD_PROJECT=canigraduate-43826 mocha -r ts-node/register test/**/*Test.ts"
+    "test":
+      "cross-env GCLOUD_PROJECT=canigraduate-43826 mocha -r ts-node/register test/**/*Test.ts"
   },
   "dependencies": {
     "@google-cloud/pubsub": "^0.16.5",
     "@google-cloud/storage": "^1.6.0",
     "@types/google-cloud__storage": "^1.1.7",
     "cheerio": "^1.0.0-rc.2",
+    "compression": "^1.7.2",
     "cors": "^2.8.4",
     "express": "^4.16.3",
     "firebase-admin": "^5.11.0",

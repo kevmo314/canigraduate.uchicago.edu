@@ -111,40 +111,4 @@ describe('Handlers', () => {
       chai.expect(response.body.transcript).to.have.length.above(0);
     }).timeout(15000);
   });
-
-  parallel('index handlers', () => {
-    it('should list periods', async () => {
-      const response = await request(index.api)
-        .post('/indexes/periods')
-        .expect('Content-Type', /json/)
-        .expect(200);
-      chai
-        .expect(response.body)
-        .to.have.members(['Winter', 'Autumn', 'Spring', 'Summer']);
-    });
-
-    it('should get data', async () => {
-      const response = await request(index.api)
-        .post('/indexes/periods/Winter')
-        .expect('Content-Type', 'application/octet-stream')
-        .expect(200);
-      chai.expect(response.body).to.be.instanceof(Buffer);
-    });
-
-    it('should return cardinality courses', async () => {
-      const response = await request(index.api)
-        .post('/indexes/cardinalities/courses')
-        .expect('Content-Type', /json/)
-        .expect(200);
-      chai.expect(response.body).to.be.instanceof(Array);
-    });
-
-    it('should return cardinality terms', async () => {
-      const response = await request(index.api)
-        .post('/indexes/cardinalities/terms')
-        .expect('Content-Type', /json/)
-        .expect(200);
-      chai.expect(response.body).to.be.instanceof(Array);
-    });
-  });
 });

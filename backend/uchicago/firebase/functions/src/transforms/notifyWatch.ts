@@ -53,6 +53,9 @@ export default async function(
   previous,
   current,
 ) {
+  if(!previous) {
+    return Promise.resolve();
+  }
   const [changed, diff] = generateDiff(previous, current);
   if (!changed) {
     // Could be due to ther fields changing.

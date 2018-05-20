@@ -1,13 +1,12 @@
 import * as admin from 'firebase-admin';
 import * as cors from 'cors';
+import * as compression from 'compression';
 import * as express from 'express';
 import * as functions from 'firebase-functions';
 import * as crypto from 'crypto';
 import notifyWatch from './transforms/notifyWatch';
 import transcriptHandler from './endpoints/transcriptHandler';
 import evaluationsHandler from './endpoints/evaluationsHandler';
-import listIndexesHandler from './endpoints/listIndexesHandler';
-import getIndexesHandler from './endpoints/getIndexesHandler';
 
 const serviceAccount = require('../service-account.json');
 
@@ -20,6 +19,7 @@ admin.initializeApp(
 const app = express();
 
 app.use(cors());
+app.use(compression());
 
 // Parse authentication headers if available.
 app.use((req, res, next) => {
@@ -34,10 +34,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.disable('x-powered-by');
+app.disable('X-Powered-By');
 
-app.all('/indexes/:type', listIndexesHandler);
-app.all('/indexes/:type/:key', getIndexesHandler);
 app.all('/evaluations/:id', evaluationsHandler);
 app.all('/transcript', transcriptHandler);
 app.all('/grades', (req, res, next) => {
@@ -54,7 +52,10 @@ app.all('/grades', (req, res, next) => {
         if (!results[course]) {
           results[course] = {};
         }
-        results[course][gpa] = (results[course][gpa] || 0) + 1;
+        if (gpa) {
+          // Ignore failing grades bc watever.
+          results[course][gpa] = (results[course][gpa] || 0) + 1;
+        }
       });
       res.status(200);
       res.json(results);
