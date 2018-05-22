@@ -34,6 +34,8 @@ public class Indexer {
     private static final Logger LOGGER = Logger.getLogger(Indexer.class.getName());
 
     private static int bytesRequired(int value) {
+        // In theory we could find the number of bits required, but this seems to gzip less efficiently than rounding
+        // to the closest number of bytes.
         for (int i = 1; i <= 4; i++) {
             if ((value >> (8 * i)) == 0) {
                 return i;
@@ -257,20 +259,6 @@ public class Indexer {
             index.add("sequences", sequencesJson);
         }
         {
-            LOGGER.info("Building age index.");
-            JsonObject agesJson = new JsonObject();
-            agesJson.addProperty("old", Base64.getEncoder()
-                    .encodeToString(pack(keys.stream()
-                            .filter(termKey -> termKey.getTerm().getAge() > 16)
-                            .map(TermKey::getCourse)
-                            .map(course -> Arrays.binarySearch(courseKeys, course))
-                            .collect(Collectors.toList()))));
-            JsonObject metadata = new JsonObject();
-            metadata.addProperty("dimension", "course");
-            agesJson.add("_metadata", metadata);
-            index.add("ages", agesJson);
-        }
-        {
             LOGGER.info("Building period index.");
             JsonObject periodsJson = new JsonObject();
             Arrays.stream(termKeys).map(Term::getPeriod).distinct().sorted().forEach(period -> {
@@ -359,6 +347,30 @@ public class Indexer {
             metadata.addProperty("dimension", "section");
             enrollmentsJson.add("_metadata", metadata);
             index.add("enrollments", enrollmentsJson);
+        }
+        {
+            LOGGER.info("Building age index.");
+            JsonObject agesJson = new JsonObject();
+            Map<String, List<Integer>> ages = new HashMap<>();
+            AtomicInteger checksum = new AtomicInteger();
+            for (String courseKey : courseKeys) {
+                for (Term termKey : termKeys) {
+                    boolean isOld = termKey.getAge() > 16;
+                    Optional.ofNullable(sections.get(courseKey, termKey))
+                            .ifPresent(map -> map.forEach((sectionId, section) -> {
+                                if (isOld) {
+                                    ages.computeIfAbsent("old", key -> new ArrayList<>()).add(checksum.get());
+                                }
+                                checksum.getAndIncrement();
+                            }));
+                }
+            }
+            Preconditions.checkState(checksum.get() == totalCardinality, "Some sections were dropped maybe...");
+            ages.forEach((age, sparse) -> agesJson.addProperty(age, Base64.getEncoder().encodeToString(pack(sparse))));
+            JsonObject metadata = new JsonObject();
+            metadata.addProperty("dimension", "section");
+            agesJson.add("_metadata", metadata);
+            index.add("ages", agesJson);
         }
 
         FirestoreService.writeIndex(index);

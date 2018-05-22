@@ -15,7 +15,7 @@ public abstract class Enrollment {
     public abstract OptionalInt getMaximum();
 
     public boolean isFull() {
-        return getEnrolled().equals(getMaximum()) && getEnrolled().isPresent();
+        return this.getEnrolled().orElse(0) >= this.getMaximum().orElse(Integer.MAX_VALUE);
     }
 
     @AutoValue.Builder
