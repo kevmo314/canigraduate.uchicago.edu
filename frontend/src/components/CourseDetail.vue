@@ -21,7 +21,7 @@
                 Enrolled
               </div>
             </div>
-            <term-detail :serialized="serialized" :course="course" :term="term" />
+            <term-detail :filter="filter.get(term)" :course="course" :term="term" />
           </div>
           <div class="text-xs-center" v-if="maxTerm < terms.length">
             <v-btn block flat @click="maxTerm += 1">Show {{terms[maxTerm]}}</v-btn>
@@ -51,7 +51,7 @@ import { first, map, switchMap } from 'rxjs/operators';
 export default {
   name: 'course-detail',
   components: { GradeDistribution, TermDetail, CompletionIndicator },
-  props: { serialized: Object },
+  props: { filter: Map },
   directives: { Sticky },
   computed: mapGetters('institution', ['institution']),
   data() {
@@ -62,18 +62,32 @@ export default {
     };
   },
   subscriptions() {
-    // Offerings are filter-invariant.
-    const institution$ = this.$observe(() => this.institution);
     const course$ = this.$observe(() => this.course);
-    const courseModel$ = combineLatest(institution$, course$).pipe(
-      map(([institution, course]) => institution.course(course)),
+    const institution$ = this.$observe(() => this.institution);
+    const terms$ = combineLatest(
+      institution$.pipe(
+        switchMap(institution => institution.getIndexes()),
+        map(indexes => indexes.getTerms()),
+        map(terms => terms.slice().reverse()),
+      ),
+      this.$observe(() => this.filter).pipe(map(filter => filter.keys())),
+    ).pipe(
+      map(([allTerms, terms]) => {
+        // Order terms by the index in the institution term listing.
+        return Array.from(terms).sort(
+          (a, b) => allTerms.indexOf(a) - allTerms.indexOf(b),
+        );
+      }),
     );
-    const courseData$ = courseModel$.pipe(switchMap(course => course.data()));
+    const courseData$ = combineLatest(institution$, course$).pipe(
+      map(([institution, course]) => institution.course(course)),
+      switchMap(course => course.data()),
+    );
     return {
       description: courseData$.pipe(map(course => course.description)),
       notes: courseData$.pipe(map(course => course.notes)),
       sequence: courseData$.pipe(map(course => course.sequence)),
-      terms: courseModel$.pipe(switchMap(course => course.terms)),
+      terms: terms$,
       grades: combineLatest(
         institution$.pipe(
           switchMap(institution => institution.data()),
@@ -85,7 +99,10 @@ export default {
         course$,
       ).pipe(
         map(([gpas, grades, course]) =>
-          gpas.map(gpa => ({ gpa, count: (grades[course] || {})[gpa] || 0 })),
+          gpas.map(gpa => ({
+            gpa,
+            count: (grades[course] || {})[gpa] || 0,
+          })),
         ),
       ),
     };

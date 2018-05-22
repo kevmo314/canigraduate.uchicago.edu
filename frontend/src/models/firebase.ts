@@ -1,4 +1,4 @@
-import firebase from 'firebase/app';
+import * as firebase from 'firebase';
 import 'firebase/firestore';
 
 firebase.initializeApp({
@@ -7,7 +7,7 @@ firebase.initializeApp({
   projectId: 'canigraduate-43286',
 });
 
-const firestore = firebase.firestore();
+export const firestore = firebase.firestore();
 firestore.settings({ timestampsInSnapshots: true });
 
-export default firestore;
+export const auth = firebase.auth();

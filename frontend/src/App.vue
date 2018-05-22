@@ -93,7 +93,7 @@
         </v-list-tile>
       </v-list>
     </v-navigation-drawer>
-    <v-toolbar fixed class="indigo darken-4" dark app>
+    <v-toolbar flat fixed class="indigo darken-4" dark app>
       <v-toolbar-side-icon @click.stop="drawer = !drawer" v-if="$vuetify.breakpoint.mdAndDown"></v-toolbar-side-icon>
       <v-toolbar-title>{{title || 'Can I Graduate?'}}</v-toolbar-title>
     </v-toolbar>

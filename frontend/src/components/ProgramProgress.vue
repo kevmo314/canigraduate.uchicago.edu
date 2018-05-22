@@ -1,5 +1,5 @@
 <template>
-  <div class="ml-2 wrapper caption">
+  <div class="ml-2 wrapper caption" v-if="transcript.length">
     <div v-if="progress" :class="{'green--text': progress.remaining == 0, 'grey--text': progress.remaining > 0}">
       {{progress.completed}}/{{progress.remaining+progress.completed}}
     </div>

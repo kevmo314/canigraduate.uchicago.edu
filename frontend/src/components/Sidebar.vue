@@ -184,7 +184,7 @@ export default {
   overflow-y: auto;
 }
 
-.item>>>.header__icon {
+.item >>> .header__icon {
   display: none;
 }
 </style>

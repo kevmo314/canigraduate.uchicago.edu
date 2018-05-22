@@ -1,3 +1,5 @@
+import { auth } from '../../models/firebase';
+
 export const AuthenticationStatus = {
   UNAUTHENTICATED: 'unauthenticated',
   EXPIRED: 'expired',
@@ -32,21 +34,25 @@ export default {
     },
   },
   actions: {
-    authenticate(context, data = {}) {
+    async authenticate(context, data = {}) {
       context.commit('update', {
         ...data,
         type: AuthenticationType.STUDENT,
         status: AuthenticationStatus.PENDING,
         message: '',
       });
-      context.rootState.institution.endpoints
-        .transcript(context.state)
-        .subscribe(
+      const institution = context.rootGetters['institution/institution'];
+      institution
+        .getTranscript(context.state.username, context.state.password)
+        .then(
           response => {
             context.commit('update', {
               status: AuthenticationStatus.AUTHENTICATED,
               token: response.data.token,
-              data: response.data.data,
+              data: {
+                displayName: response.data.data.displayName,
+                email: response.data.data.email,
+              },
             });
             context.commit('transcript/update', response.data.transcript, {
               root: true,
@@ -116,9 +122,10 @@ export default {
     },
     reset(context, status = AuthenticationStatus.UNAUTHENTICATED) {
       if (context.state.status == AuthenticationStatus.AUTHENTICATED) {
-        context.rootState.institution.endpoints.signOut();
+        auth.signOut();
       }
       context.commit('update', { ...DEFAULT_STATE, status });
+      context.commit('transcript/update', [], { root: true });
     },
   },
 };

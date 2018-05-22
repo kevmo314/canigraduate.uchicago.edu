@@ -12,12 +12,6 @@
     <v-card-text>
       <p>Built with love and
         <a href="http://vuejs.org/">Vue.js</a>.</p>
-      <p>
-        Icons made by
-        <a href="https://www.flaticon.com/authors/popcorns-arts" title="Icon Pond">Icon Pond</a> from
-        <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by
-        <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0"
-          target="_blank">CC 3.0 BY</a>.</p>
       <p>Additional contributions from:
         <ul>
           <li>Jacob Burroughs</li>
@@ -26,10 +20,12 @@
       <p>Interested in contributing? Check out our
         <a href="http://github.com/kevmo314/canigraduate.uchicago.edu">GitHub page</a>.</p>
     </v-card-text>
-    <v-card-media class="text-xs-center">
-      <v-divider></v-divider>
-      <p class="mt-2">Copyright © {{year}} Kevin Wang, All Rights Reserved</p>
-      <p>This site is not affiliated with {{ institutionName }}</p>
+    <v-card-media>
+      <v-layout column text-xs-center>
+        <v-divider></v-divider>
+        <div class="my-2">This site is not affiliated with {{ institutionName }}</div>
+        <div class="my-2">©{{year}} — <strong>Can I Graduate?</strong></div>
+      </v-layout>
     </v-card-media>
   </v-card>
 </template>

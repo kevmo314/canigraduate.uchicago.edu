@@ -6,6 +6,9 @@ export default {
     days: [0, 1, 2, 3, 4, 5, 6],
     departments: [],
     instructors: [],
+    full: true,
+    taken: true,
+    old: false,
   },
   mutations: {
     update(state, params) {
@@ -20,6 +23,9 @@ export default {
         days: [0, 1, 2, 3, 4, 5, 6],
         departments: [],
         instructors: [],
+        full: true,
+        taken: true,
+        old: false,
         ...params,
       });
     },

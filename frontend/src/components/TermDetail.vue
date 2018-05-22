@@ -1,14 +1,14 @@
 <template>
   <div class="mt-2" @mouseout="clearTemporary">
-    <section-detail v-for="section of sections" :key="section" :term="term" :course="course" :section="section" :serialized="serialized" />
+    <section-detail v-for="(section, index) of sections" :key="section" :term="term" :course="course" :section="section" :matches="filter.includes(index)" />
   </div>
 </template>
 
 <script>
 import SectionDetail from '@/components/SectionDetail';
 import { mapActions, mapGetters } from 'vuex';
-import { combineLatest } from 'rxjs';
-import { switchMap, map } from 'rxjs/operators';
+import { combineLatest, of } from 'rxjs';
+import { switchMap, map, filter, concat } from 'rxjs/operators';
 
 export default {
   name: 'term-detail',
@@ -22,19 +22,18 @@ export default {
       type: String,
       required: true,
     },
-    serialized: Object,
+    filter: Array,
   },
   computed: mapGetters('institution', ['institution']),
   subscriptions() {
-    return {
-      sections: combineLatest(
-        this.$observe(() => this.institution),
-        this.$observe(() => this.course),
-        this.$observe(() => this.term),
-        (institution, course, term) =>
-          this.institution.course(course).term(term),
-      ).pipe(switchMap(term => term.sections)),
-    };
+    const sections$ = combineLatest(
+      this.$observe(() => this.institution).pipe(
+        switchMap(institution => institution.getIndexes()),
+      ),
+      this.$observe(() => this.course),
+      this.$observe(() => this.term),
+    ).pipe(map(([index, course, term]) => index.getSections(course, term)));
+    return { sections: sections$ };
   },
   methods: mapActions('calendar', ['clearTemporary']),
 };

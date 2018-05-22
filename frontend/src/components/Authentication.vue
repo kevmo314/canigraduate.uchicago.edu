@@ -18,9 +18,9 @@
           </p>
           <div class="display-flex">
             <v-text-field class="mr-2 flex-grow" name="username" label="CNetID" v-model.lazy="students.username"
-              :suffix="emailDomain" :rules="[() => rejected ? '' : true]"></v-text-field>
+              :suffix="'@' + emailDomain" :rules="[() => rejected ? '' : true]" :disabled="pending"></v-text-field>
             <v-text-field class="ml-2 flex-grow" name="password" label="Password" v-model.lazy="students.password"
-              type="password" :rules="[() => rejected ? '' : true]"></v-text-field>
+              type="password" :rules="[() => rejected ? '' : true]" :disabled="pending"></v-text-field>
           </div>
           <p class="red--text auth-error" v-if="this.studentType">
             {{ message }}
@@ -45,8 +45,7 @@
         <v-card-media>
           <v-tabs grow color="white" slider-color="blue">
             <v-tab href="#sign-in">Sign in</v-tab>
-            <v-tab href="#create-an-account">Create an account</v-tab>
-            <v-tabs-item id="sign-in">
+            <v-tab-item id="sign-in">
               <form @submit.prevent="authenticateEducators">
                 <v-card flat>
                   <v-card-text>
@@ -66,8 +65,9 @@
                   </v-card-actions>
                 </v-card>
               </form>
-            </v-tabs-item>
-            <v-tabs-item id="create-an-account">
+            </v-tab-item>
+            <v-tab href="#create-an-account">Create an account</v-tab>
+            <v-tab-item id="create-an-account">
               <form @submit.prevent="createEducatorAccount">
                 <v-card flat>
                   <v-card-text>
@@ -87,7 +87,7 @@
                   </v-card-actions>
                 </v-card>
               </form>
-            </v-tabs-item>
+            </v-tab-item>
           </v-tabs>
         </v-card-media>
       </v-card>
@@ -100,7 +100,8 @@ import {
   AuthenticationStatus,
   AuthenticationType,
 } from '@/store/modules/authentication';
-import { mapState, mapActions } from 'vuex';
+import { mapState, mapActions, mapGetters } from 'vuex';
+import { switchMap, map } from 'rxjs/operators';
 export default {
   name: 'authentication',
   data() {
@@ -133,9 +134,7 @@ export default {
         state.type == AuthenticationType.EDUCATOR_REGISTER,
       message: state => state.message,
     }),
-    ...mapState('institution', {
-      emailDomain: state => state.emailDomain,
-    }),
+    ...mapGetters('institution', ['institution']),
     validateEmail() {
       return (
         this.educators.username.indexOf(this.emailDomain) !== -1 ||
@@ -166,6 +165,15 @@ export default {
         this.educators,
       );
     },
+  },
+  subscriptions() {
+    const institution$ = this.$observe(() => this.institution);
+    return {
+      emailDomain: institution$.pipe(
+        switchMap(institution => institution.data()),
+        map(institution => institution.emailDomain),
+      ),
+    };
   },
 };
 </script>

@@ -1,6 +1,6 @@
 <template>
   <div v-if="data">
-    <div class="display-flex section-header pa-0" :class="{'body-2': hasMultipleSecondaries(data)}"
+    <div class="display-flex section-header pa-0" :class="{'body-2': hasMultipleSecondaries(data), 'muted': !matches}"
       @mouseover="setTemporarySection({term, section, course, activity: !hasMultipleSecondaries(data) && Object.keys(data.secondaries || {})[0]})">
       <div class="section-id">&sect;{{section}}</div>
       <div class="flex-grow primaries ml-2">
@@ -55,7 +55,7 @@ export default {
       type: String,
       required: true,
     },
-    serialized: Object,
+    matches: Boolean,
   },
   computed: mapGetters('institution', ['institution']),
   subscriptions() {
@@ -106,5 +106,9 @@ export default {
   align-self: center;
   text-align: right;
   width: 48px;
+}
+
+.muted {
+  opacity: 0.4;
 }
 </style>

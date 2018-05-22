@@ -1,8 +1,16 @@
-function pivot(A, i, j) {
+type Comparator<T> = ((a: T, b: T) => number);
+
+function pivot<T>(A: T[], i: number, j: number): number {
   return i + ((j - i) >> 1);
 }
 
-function partition(A, i, j, p, compare) {
+function partition<T>(
+  A: T[],
+  i: number,
+  j: number,
+  p: number,
+  compare: Comparator<T>,
+): number {
   [A[p], A[j]] = [A[j], A[p]];
   for (let k = i; k < j; k++) {
     if (compare(A[k], A[j]) < 0) {
@@ -14,7 +22,13 @@ function partition(A, i, j, p, compare) {
   return i;
 }
 
-function partialQuickSort(A, i, j, k, compare) {
+function partialQuickSort<T>(
+  A: T[],
+  i: number,
+  j: number,
+  k: number,
+  compare: Comparator<T>,
+) {
   if (i < j) {
     const p = pivot(A, i, j);
     const q = partition(A, i, j, p, compare);
@@ -25,7 +39,12 @@ function partialQuickSort(A, i, j, k, compare) {
   }
 }
 
-export default function(A, i, k, compare) {
+export default function<T>(
+  A: T[],
+  i: number,
+  k: number,
+  compare: Comparator<T>,
+): T[] {
   partialQuickSort(A, i, A.length - 1, k, compare);
   return A;
 }

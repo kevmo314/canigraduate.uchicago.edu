@@ -11,11 +11,11 @@
       </div>
       <div class="offering-indicators">
         <term-offering-indicator v-for="period of periods" :key="period.name" :period="period"
-          :course="course" :serialized="serialized"></term-offering-indicator>
+          :course="course" :matches="Array.from(filter.keys()).some(term => term.indexOf(period.name) > -1)"></term-offering-indicator>
       </div>
     </v-card-title>
     <v-slide-y-transition>
-      <course-detail v-if="show" :serialized="serialized">{{course}}</course-detail>
+      <course-detail v-if="show" :filter="filter">{{course}}</course-detail>
     </v-slide-y-transition>
   </v-card>
 </template>
@@ -29,7 +29,7 @@ import { combineLatest } from 'rxjs';
 
 export default {
   name: 'search-result',
-  props: { value: Boolean, serialized: Object },
+  props: { value: Boolean, filter: Map },
   components: {
     CourseName,
     TermOfferingIndicator,
@@ -37,13 +37,6 @@ export default {
   },
   computed: {
     ...mapGetters('institution', ['institution']),
-    ...mapState('filter', {
-      activePeriods(state) {
-        return state.periods
-          .filter(i => i < this.periods.length)
-          .map(i => this.periods[i].name);
-      },
-    }),
     show: {
       get() {
         return (

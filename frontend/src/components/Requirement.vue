@@ -3,7 +3,7 @@
     <v-icon class="state-icon mr-2">indeterminate_check_box</v-icon>
     {{lifted.display}}
   </div>
-  <v-layout v-else-if="isLeaf && progress.remaining > 0" row align-center class="ml-2 py-1" :class="{'red--text': !prune}">
+  <v-layout v-else-if="isLeaf && progress.remaining > 0" row align-center class="ml-2 py-1" :class="{'red--text': !prune && this.transcript.length > 0}">
     <v-icon class="state-icon mr-2">check_box_outline_blank</v-icon>
     <div class="id">{{program.split(':')[0]}}</div>
     <course-name class="ml-2" v-if="isExact">{{program}}</course-name>
@@ -60,6 +60,7 @@ export default {
     return { collapse: !this.isLeaf };
   },
   computed: {
+    ...mapState('transcript', { transcript: state => state }),
     progress() {
       return {
         completed: 0,

@@ -213,7 +213,7 @@ export default class Program {
           } as LiftedData;
         }),
       ),
-      crosslistedRecords,
+      records.length == 0 ? of([]) : crosslistedRecords,
     ).pipe(
       map(([lifted, crosslistedRecords]) =>
         resolve(lifted, crosslistedRecords.slice()),

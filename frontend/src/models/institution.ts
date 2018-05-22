@@ -4,8 +4,17 @@ import {
   DocumentSnapshot,
 } from '@firebase/firestore-types';
 import { defer, of, combineLatest, Observable } from 'rxjs';
-import { map, publishReplay, refCount, switchMap, tap } from 'rxjs/operators';
-import firestore from './firestore';
+import {
+  map,
+  publishReplay,
+  refCount,
+  reduce,
+  switchMap,
+  tap,
+  mergeAll,
+  first,
+} from 'rxjs/operators';
+import { firestore, auth } from './firebase';
 import publishDocument from './publishDocument';
 import Grades from './grades';
 import TypedFastBitSet from 'fastbitset';
@@ -41,6 +50,9 @@ interface FilterState {
   days: any;
   departments: string[];
   instructors: string[];
+  full: boolean;
+  taken: boolean;
+  old: boolean;
 }
 
 export default class Institution {
@@ -158,17 +170,26 @@ export default class Institution {
     return this.courseRanking;
   }
 
-  search(filter$: Observable<FilterState>) {
-    return combineLatest(filter$, this.getIndexes()).pipe(
-      switchMap(([filter, indexes]) => {
+  getTranscript(username: string, password: string): Promise<any> {
+    return Axios.get(HOST + '/api/transcript', {
+      auth: { username, password },
+    }).then(response => {
+      return auth.signInWithCustomToken(response.data.token).then(() => {
+        response.data.data = auth.currentUser;
+        return response;
+      });
+    });
+  }
+
+  search(transcript: { course: string }[], filter: FilterState) {
+    return combineLatest(this.getIndexes(), this.data()).pipe(
+      switchMap(([indexes, institution]) => {
         function filterAny(values, getter) {
-          if (values.length == 0) {
-            return results => new TypedFastBitSet();
-          }
-          const mask = values
-            .map(x => getter(x))
-            .reduce((a, b) => a.union(b), new TypedFastBitSet());
-          return results => results.intersection(mask);
+          return of(...values).pipe(
+            map(x => getter(x)),
+            reduce((a, b) => a.union(b), new TypedFastBitSet()),
+            map(mask => results => results.intersection(mask)),
+          );
         }
 
         const subsetters = [];
@@ -181,6 +202,7 @@ export default class Institution {
                   attributesToRetrieve: [],
                   attributesToHighlight: [],
                   allowTyposOnNumericTokens: false,
+                  hitsPerPage: 1000,
                 }),
               ),
               map(results => results.hits.map(result => result.objectID)),
@@ -194,21 +216,53 @@ export default class Institution {
                   : mask;
               }),
               map(mask => results => results.intersection(mask)),
+              first(), // Complete the observable.
             ),
           );
         }
+
+        if (!filter.full) {
+          subsetters.push(
+            defer(() => of(indexes.enrollment('full'))).pipe(
+              map(mask => results => results.difference(mask)),
+            ),
+          );
+        }
+
+        if (!filter.taken) {
+          subsetters.push(
+            of(transcript.map(record => record.course)).pipe(
+              map(courses => indexes.getBitSetForCourses(courses)),
+              map(mask => results => results.difference(mask)),
+            ),
+          );
+        }
+
+        if (!filter.old) {
+          subsetters.push(
+            defer(() => of(indexes.getTerms())).pipe(
+              map(terms => terms.slice(0, terms.length - 16)),
+              map(terms => indexes.getBitSetForTerms(terms)),
+              map(mask => results => results.difference(mask)),
+            ),
+          );
+        }
+
         if (filter.departments.length) {
           subsetters.push(
-            of(filterAny(filter.departments, x => indexes.department(x))),
+            filterAny(filter.departments, x => indexes.department(x)),
           );
         }
         if (filter.instructors.length) {
           subsetters.push(
-            of(filterAny(filter.instructors, x => indexes.instructor(x))),
+            filterAny(filter.instructors, x => indexes.instructor(x)),
           );
         }
         subsetters.push(
-          of(filterAny(filter.periods, x => indexes.periodIndex(x))),
+          filterAny(
+            filter.periods.filter(x => x < institution.periods.length),
+            x => indexes.period(institution.periods[x].name),
+          ),
         );
 
         // This is a rather expensive filter...
@@ -222,25 +276,10 @@ export default class Institution {
           state.add(i);
         }
 
-        // Generate the subsetters.
-        return combineLatest(subsetters).pipe(
-          map(s => s.reduce((state, f) => f(state), state)),
-          map(data => {
-            console.log(data);
-            let lowerBound = 0;
-            const courses = [];
-            data.forEach(index => {
-              if (index < lowerBound) {
-                return;
-              }
-              const courseOffsets = indexes.getCourseOffsets();
-              const location = binarySearch(courseOffsets, index);
-              const courseIndex = location < 0 ? ~location - 1 : location + 1;
-              courses.push(indexes.getCourses()[courseIndex]);
-              lowerBound = courseOffsets[courseIndex];
-            });
-            return { courses, serialized: data };
-          }),
+        return combineLatest(...subsetters).pipe(
+          mergeAll(),
+          reduce((state, f) => f(state), state),
+          map(data => indexes.getCourseTermSections(data)),
         );
       }),
     );
