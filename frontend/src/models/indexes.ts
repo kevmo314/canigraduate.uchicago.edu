@@ -1,9 +1,5 @@
-import { defer, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import Axios from 'axios';
-import { MapOperator } from 'rxjs/internal/operators/map';
-import TypedFastBitSet from 'fastbitset';
-import * as base64js from 'base64-js';
+import * as base64js from "base64-js";
+import TypedFastBitSet from "fastbitset";
 
 function unpack(data: string): Uint32Array {
   const binary = base64js.toByteArray(data);
@@ -34,7 +30,7 @@ function build<T>(n: number, m: number): T[][] {
 function toCardinalityTable(
   n: number,
   m: number,
-  data: Uint32Array,
+  data: Uint32Array
 ): number[][] {
   const table = build<number>(n, m);
   for (let i = 0; i < data.length; ) {
@@ -73,7 +69,7 @@ function toTotalCardinality(table: number[][]): number {
 function getOrUnpack(
   map: Map<string, TypedFastBitSet | string>,
   unpacker: (data: string) => TypedFastBitSet,
-  key: string,
+  key: string
 ) {
   if (!map.has(key)) {
     return new TypedFastBitSet();
@@ -90,7 +86,7 @@ function getOrUnpack(
 function keysWithoutMetadata<V>(map: Map<string, V>) {
   return Array.from(map.keys())
     .sort()
-    .filter(key => key != '_metadata');
+    .filter(key => key != "_metadata");
 }
 
 export default class Indexes {
@@ -115,10 +111,10 @@ export default class Indexes {
     this.courses = data.courses as string[];
     this.terms = data.terms as string[];
     this.courseIndexes = new Map<string, number>(
-      this.courses.map((course, index) => [course, index] as [string, number]),
+      this.courses.map((course, index) => [course, index] as [string, number])
     );
     this.termIndexes = new Map<string, number>(
-      this.terms.map((term, index) => [term, index] as [string, number]),
+      this.terms.map((term, index) => [term, index] as [string, number])
     );
     function parse(x) {
       return new Map<string, TypedFastBitSet | string>(Object.entries(x));
@@ -134,11 +130,11 @@ export default class Indexes {
     this.cardinalityTable = toCardinalityTable(
       this.courses.length,
       this.terms.length,
-      unpack(data.cardinalities),
+      unpack(data.cardinalities)
     );
     this.totalCardinality = toTotalCardinality(this.cardinalityTable);
     const cardinalities = this.cardinalityTable.map(row =>
-      row.reduce((a, b) => a + b, 0),
+      row.reduce((a, b) => a + b, 0)
     );
     this.courseOffsets = [0];
     for (let i = 0; i < cardinalities.length; i++) {
@@ -146,7 +142,7 @@ export default class Indexes {
     }
     this.sections = toSectionsTable(
       this.cardinalityTable,
-      Array.from(unpack(data.sectionIds)).map(index => data.sections[index]),
+      Array.from(unpack(data.sectionIds)).map(index => data.sections[index])
     );
   }
 
@@ -169,7 +165,7 @@ export default class Indexes {
   }
 
   getCourseTermSections(
-    data: TypedFastBitSet,
+    data: TypedFastBitSet
   ): Map<string, Map<string, number[]>> {
     const locations = data.array();
     const result = new Map<string, Map<string, number[]>>();
@@ -196,7 +192,7 @@ export default class Indexes {
     if (p == locations.length) {
       return result;
     } else {
-      throw new Error('Unable to resolve all courses.');
+      throw new Error("Unable to resolve all courses.");
     }
   }
 
@@ -279,7 +275,7 @@ export default class Indexes {
 
   getSparseSequence(key: string): string[] {
     return Array.from(new Set<number>(unpack(this.sequences.get(key)))).map(
-      i => this.courses[i],
+      i => this.courses[i]
     );
   }
 

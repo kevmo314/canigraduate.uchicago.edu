@@ -1,12 +1,12 @@
-import { Observable, combineLatest, of } from 'rxjs';
 import {
-  DocumentReference,
   CollectionReference,
-} from '@firebase/firestore-types';
-import publishDocument from './publishDocument';
-import publishIndex from './publishIndex';
-import { map, tap, switchMap } from 'rxjs/operators';
-import Institution from './institution';
+  DocumentReference
+} from "@firebase/firestore-types";
+import { Observable, combineLatest, of } from "rxjs";
+import { map, switchMap } from "rxjs/operators";
+import Institution from "./institution";
+import publishDocument from "./publishDocument";
+import publishIndex from "./publishIndex";
 
 interface ProgramData {
   readonly requirements: ProgramData[];
@@ -32,72 +32,72 @@ function display(node) {
   if (node.min && node.max) {
     if (node.min == node.max) {
       if (node.min > 1) {
-        return 'Exactly ' + node.min + ' of the following';
+        return "Exactly " + node.min + " of the following";
       }
     } else {
       return (
-        'At least ' +
+        "At least " +
         node.min +
-        ' and at most ' +
+        " and at most " +
         node.max +
-        ' of the following'
+        " of the following"
       );
     }
   } else if (node.min && node.min > 1) {
-    return 'At least ' + node.min + ' of the following';
+    return "At least " + node.min + " of the following";
   }
 }
 
 function grouping(node) {
   if (node.min == node.max && node.min == 1) {
-    return 'OR';
+    return "OR";
   } else if (node.min && node.min == 1) {
-    return 'OR';
+    return "OR";
   } else {
-    return 'ALL';
+    return "ALL";
   }
 }
 
 function* extractSubprograms(node) {
-  if (typeof node == 'string' && node.startsWith('subprograms')) {
+  if (typeof node == "string" && node.startsWith("subprograms")) {
     yield node;
   } else if (node instanceof Array) {
     for (const child of node) {
       yield* extractSubprograms(child);
     }
-  } else if (typeof node == 'object') {
+  } else if (typeof node == "object") {
     yield* extractSubprograms(node.requirements);
   }
 }
 
 function satisfies(specification, course) {
-  if (specification.indexOf(':') === -1) {
+  if (specification.indexOf(":") === -1) {
     return course == specification;
   }
   // Just for convenience
   const parse = x => [x.substring(0, 4), parseInt(x.substring(5), 10)];
   return specification
-    .split(':')[1]
-    .split(',')
+    .split(":")[1]
+    .split(",")
     .every(expression => {
       const [courseDepartment, courseOrdinal] = parse(course);
-      if (expression.startsWith('>=')) {
+      if (expression.startsWith(">=")) {
         const [department, ordinal] = parse(expression.substring(2));
         return courseDepartment == department && courseOrdinal >= ordinal;
       }
-      if (expression.startsWith('>')) {
+      if (expression.startsWith(">")) {
         const [department, ordinal] = parse(expression.substring(1));
         return courseDepartment == department && courseOrdinal > ordinal;
       }
-      if (expression.startsWith('<=')) {
+      if (expression.startsWith("<=")) {
         const [department, ordinal] = parse(expression.substring(2));
         return courseDepartment == department && courseOrdinal <= ordinal;
       }
-      if (expression.startsWith('<')) {
+      if (expression.startsWith("<")) {
         const [department, ordinal] = parse(expression.substring(1));
         return courseDepartment == department && courseOrdinal < ordinal;
       }
-      if (expression.startsWith('!')) {
+      if (expression.startsWith("!")) {
         return expression.substring(1) != course;
       }
       throw new Error('Invalid expression "' + expression + '".');
@@ -106,12 +106,12 @@ function satisfies(specification, course) {
 
 function leafResolver(node: LiftedData, courses: string[][]): LiftedData {
   const i = courses.findIndex(crosslists =>
-    crosslists.some(c => satisfies(node.program, c)),
+    crosslists.some(c => satisfies(node.program, c))
   );
   return Object.assign(node, {
     progress:
       i > -1 ? { completed: 1, remaining: 0 } : { completed: 0, remaining: 1 },
-    satisfier: i > -1 ? courses.splice(i, 1)[0][0] : null,
+    satisfier: i > -1 ? courses.splice(i, 1)[0][0] : null
   });
 }
 
@@ -145,13 +145,13 @@ function nodeResolver(node: LiftedData, courses: string[][]): LiftedData {
   return Object.assign(node, {
     progress: {
       remaining: node.force ? 0 : remaining,
-      completed,
-    },
+      completed
+    }
   });
 }
 
 function resolve(node: LiftedData, courses: string[][]): LiftedData {
-  if (typeof node.program === 'string') {
+  if (typeof node.program === "string") {
     return leafResolver(node, courses);
   } else if (node.requirements) {
     return nodeResolver(node, courses);
@@ -167,7 +167,7 @@ export default class Program {
   constructor(
     institution: Institution,
     ref: DocumentReference,
-    subprogramsRef: CollectionReference,
+    subprogramsRef: CollectionReference
   ) {
     this.institution = institution;
     this.ref = ref;
@@ -179,12 +179,12 @@ export default class Program {
     return combineLatest(
       data,
       data.pipe(
-        switchMap(({ requirements }) => this.parse(JSON.parse(requirements))),
-      ),
+        switchMap(({ requirements }) => this.parse(JSON.parse(requirements)))
+      )
     ).pipe(
       map(([data, requirements]) => {
         return { ...data, requirements } as ProgramData;
-      }),
+      })
     );
   }
 
@@ -195,11 +195,9 @@ export default class Program {
           .course(record.course)
           .data()
           .pipe(
-            map(
-              data => [record.course, ...(data.crosslists || [])] as string[],
-            ),
-          ),
-      ),
+            map(data => [record.course, ...(data.crosslists || [])] as string[])
+          )
+      )
     );
     return combineLatest(
       this.data().pipe(
@@ -209,15 +207,15 @@ export default class Program {
               ? program.requirements.map(requirement => lift(requirement))
               : null,
             program,
-            progress: {} as ProgressData,
+            progress: {} as ProgressData
           } as LiftedData;
-        }),
+        })
       ),
-      records.length == 0 ? of([]) : crosslistedRecords,
+      records.length == 0 ? of([]) : crosslistedRecords
     ).pipe(
       map(([lifted, crosslistedRecords]) =>
-        resolve(lifted, crosslistedRecords.slice()),
-      ),
+        resolve(lifted, crosslistedRecords.slice())
+      )
     );
   }
 
@@ -226,48 +224,48 @@ export default class Program {
    * @param requirements
    */
   resolve(requirements: any[] | string): Observable<ProgramData[]> {
-    if (typeof requirements === 'string') {
+    if (typeof requirements === "string") {
       // For convenience, requirements may be a string.
       requirements = [requirements];
     }
     // Considering only this requirement tree level.
     return combineLatest(
       requirements.map(node => {
-        if (typeof node === 'string') {
-          if (node.startsWith('subprograms')) {
+        if (typeof node === "string") {
+          if (node.startsWith("subprograms")) {
             // Resolve the subprogram.
             return publishDocument(
-              this.subprogramsRef.doc(node.split('/')[1]),
+              this.subprogramsRef.doc(node.split("/")[1])
             ).pipe(
               switchMap(result => {
                 if (!result) {
-                  console.error('Could not resolve subprogram: ' + node);
-                  return of({ display: 'Specification error' });
+                  console.error("Could not resolve subprogram: " + node);
+                  return of({ display: "Specification error" });
                 }
                 return this.resolve(JSON.parse(result.requirements)).pipe(
                   map(requirements => ({
                     display: result.display,
-                    requirements,
-                  })),
+                    requirements
+                  }))
                 );
-              }),
+              })
             );
           } else {
             return of(node);
           }
         } else if (node.requirements) {
           return this.resolve(node.requirements).pipe(
-            map(requirements => ({ ...node, requirements })),
+            map(requirements => ({ ...node, requirements }))
           );
         } else {
           return of(node);
         }
-      }),
+      })
     );
   }
 
   addMetadata(node: any) {
-    if (typeof node == 'string' || !node.requirements) {
+    if (typeof node == "string" || !node.requirements) {
       return node;
     }
     return {
@@ -276,7 +274,7 @@ export default class Program {
       min: node.requirements.length,
       max: node.requirements.length,
       ...node,
-      requirements: node.requirements.map(child => this.addMetadata(child)),
+      requirements: node.requirements.map(child => this.addMetadata(child))
     };
   }
 
@@ -284,19 +282,19 @@ export default class Program {
     return this.resolve(requirements).pipe(
       map(requirements => {
         return requirements.map(node => this.addMetadata(node));
-      }),
+      })
     );
   }
 
   get extensions(): Observable<string[]> {
-    return publishIndex(this.ref.collection('extensions'));
+    return publishIndex(this.ref.collection("extensions"));
   }
 
   extension(id: string): Program {
     return new Program(
       this.institution,
-      this.ref.collection('extensions').doc(id),
-      this.subprogramsRef,
+      this.ref.collection("extensions").doc(id),
+      this.subprogramsRef
     );
   }
 }

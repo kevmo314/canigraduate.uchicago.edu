@@ -1,6 +1,6 @@
-import { CollectionReference, QuerySnapshot } from '@firebase/firestore-types';
-import { Observable } from 'rxjs';
-import { publishReplay, refCount, map } from 'rxjs/operators';
+import { CollectionReference, QuerySnapshot } from "@firebase/firestore-types";
+import { Observable } from "rxjs";
+import { map, publishReplay, refCount } from "rxjs/operators";
 
 const CACHE = new Map<string, Observable<string[]>>();
 
@@ -10,7 +10,7 @@ export default function(ref: CollectionReference): Observable<string[]> {
     return result;
   }
   const observable = Observable.create(observer =>
-    ref.onSnapshot(observer),
+    ref.onSnapshot(observer)
   ).pipe(
     map((snapshot: QuerySnapshot) => {
       const ids: string[] = [];
@@ -18,7 +18,7 @@ export default function(ref: CollectionReference): Observable<string[]> {
       return ids;
     }),
     publishReplay(1),
-    refCount(),
+    refCount()
   );
   CACHE.set(ref.path, observable);
   return observable;

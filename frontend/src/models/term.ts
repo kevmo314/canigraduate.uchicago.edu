@@ -1,13 +1,8 @@
-import {
-  DocumentReference,
-  DocumentData,
-  DocumentSnapshot,
-} from '@firebase/firestore-types';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import publishDocument from './publishDocument';
-import Institution from './institution';
-import Section from './section';
+import { DocumentReference } from "@firebase/firestore-types";
+import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
+import publishDocument from "./publishDocument";
+import Section from "./section";
 
 export interface TermData {
   readonly period: string;
@@ -30,6 +25,6 @@ export default class Term {
   }
 
   section(id: string) {
-    return new Section(this.ref.collection('sections').doc(id));
+    return new Section(this.ref.collection("sections").doc(id));
   }
 }

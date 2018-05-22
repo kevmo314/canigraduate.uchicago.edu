@@ -1,6 +1,6 @@
-import { Observable } from 'rxjs';
-import { DocumentReference } from '@firebase/firestore-types';
-import publishDocument from './publishDocument';
+import { DocumentReference } from "@firebase/firestore-types";
+import { Observable } from "rxjs";
+import publishDocument from "./publishDocument";
 
 interface SequenceData {
   readonly name: string;

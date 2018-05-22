@@ -1,11 +1,7 @@
-import {
-  DocumentReference,
-  DocumentData,
-  DocumentSnapshot,
-} from '@firebase/firestore-types';
-import { Observable } from 'rxjs';
-import { map, filter } from 'rxjs/operators';
-import publishDocument from './publishDocument';
+import { DocumentReference } from "@firebase/firestore-types";
+import { Observable } from "rxjs";
+import { filter, map } from "rxjs/operators";
+import publishDocument from "./publishDocument";
 
 export enum DayOfWeek {
   SUNDAY = 0,
@@ -14,7 +10,7 @@ export enum DayOfWeek {
   WEDNESDAY = 3,
   THURSDAY = 4,
   FRIDAY = 5,
-  SATURDAY = 6,
+  SATURDAY = 6
 }
 
 interface ScheduleData {
@@ -79,18 +75,18 @@ export default class Section {
             primary =>
               ({
                 ...primary,
-                schedule: parseSchedule(primary.schedule),
-              } as PrimaryActivityData),
+                schedule: parseSchedule(primary.schedule)
+              } as PrimaryActivityData)
           ),
           secondaries: data.secondaries.map(
             secondary =>
               ({
                 ...secondary,
-                schedule: parseSchedule(secondary.schedule),
-              } as SecondaryActivityData),
-          ),
+                schedule: parseSchedule(secondary.schedule)
+              } as SecondaryActivityData)
+          )
         } as SectionData;
-      }),
+      })
     );
   }
 }

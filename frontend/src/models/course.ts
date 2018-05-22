@@ -1,10 +1,9 @@
-import { Observable } from 'rxjs';
-import { DocumentReference } from '@firebase/firestore-types';
-import publishDocument from './publishDocument';
-import Institution from './institution';
-import { map } from 'rxjs/operators';
-import { combineLatest } from 'rxjs';
-import Term from './term';
+import { DocumentReference } from "@firebase/firestore-types";
+import { Observable, combineLatest } from "rxjs";
+import { map } from "rxjs/operators";
+import Institution from "./institution";
+import publishDocument from "./publishDocument";
+import Term from "./term";
 
 interface CourseData {
   readonly name: string;
@@ -35,7 +34,7 @@ export default class Course {
         }
         function termToOrdinal(term: string) {
           const index = periods.findIndex(period =>
-            term.startsWith(period.name),
+            term.startsWith(period.name)
           );
           const year = parseInt(term.substring(term.length - 4), 10) * 4;
           return (index + 3) % 4 + year;
@@ -43,10 +42,10 @@ export default class Course {
         return {
           ...courseData,
           terms: courseData.terms.sort(
-            (a, b) => termToOrdinal(b) - termToOrdinal(a),
-          ),
+            (a, b) => termToOrdinal(b) - termToOrdinal(a)
+          )
         } as CourseData;
-      },
+      }
     );
   }
 
@@ -55,6 +54,6 @@ export default class Course {
   }
 
   term(id: string) {
-    return new Term(this.ref.collection('terms').doc(id));
+    return new Term(this.ref.collection("terms").doc(id));
   }
 }

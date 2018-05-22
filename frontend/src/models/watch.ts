@@ -1,12 +1,6 @@
-import {
-  DocumentReference,
-  DocumentData,
-  DocumentSnapshot,
-} from '@firebase/firestore-types';
-import { Observable } from 'rxjs/Observable';
-import { map } from 'rxjs/operators';
-import publishDocument from './publishDocument';
-import Institution from './institution';
+import { DocumentReference } from "@firebase/firestore-types";
+import { Observable } from "rxjs";
+import publishDocument from "./publishDocument";
 
 export interface WatchData {
   readonly email: string;

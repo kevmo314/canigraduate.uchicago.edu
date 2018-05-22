@@ -1,33 +1,26 @@
+import { DocumentReference } from "@firebase/firestore-types";
+import * as algoliasearch from "algoliasearch";
+import Axios from "axios";
+import TypedFastBitSet from "fastbitset";
+import { Observable, combineLatest, defer, of } from "rxjs";
 import {
-  DocumentReference,
-  DocumentData,
-  DocumentSnapshot,
-} from '@firebase/firestore-types';
-import { defer, of, combineLatest, Observable } from 'rxjs';
-import {
-  map,
-  publishReplay,
-  refCount,
-  reduce,
-  switchMap,
-  tap,
-  mergeAll,
   first,
-} from 'rxjs/operators';
-import { firestore, auth } from './firebase';
-import publishDocument from './publishDocument';
-import Grades from './grades';
-import TypedFastBitSet from 'fastbitset';
-import Course from './course';
-import Sequence from './sequence';
-import Axios from 'axios';
-import Indexes from './indexes';
-import { HOST } from './functions';
-import Watch from './watch';
-import Program from './program';
-import * as algoliasearch from 'algoliasearch';
-import publishIndex from './publishIndex';
-import binarySearch from '../lib/binary-search';
+  map,
+  mergeAll,
+  publishReplay,
+  reduce,
+  refCount,
+  switchMap
+} from "rxjs/operators";
+import Course from "./course";
+import { auth } from "./firebase";
+import { HOST } from "./functions";
+import Indexes from "./indexes";
+import Program from "./program";
+import publishDocument from "./publishDocument";
+import publishIndex from "./publishIndex";
+import Sequence from "./sequence";
+import Watch from "./watch";
 
 interface Period {
   readonly name: string;
@@ -63,13 +56,13 @@ export default class Institution {
   private readonly courseRanking: Observable<{ [course: string]: number }>;
   constructor(ref: DocumentReference) {
     this.ref = ref;
-    this.gradeDistribution = defer(() => Axios.get(HOST + '/api/grades')).pipe(
+    this.gradeDistribution = defer(() => Axios.get(HOST + "/api/grades")).pipe(
       map(
         (response: { data: any }) =>
-          Object.freeze(response.data) as { [gpa: number]: number },
+          Object.freeze(response.data) as { [gpa: number]: number }
       ),
       publishReplay(1),
-      refCount(),
+      refCount()
     );
     this.indexes = this.data().pipe(
       switchMap((institution: InstitutionData) => {
@@ -77,25 +70,25 @@ export default class Institution {
       }),
       map(response => new Indexes(response.data)),
       publishReplay(1),
-      refCount(),
+      refCount()
     );
     this.algolia = combineLatest(
       defer(() => {
         return of(
           // Not sure why this is necessary...
           algoliasearch.default(
-            'BF6BT6JP9W',
-            '52677be23c182ca96eb2ccfd7c9c459f',
-          ) as algoliasearch.Client,
+            "BF6BT6JP9W",
+            "52677be23c182ca96eb2ccfd7c9c459f"
+          ) as algoliasearch.Client
         );
       }),
-      this.data(),
+      this.data()
     ).pipe(
       map(([algolia, institution]) =>
-        algolia.initIndex(institution.algoliaIndex),
+        algolia.initIndex(institution.algoliaIndex)
       ),
       publishReplay(1),
-      refCount(),
+      refCount()
     );
     this.courseRanking = combineLatest(
       this.getGradeDistribution().pipe(
@@ -103,10 +96,10 @@ export default class Institution {
           return Object.entries(distribution).reduce((obj, [course, data]) => {
             return {
               ...obj,
-              [course]: 2 * Object.values(data).reduce((a, b) => a + b, 0),
+              [course]: 2 * Object.values(data).reduce((a, b) => a + b, 0)
             };
           }, {});
-        }),
+        })
       ),
       this.getIndexes(),
       (courseRanking, indexes) => {
@@ -122,7 +115,7 @@ export default class Institution {
             sequence.forEach(course => (courseRanking[course] = max));
           });
         return courseRanking;
-      },
+      }
     ).pipe(publishReplay(1), refCount());
   }
 
@@ -131,27 +124,27 @@ export default class Institution {
   }
 
   course(id: string) {
-    return new Course(this, this.ref.collection('courses').doc(id));
+    return new Course(this, this.ref.collection("courses").doc(id));
   }
 
   sequence(id: string) {
-    return new Sequence(this.ref.collection('sequences').doc(id));
+    return new Sequence(this.ref.collection("sequences").doc(id));
   }
 
   get sequences(): Observable<string[]> {
-    return publishIndex(this.ref.collection('sequences'));
+    return publishIndex(this.ref.collection("sequences"));
   }
 
   program(id: string) {
     return new Program(
       this,
-      this.ref.collection('programs').doc(id),
-      this.ref.collection('subprograms'),
+      this.ref.collection("programs").doc(id),
+      this.ref.collection("subprograms")
     );
   }
 
   get programs(): Observable<string[]> {
-    return publishIndex(this.ref.collection('programs'));
+    return publishIndex(this.ref.collection("programs"));
   }
 
   getGradeDistribution(): Observable<Distribution> {
@@ -163,7 +156,7 @@ export default class Institution {
   }
 
   watch(id: string) {
-    return new Watch(this.ref.collection('watches').doc(id));
+    return new Watch(this.ref.collection("watches").doc(id));
   }
 
   getCourseRanking(): Observable<any> {
@@ -171,8 +164,8 @@ export default class Institution {
   }
 
   getTranscript(username: string, password: string): Promise<any> {
-    return Axios.get(HOST + '/api/transcript', {
-      auth: { username, password },
+    return Axios.get(HOST + "/api/transcript", {
+      auth: { username, password }
     }).then(response => {
       return auth.signInWithCustomToken(response.data.token).then(() => {
         response.data.data = auth.currentUser;
@@ -188,7 +181,7 @@ export default class Institution {
           return of(...values).pipe(
             map(x => getter(x)),
             reduce((a, b) => a.union(b), new TypedFastBitSet()),
-            map(mask => results => results.intersection(mask)),
+            map(mask => results => results.intersection(mask))
           );
         }
 
@@ -202,8 +195,8 @@ export default class Institution {
                   attributesToRetrieve: [],
                   attributesToHighlight: [],
                   allowTyposOnNumericTokens: false,
-                  hitsPerPage: 1000,
-                }),
+                  hitsPerPage: 1000
+                })
               ),
               map(results => results.hits.map(result => result.objectID)),
               // Map the list of course identifiers to the corresponding bitset.
@@ -216,16 +209,16 @@ export default class Institution {
                   : mask;
               }),
               map(mask => results => results.intersection(mask)),
-              first(), // Complete the observable.
-            ),
+              first() // Complete the observable.
+            )
           );
         }
 
         if (!filter.full) {
           subsetters.push(
-            defer(() => of(indexes.enrollment('full'))).pipe(
-              map(mask => results => results.difference(mask)),
-            ),
+            defer(() => of(indexes.enrollment("full"))).pipe(
+              map(mask => results => results.difference(mask))
+            )
           );
         }
 
@@ -233,8 +226,8 @@ export default class Institution {
           subsetters.push(
             of(transcript.map(record => record.course)).pipe(
               map(courses => indexes.getBitSetForCourses(courses)),
-              map(mask => results => results.difference(mask)),
-            ),
+              map(mask => results => results.difference(mask))
+            )
           );
         }
 
@@ -243,26 +236,26 @@ export default class Institution {
             defer(() => of(indexes.getTerms())).pipe(
               map(terms => terms.slice(0, terms.length - 16)),
               map(terms => indexes.getBitSetForTerms(terms)),
-              map(mask => results => results.difference(mask)),
-            ),
+              map(mask => results => results.difference(mask))
+            )
           );
         }
 
         if (filter.departments.length) {
           subsetters.push(
-            filterAny(filter.departments, x => indexes.department(x)),
+            filterAny(filter.departments, x => indexes.department(x))
           );
         }
         if (filter.instructors.length) {
           subsetters.push(
-            filterAny(filter.instructors, x => indexes.instructor(x)),
+            filterAny(filter.instructors, x => indexes.instructor(x))
           );
         }
         subsetters.push(
           filterAny(
             filter.periods.filter(x => x < institution.periods.length),
-            x => indexes.period(institution.periods[x].name),
-          ),
+            x => indexes.period(institution.periods[x].name)
+          )
         );
 
         // This is a rather expensive filter...
@@ -279,9 +272,9 @@ export default class Institution {
         return combineLatest(...subsetters).pipe(
           mergeAll(),
           reduce((state, f) => f(state), state),
-          map(data => indexes.getCourseTermSections(data)),
+          map(data => indexes.getCourseTermSections(data))
         );
-      }),
+      })
     );
   }
 }
