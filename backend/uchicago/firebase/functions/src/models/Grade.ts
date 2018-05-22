@@ -22,7 +22,7 @@ export default class Grade {
     return key in GPA_MAP ? GPA_MAP[key] : null;
   }
   get quality() {
-    return this.gpa !== undefined;
+    return this.gpa !== null;
   }
   get credit() {
     return this.grade.endsWith('P') || (this.quality && this.gpa > 0);
