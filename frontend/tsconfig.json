@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
     "noEmit": true,
-    "lib": ["es6", "es2017", "dom"]
+    "lib": ["es6", "es2017", "dom"],
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"]
+    }
   }
 }
