@@ -159,6 +159,10 @@ export default class Institution {
     return new Watch(this.ref.collection("watches").doc(id));
   }
 
+  get watches(): Observable<string[]> {
+    return publishIndex(this.ref.collection("watches"));
+  }
+
   getCourseRanking(): Observable<any> {
     return this.courseRanking;
   }

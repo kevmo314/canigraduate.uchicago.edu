@@ -4,9 +4,7 @@
       <v-toolbar flat class="transparent">
         <v-list class="pa-0">
           <v-list-tile avatar tag="div">
-            <v-list-tile-avatar>
-              <img src="//communications.uchicago.edu/sites/all/files/identity/downloads/university-seal/university.seal.rgb.maroon.png">
-            </v-list-tile-avatar>
+            <v-list-tile-avatar tile><img class="logo" :src="logoUrl"></v-list-tile-avatar>
             <v-list-tile-content>
               <v-list-tile-title>{{ institutionName }}</v-list-tile-title>
             </v-list-tile-content>
@@ -63,15 +61,6 @@
           </v-list-tile-action>
           <v-list-tile-content>
             <v-list-tile-title>Analytics</v-list-tile-title>
-          </v-list-tile-content>
-        </v-list-tile>
-        <v-divider></v-divider>
-        <v-list-tile>
-          <v-list-tile-action>
-            <v-icon>settings</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-content>
-            <v-list-tile-title>Settings</v-list-tile-title>
           </v-list-tile-content>
         </v-list-tile>
         <v-list-tile router to="/about">
@@ -156,13 +145,21 @@ export default {
   },
   subscriptions() {
     const institution$ = this.$observe(() => this.institution);
+    const institutionData$ = institution$.pipe(
+      switchMap(institution => institution.data())
+    );
+    const institutionName$ = institutionData$.pipe(
+      map(institution => institution.name)
+    );
     return {
       programs: institution$.pipe(
         switchMap(institution => institution.programs)
       ),
-      institutionName: institution$.pipe(
-        switchMap(institution => institution.data()),
-        map(institution => institution.name)
+      institutionName: institutionName$,
+      logoUrl: institutionData$.pipe(
+        map(institution =>
+          require(`./assets/logos/${institution.logoName}.png`)
+        )
       )
     };
   }
@@ -181,6 +178,13 @@ export default {
 
 .user-subheader {
   height: 24px;
+}
+
+.logo {
+  max-width: 100%;
+  max-height: 100%;
+  height: auto;
+  width: auto;
 }
 </style>
 

@@ -9,8 +9,8 @@
       <v-btn dark flat @click.native="reset()">Okay</v-btn>
     </v-snackbar>
     <form @submit.prevent="authenticateStudents">
+      <v-subheader>Students</v-subheader>
       <v-card>
-        <v-card-title primary-title class="headline">Students</v-card-title>
         <v-card-text>
           <p>
             <strong>Can I Graduate?</strong> works better if you're signed in. Enter your UChicago
@@ -27,7 +27,7 @@
           </p>
         </v-card-text>
         <v-card-media>
-          <v-alert color="warning" icon="priority_high" value="true">
+          <v-alert color="error" icon="priority_high" value="true">
             By signing in, you agree to let
             <strong>Can I Graduate?</strong> pull your transcript from AIS and store your anonymized
             grades.
@@ -40,21 +40,24 @@
       </v-card>
     </form>
     <form class="mt-3">
+      <v-subheader>Educators</v-subheader>
       <v-card>
-        <v-card-title primary-title class="headline">Educators</v-card-title>
+        <v-card-text>
+          Manage your students' progress with ease! <strong>Can I Graduate?</strong> lets you track how your students are doing and keep up with their class choices.
+        </v-card-text>
         <v-card-media>
-          <v-tabs grow color="white" slider-color="blue">
+          <v-tabs fixed-tabs color="white" slider-color="blue" style="width: 100%;">
             <v-tab href="#sign-in">Sign in</v-tab>
             <v-tab-item id="sign-in">
               <form @submit.prevent="authenticateEducators">
                 <v-card flat>
                   <v-card-text>
-                    Manage your students' progress with
-                    <strong>Can I Graduate?</strong> with ease!
-                    <v-text-field name="username" label="Email address" v-model.lazy="educators.username"
-                      required :rules="[() => rejected ? '' : true]"></v-text-field>
-                    <v-text-field name="password" label="Password" v-model.lazy="educators.password"
-                      type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
+                    <div class="display-flex">
+                      <v-text-field class="mr-2 flex-grow" name="username" label="Email" v-model.lazy="educators.username"
+                        :suffix="'@' + emailDomain" :rules="[() => rejected ? '' : true]"></v-text-field>
+                      <v-text-field class="ml-2 flex-grow" name="password" label="Password" v-model.lazy="educators.password"
+                        type="password" :rules="[() => rejected ? '' : true]"></v-text-field>
+                    </div>
                     <p class="red--text auth-error" v-if="this.educatorType">
                       {{ message }}
                     </p>
@@ -71,19 +74,19 @@
               <form @submit.prevent="createEducatorAccount">
                 <v-card flat>
                   <v-card-text>
-                    <v-text-field name="username" label="Email address (please use your school email)" v-model.lazy="educators.username"
-                      type="email" required :rules="[validateEmail]"></v-text-field>
+                    <v-text-field name="username" label="Email" v-model.lazy="educators.username"
+                      :suffix="'@' + emailDomain" type="email" required :rules="[validateEmail]" disabled></v-text-field>
                     <v-text-field name="password" label="Password" v-model.lazy="educators.password"
-                      type="password" required :rules="[() => rejected ? '' : true]"></v-text-field>
+                      type="password" required :rules="[() => rejected ? '' : true]" disabled></v-text-field>
                     <v-text-field name="password" label="Confirm password" type="password" required v-model.lazy="educators.confirmPassword"
-                      :rules="[validateConfirmPassword]"></v-text-field>
+                      :rules="[validateConfirmPassword]" disabled></v-text-field>
                     <p :class="{'auth-error green--text': unauthenticated, 'auth-error red--text': !unauthenticated}" v-if="this.educatorRegisterType">
                       {{ message }}
                     </p>
                   </v-card-text>
                   <v-card-actions>
                     <v-spacer />
-                    <v-btn flat class="orange--text" :loading="educatorType&&pending" :disabled="studentType&&pending" type="submit">Create an Account</v-btn>
+                    <v-btn flat class="orange--text" :loading="educatorType&&pending" :disabled="studentType&&pending" type="submit" disabled>Coming soon</v-btn>
                   </v-card-actions>
                 </v-card>
               </form>
@@ -138,7 +141,7 @@ export default {
     validateEmail() {
       return (
         this.educators.username.indexOf(this.emailDomain) !== -1 ||
-        "Must use your" + this.emailDomain + "email."
+        "Must use your @" + this.emailDomain + " email."
       );
     },
     validateConfirmPassword() {

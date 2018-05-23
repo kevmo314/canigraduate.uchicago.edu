@@ -8660,9 +8660,9 @@ stdout-stream@^1.4.0:
   dependencies:
     readable-stream "^2.0.1"
 
-stickyfill@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/stickyfill/-/stickyfill-1.1.1.tgz#39413fee9d025c74a7e59ceecb23784cc0f17f02"
+stickyfilljs@^2.0.5:
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/stickyfilljs/-/stickyfilljs-2.0.5.tgz#d229e372d2199ddf5d283bbe34ac1f7d2529c2fc"
 
 stream-browserify@^2.0.1:
   version "2.0.1"

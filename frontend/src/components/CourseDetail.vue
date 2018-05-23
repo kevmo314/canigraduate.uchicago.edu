@@ -33,7 +33,8 @@
           <div class="subheading">Grades</div>
           <grade-distribution :value="grades"></grade-distribution>
         </template>
-        <div class="subheading mt-2">Meta</div>
+        <div class="subheading mt-2">Evaluations</div>
+        <small>Maybe coming soon? Depends on if I can figure out how to scrape the data...</small>
       </div>
     </v-layout>
   </v-card-text>

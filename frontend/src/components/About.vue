@@ -1,33 +1,30 @@
 <template>
-  <v-card>
-    <v-card-media class="white--text" height="300px" src="https://i.ytimg.com/vi/eO6NJuw8yGg/maxresdefault.jpg">
-      <v-container fill-height fluid>
-        <v-layout fill-height>
-          <v-flex xs12 align-end flexbox>
-            <span class="headline">Can I Graduate?</span>
-          </v-flex>
+  <div>
+    <v-subheader>About</v-subheader>
+    <v-card>
+      <v-card-text>
+        <p>Built with love and
+          <a href="http://vuejs.org/">Vue.js</a>.</p>
+        <p>Additional contributions from:
+          <ul class="ml-3 mt-2">
+            <li>Jacob Burroughs</li>
+            <li>Kelly Shen</li>
+            <li>Caitlin Yee</li>
+          </ul>
+        </p>
+        <p>Interested in contributing? Tired of seeing stuff unfinished? Check out our
+          <a href="http://github.com/kevmo314/canigraduate.uchicago.edu">GitHub page</a> and contribute!</p>
+        <p>No idea where to start? Email Kevin at <a href="mailto:kevmo314@gmail.com">kevmo314@gmail.com</a>.</p>
+      </v-card-text>
+      <v-card-media>
+        <v-layout column text-xs-center>
+          <v-divider></v-divider>
+          <div class="my-2">This site is not affiliated with {{ institutionName }}</div>
+          <div class="my-2">©{{year}} — <strong>Can I Graduate?</strong></div>
         </v-layout>
-      </v-container>
-    </v-card-media>
-    <v-card-text>
-      <p>Built with love and
-        <a href="http://vuejs.org/">Vue.js</a>.</p>
-      <p>Additional contributions from:
-        <ul>
-          <li>Jacob Burroughs</li>
-        </ul>
-      </p>
-      <p>Interested in contributing? Check out our
-        <a href="http://github.com/kevmo314/canigraduate.uchicago.edu">GitHub page</a>.</p>
-    </v-card-text>
-    <v-card-media>
-      <v-layout column text-xs-center>
-        <v-divider></v-divider>
-        <div class="my-2">This site is not affiliated with {{ institutionName }}</div>
-        <div class="my-2">©{{year}} — <strong>Can I Graduate?</strong></div>
-      </v-layout>
-    </v-card-media>
-  </v-card>
+      </v-card-media>
+    </v-card>
+  </div>
 </template>
 
 <script>

@@ -31,7 +31,7 @@
     "pako": "^1.0.6",
     "promise-polyfill": "^7.1.1",
     "rxjs": "^6.0.0",
-    "stickyfill": "^1.1.1",
+    "stickyfilljs": "^2.0.5",
     "vue": "^2.5.16",
     "vue-router": "^3.0.1",
     "vue-rx": "^5.0.0",
