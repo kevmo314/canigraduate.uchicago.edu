@@ -32,32 +32,32 @@
 </template>
 
 <script>
-import ScheduleBar from '@/components/ScheduleBar';
-import IntervalTree from '@/lib/interval-tree';
-import { Observable } from 'rxjs/Observable';
-import { mapState, mapActions, mapGetters } from 'vuex';
-import { combineLatest } from 'rxjs';
-import { switchMap, map } from 'rxjs/operators';
+import ScheduleBar from "@/components/ScheduleBar";
+import IntervalTree from "@/lib/interval-tree";
+import { Observable } from "rxjs/Observable";
+import { mapState, mapActions, mapGetters } from "vuex";
+import { combineLatest } from "rxjs";
+import { switchMap, map } from "rxjs/operators";
 
 export default {
-  name: 'section-detail',
+  name: "section-detail",
   components: { ScheduleBar },
   props: {
     course: {
       type: String,
-      required: true,
+      required: true
     },
     term: {
       type: String,
-      required: true,
+      required: true
     },
     section: {
       type: String,
-      required: true,
+      required: true
     },
-    matches: Boolean,
+    matches: Boolean
   },
-  computed: mapGetters('institution', ['institution']),
+  computed: mapGetters("institution", ["institution"]),
   subscriptions() {
     return {
       data: combineLatest(
@@ -70,16 +70,16 @@ export default {
             .course(course)
             .term(term)
             .section(section);
-        },
-      ).pipe(switchMap(section => section.data())),
+        }
+      ).pipe(switchMap(section => section.data()))
     };
   },
   methods: {
-    ...mapActions('calendar', ['setTemporarySection', 'clearTemporary']),
+    ...mapActions("calendar", ["setTemporarySection", "clearTemporary"]),
     hasMultipleSecondaries(section) {
       return section.secondaries && Object.keys(section.secondaries).length > 1;
-    },
-  },
+    }
+  }
 };
 </script>
 

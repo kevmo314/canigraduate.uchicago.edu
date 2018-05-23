@@ -21,22 +21,22 @@
 </template>
 
 <script>
-import CourseName from '@/components/CourseName';
-import TermOfferingIndicator from '@/components/TermOfferingIndicator';
-import { mapState, mapGetters } from 'vuex';
-import { map, switchMap } from 'rxjs/operators';
-import { combineLatest } from 'rxjs';
+import CourseName from "@/components/CourseName";
+import TermOfferingIndicator from "@/components/TermOfferingIndicator";
+import { mapState, mapGetters } from "vuex";
+import { map, switchMap } from "rxjs/operators";
+import { combineLatest } from "rxjs";
 
 export default {
-  name: 'search-result',
+  name: "search-result",
   props: { value: Boolean, filter: Map },
   components: {
     CourseName,
     TermOfferingIndicator,
-    CourseDetail: () => import('@/components/CourseDetail'),
+    CourseDetail: () => import("@/components/CourseDetail")
   },
   computed: {
-    ...mapGetters('institution', ['institution']),
+    ...mapGetters("institution", ["institution"]),
     show: {
       get() {
         return (
@@ -45,18 +45,18 @@ export default {
       },
       set(expanded) {
         if (!this.value) {
-          this.$store.commit('search/setExpanded', {
+          this.$store.commit("search/setExpanded", {
             course: this.course,
-            expanded,
+            expanded
           });
         }
-      },
-    },
+      }
+    }
   },
   data() {
     return {
       course: this.$slots.default[0].text,
-      maxTerm: 4,
+      maxTerm: 4
     };
   },
   subscriptions() {
@@ -65,16 +65,16 @@ export default {
     return {
       periods: institution.pipe(
         switchMap(institution => institution.data()),
-        map(data => data.periods),
+        map(data => data.periods)
       ),
       crosslists: combineLatest(institution, course, (institution, course) =>
-        institution.course(course),
+        institution.course(course)
       ).pipe(
         switchMap(course => course.data()),
-        map(course => course.crosslists.join(', ')),
-      ),
+        map(course => course.crosslists.join(", "))
+      )
     };
-  },
+  }
 };
 </script>
 

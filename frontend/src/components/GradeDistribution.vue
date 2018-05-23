@@ -10,31 +10,33 @@
 </template>
 
 <script>
-import Chartist from 'chartist';
+import Chartist from "chartist";
 
 export default {
-  name: 'grade-distribution',
+  name: "grade-distribution",
   props: {
     value: {
       type: Array,
-      required: true,
+      required: true
     }
   },
   data() {
-    return { chart: null }
+    return { chart: null };
   },
   computed: {
     data() {
       return {
         labels: this.value.map(x => x.gpa.toFixed(1)),
-        series: [this.value.map(x => x.count)],
+        series: [this.value.map(x => x.count)]
       };
     },
     count() {
       return this.value.reduce((count, x) => count + x.count, 0);
     },
     mean() {
-      return this.value.reduce((total, x) => total + x.gpa * x.count, 0) / this.count;
+      return (
+        this.value.reduce((total, x) => total + x.gpa * x.count, 0) / this.count
+      );
     },
     median() {
       let total = 0;
@@ -43,7 +45,7 @@ export default {
         total += x.count;
         return total > target;
       }).gpa;
-    },
+    }
   },
   mounted() {
     this.createChart();
@@ -69,27 +71,27 @@ export default {
           this.chart = new Chartist.Bar(this.$refs.chart, this.data, {
             axisX: {
               offset: 10,
-              position: 'start',
+              position: "start",
               scaleMinSpace: 10,
               onlyInteger: true,
               labelOffset: { x: -3 }
             },
             axisY: {
               offset: 15,
-              showGrid: false,
+              showGrid: false
             },
             horizontalBars: true,
-            height: '400px',
+            height: "400px"
           });
         }
       });
     }
   }
-}
+};
 </script>
 
 <style lang="scss">
-@import '../../node_modules/chartist/dist/scss/chartist.scss';
+@import "../../node_modules/chartist/dist/scss/chartist.scss";
 
 .chart .ct-bar {
   stroke-width: 15px;

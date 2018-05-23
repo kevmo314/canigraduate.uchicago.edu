@@ -98,20 +98,20 @@
 <script>
 import {
   AuthenticationStatus,
-  AuthenticationType,
-} from '@/store/modules/authentication';
-import { mapState, mapActions, mapGetters } from 'vuex';
-import { switchMap, map } from 'rxjs/operators';
+  AuthenticationType
+} from "@/store/modules/authentication";
+import { mapState, mapActions, mapGetters } from "vuex";
+import { switchMap, map } from "rxjs/operators";
 export default {
-  name: 'authentication',
+  name: "authentication",
   data() {
     return {
-      students: { username: '', password: '' },
+      students: { username: "", password: "" },
       educators: {
-        username: '',
-        password: '',
-        confirmPassword: '',
-      },
+        username: "",
+        password: "",
+        confirmPassword: ""
+      }
     };
   },
   created() {
@@ -121,7 +121,7 @@ export default {
     }
   },
   computed: {
-    ...mapState('authentication', {
+    ...mapState("authentication", {
       pending: state => state.status == AuthenticationStatus.PENDING,
       expired: state => state.status == AuthenticationStatus.EXPIRED,
       rejected: state => state.status == AuthenticationStatus.REJECTED,
@@ -132,49 +132,49 @@ export default {
       educatorType: state => state.type == AuthenticationType.EDUCATOR,
       educatorRegisterType: state =>
         state.type == AuthenticationType.EDUCATOR_REGISTER,
-      message: state => state.message,
+      message: state => state.message
     }),
-    ...mapGetters('institution', ['institution']),
+    ...mapGetters("institution", ["institution"]),
     validateEmail() {
       return (
         this.educators.username.indexOf(this.emailDomain) !== -1 ||
-        'Must use your' + this.emailDomain + 'email.'
+        "Must use your" + this.emailDomain + "email."
       );
     },
     validateConfirmPassword() {
       return (
         this.educators.confirmPassword == this.educators.password ||
-        'Must be the same as your password.'
+        "Must be the same as your password."
       );
-    },
+    }
   },
   methods: {
-    ...mapActions('authentication', ['reset']),
+    ...mapActions("authentication", ["reset"]),
     authenticateStudents() {
-      this.$store.dispatch('authentication/authenticate', this.students);
+      this.$store.dispatch("authentication/authenticate", this.students);
     },
     authenticateEducators() {
       this.$store.dispatch(
-        'authentication/authenticateEducators',
-        this.educators,
+        "authentication/authenticateEducators",
+        this.educators
       );
     },
     createEducatorAccount() {
       this.$store.dispatch(
-        'authentication/createEducatorAccount',
-        this.educators,
+        "authentication/createEducatorAccount",
+        this.educators
       );
-    },
+    }
   },
   subscriptions() {
     const institution$ = this.$observe(() => this.institution);
     return {
       emailDomain: institution$.pipe(
         switchMap(institution => institution.data()),
-        map(institution => institution.emailDomain),
-      ),
+        map(institution => institution.emailDomain)
+      )
     };
-  },
+  }
 };
 </script>
 

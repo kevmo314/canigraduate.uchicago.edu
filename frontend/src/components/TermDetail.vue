@@ -5,36 +5,36 @@
 </template>
 
 <script>
-import SectionDetail from '@/components/SectionDetail';
-import { mapActions, mapGetters } from 'vuex';
-import { combineLatest, of } from 'rxjs';
-import { switchMap, map, filter, concat } from 'rxjs/operators';
+import SectionDetail from "@/components/SectionDetail";
+import { mapActions, mapGetters } from "vuex";
+import { combineLatest, of } from "rxjs";
+import { switchMap, map, filter, concat } from "rxjs/operators";
 
 export default {
-  name: 'term-detail',
+  name: "term-detail",
   components: { SectionDetail },
   props: {
     course: {
       type: String,
-      required: true,
+      required: true
     },
     term: {
       type: String,
-      required: true,
+      required: true
     },
-    filter: Array,
+    filter: Array
   },
-  computed: mapGetters('institution', ['institution']),
+  computed: mapGetters("institution", ["institution"]),
   subscriptions() {
     const sections$ = combineLatest(
       this.$observe(() => this.institution).pipe(
-        switchMap(institution => institution.getIndexes()),
+        switchMap(institution => institution.getIndexes())
       ),
       this.$observe(() => this.course),
-      this.$observe(() => this.term),
+      this.$observe(() => this.term)
     ).pipe(map(([index, course, term]) => index.getSections(course, term)));
     return { sections: sections$ };
   },
-  methods: mapActions('calendar', ['clearTemporary']),
+  methods: mapActions("calendar", ["clearTemporary"])
 };
 </script>

@@ -117,55 +117,55 @@
 </template>
 
 <script>
-import Authentication from '@/components/Authentication.vue';
-import Sidebar from '@/components/Sidebar.vue';
-import ProgramProgress from '@/components/ProgramProgress.vue';
-import { AuthenticationStatus } from '@/store/modules/authentication';
-import { mapState, mapActions, mapGetters } from 'vuex';
-import EventBus from '@/EventBus';
-import Sticky from '@/directives/Sticky';
-import { switchMap, map, tap } from 'rxjs/operators';
+import Authentication from "@/components/Authentication.vue";
+import Sidebar from "@/components/Sidebar.vue";
+import ProgramProgress from "@/components/ProgramProgress.vue";
+import { AuthenticationStatus } from "@/store/modules/authentication";
+import { mapState, mapActions, mapGetters } from "vuex";
+import EventBus from "@/EventBus";
+import Sticky from "@/directives/Sticky";
+import { switchMap, map, tap } from "rxjs/operators";
 
 export default {
-  name: 'app',
+  name: "app",
   components: { Authentication, Sidebar, ProgramProgress },
   directives: { Sticky },
   computed: {
-    ...mapState('authentication', {
+    ...mapState("authentication", {
       authenticated: state =>
         state.status == AuthenticationStatus.AUTHENTICATED,
       educatorAuthenticated: state =>
         state.status == AuthenticationStatus.EDUCATOR_AUTHENTICATED,
-      user: state => state.data,
+      user: state => state.data
     }),
-    ...mapGetters('institution', ['institution']),
+    ...mapGetters("institution", ["institution"])
   },
   data() {
     return { drawer: !this.$vuetify.breakpoint.mdAndDown, title: null };
   },
   mounted() {
-    EventBus.$on('set-title', title => (this.title = title));
+    EventBus.$on("set-title", title => (this.title = title));
   },
   methods: {
     signOut() {
       this.$store.dispatch(
-        'authentication/reset',
-        AuthenticationStatus.LOGGED_OUT,
+        "authentication/reset",
+        AuthenticationStatus.LOGGED_OUT
       );
-    },
+    }
   },
   subscriptions() {
     const institution$ = this.$observe(() => this.institution);
     return {
       programs: institution$.pipe(
-        switchMap(institution => institution.programs),
+        switchMap(institution => institution.programs)
       ),
       institutionName: institution$.pipe(
         switchMap(institution => institution.data()),
-        map(institution => institution.name),
-      ),
+        map(institution => institution.name)
+      )
     };
-  },
+  }
 };
 </script>
 
@@ -223,4 +223,3 @@ export default {
   fill: #ff9800;
 }
 </style>
-

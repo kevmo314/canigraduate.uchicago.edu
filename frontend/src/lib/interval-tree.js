@@ -138,7 +138,7 @@ export default class IntervalTree {
     }
     var result = false;
     var temp;
-    ['left', 'right'].forEach(function(key) {
+    ["left", "right"].forEach(function(key) {
       temp = node[key];
       if (temp) {
         if (temp.max > point) {
@@ -165,7 +165,7 @@ export default class IntervalTree {
     }
     var result = false;
     var temp;
-    ['left', 'right'].forEach(side => {
+    ["left", "right"].forEach(side => {
       temp = node[side];
       if (temp && temp.max >= interval[0]) {
         result = result || this.intersects(interval, temp);
@@ -206,9 +206,9 @@ export default class IntervalTree {
         this.remove(replacement.interval, node);
       } else {
         // When only left or right child exists
-        var side = 'left';
+        var side = "left";
         if (node.right) {
-          side = 'right';
+          side = "right";
         }
         var parentNode = node.parentNode;
         if (parentNode) {

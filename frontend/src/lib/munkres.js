@@ -12,7 +12,7 @@
  */
 export default function munkres(A) {
   if (A.length != A[0].length) {
-    throw new Error('Cost matrix must be square.');
+    throw new Error("Cost matrix must be square.");
   }
   const N = A.length;
   const forward = new Array(N).fill(-1);
@@ -36,7 +36,7 @@ export default function munkres(A) {
     function updateLabels() {
       const delta = slack.reduce(
         (min, x, j) => (!T[j] && x < min ? x : min),
-        Number.POSITIVE_INFINITY,
+        Number.POSITIVE_INFINITY
       );
       for (let i = 0; i < N; i++) {
         if (S[i]) {

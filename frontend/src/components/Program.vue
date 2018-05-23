@@ -27,28 +27,28 @@
 </template>
 
 <script>
-import Requirement from '@/components/Requirement';
-import ProgramProgress from '@/components/ProgramProgress';
-import EventBus from '@/EventBus';
-import { mapState, mapGetters } from 'vuex';
-import { map, tap, switchMap } from 'rxjs/operators';
-import { combineLatest } from 'rxjs';
+import Requirement from "@/components/Requirement";
+import ProgramProgress from "@/components/ProgramProgress";
+import EventBus from "@/EventBus";
+import { mapState, mapGetters } from "vuex";
+import { map, tap, switchMap } from "rxjs/operators";
+import { combineLatest } from "rxjs";
 
 export default {
   components: { Requirement, ProgramProgress },
   props: {
     program: { type: String, required: true },
-    extension: { type: String, required: false },
+    extension: { type: String, required: false }
   },
   data() {
     return { active: null };
   },
   computed: {
-    ...mapState('transcript', { transcript: state => state }),
-    ...mapGetters('institution', ['institution']),
+    ...mapState("transcript", { transcript: state => state }),
+    ...mapGetters("institution", ["institution"])
   },
   beforeRouteLeave(to, from, next) {
-    EventBus.$emit('set-title', null);
+    EventBus.$emit("set-title", null);
     next();
   },
   subscriptions() {
@@ -56,22 +56,22 @@ export default {
     const root = combineLatest(
       this.$observe(() => this.institution),
       this.$observe(() => this.program).pipe(
-        tap(program => EventBus.$emit('set-title', program)),
-      ),
+        tap(program => EventBus.$emit("set-title", program))
+      )
     ).pipe(map(([institution, program]) => institution.program(program)));
     const extensions = root.pipe(switchMap(program => program.extensions));
     const extension = this.$observe(() => this.extension);
     const program = combineLatest(root, extension).pipe(
       map(([root, extension]) => {
         return root && extension ? root.extension(extension) : root;
-      }),
+      })
     );
     const lifted = combineLatest(program, transcript).pipe(
       switchMap(([program, transcript]) => {
         return program.bindTranscript(transcript);
-      }),
+      })
     );
     return { extensions, lifted };
-  },
+  }
 };
 </script>

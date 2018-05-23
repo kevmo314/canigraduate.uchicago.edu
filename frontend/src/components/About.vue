@@ -31,20 +31,20 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
-import { switchMap, map } from 'rxjs/operators';
+import { mapGetters } from "vuex";
+import { switchMap, map } from "rxjs/operators";
 export default {
   data() {
     return { year: new Date().getFullYear() };
   },
-  computed: mapGetters('institution', ['institution']),
+  computed: mapGetters("institution", ["institution"]),
   subscriptions() {
     return {
       institutionName: this.$observe(() => this.institution).pipe(
         switchMap(institution => institution.data()),
-        map(data => data.name),
-      ),
+        map(data => data.name)
+      )
     };
-  },
+  }
 };
 </script>

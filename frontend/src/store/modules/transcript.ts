@@ -5,7 +5,7 @@ export default {
     update(state, records) {
       state.length = 0;
       state.push(...records);
-    },
+    }
   },
-  actions: {},
+  actions: {}
 };

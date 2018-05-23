@@ -55,12 +55,12 @@
 </template>
 
 <script>
-import CourseName from '@/components/CourseName.vue';
-import Calendar from '@/components/Calendar.vue';
-import { mapState, mapActions, mapMutations, mapGetters } from 'vuex';
-import { map, switchMap, tap, publishReplay, refCount } from 'rxjs/operators';
-import { combineLatest } from 'rxjs';
-import EventBus from '@/EventBus';
+import CourseName from "@/components/CourseName.vue";
+import Calendar from "@/components/Calendar.vue";
+import { mapState, mapActions, mapMutations, mapGetters } from "vuex";
+import { map, switchMap, tap, publishReplay, refCount } from "rxjs/operators";
+import { combineLatest } from "rxjs";
+import EventBus from "@/EventBus";
 
 function mean(x) {
   return x.reduce((a, b) => a + b, 0) / x.length;
@@ -75,18 +75,18 @@ function frequencyMean(x) {
 }
 
 export default {
-  name: 'sidebar',
+  name: "sidebar",
   components: { CourseName, Calendar },
   computed: {
-    ...mapState('transcript', {
+    ...mapState("transcript", {
       terms: state => Array.from(new Set(state.map(record => record.term))),
-      transcript: state => state,
+      transcript: state => state
     }),
-    ...mapGetters('institution', ['institution']),
-    ...mapState('calendar', {
+    ...mapGetters("institution", ["institution"]),
+    ...mapState("calendar", {
       activeTerm: state => state.activeTerm,
       temporaryTerm: state => state.temporary.term,
-      scheduleTerm: state => state.temporary.term || state.activeTerm,
+      scheduleTerm: state => state.temporary.term || state.activeTerm
     }),
     quarterGpa() {
       const quality = this.transcript.filter(record => record.quality);
@@ -104,17 +104,17 @@ export default {
         const to = qualityTerms.lastIndexOf(term) + 1;
         return mean(quality.slice(0, to).map(record => record.gpa));
       });
-    },
+    }
   },
   data() {
     return { active: null };
   },
   mounted() {
-    EventBus.$on('show-schedule-tab', () => (this.active = 'schedule'));
+    EventBus.$on("show-schedule-tab", () => (this.active = "schedule"));
   },
   methods: {
-    ...mapActions('filter', ['reset']),
-    ...mapMutations('calendar', ['setActiveTerm']),
+    ...mapActions("filter", ["reset"]),
+    ...mapMutations("calendar", ["setActiveTerm"])
   },
   subscriptions() {
     const institution$ = this.$observe(() => this.institution);
@@ -124,17 +124,17 @@ export default {
         return Object.keys(gradeDistribution).reduce(
           (state, key) => ({
             ...state,
-            [key]: frequencyMean(gradeDistribution[key]),
+            [key]: frequencyMean(gradeDistribution[key])
           }),
-          {},
+          {}
         );
       }),
       publishReplay(1),
-      refCount(),
+      refCount()
     );
     const terms = this.$observe(() => this.terms);
     const quality = this.$observe(() => this.transcript).pipe(
-      map(transcript => transcript.filter(record => record.quality)),
+      map(transcript => transcript.filter(record => record.quality))
     );
     const allTerms = institution$.pipe(
       switchMap(institution => institution.getIndexes()),
@@ -142,9 +142,9 @@ export default {
       map(terms => terms.slice().reverse()),
       tap(terms => {
         if (!this.$store.state.calendar.activeTerm) {
-          this.$store.commit('calendar/setActiveTerm', terms[0]);
+          this.$store.commit("calendar/setActiveTerm", terms[0]);
         }
-      }),
+      })
     );
     return {
       allTerms,
@@ -157,7 +157,7 @@ export default {
             const to = qualityTerms.lastIndexOf(term) + 1;
             return mean(grades.slice(from, to));
           });
-        }),
+        })
       ),
       cumulativeEgpa: combineLatest(quality, egpa, terms).pipe(
         map(([quality, egpa, terms]) => {
@@ -166,11 +166,11 @@ export default {
           return terms.map(term => {
             return mean(grades.slice(0, qualityTerms.lastIndexOf(term) + 1));
           });
-        }),
+        })
       ),
-      egpa,
+      egpa
     };
-  },
+  }
 };
 </script>
 

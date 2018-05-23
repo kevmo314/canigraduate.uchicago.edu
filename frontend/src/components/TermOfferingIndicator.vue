@@ -26,34 +26,34 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
-import { switchMap, map } from 'rxjs/operators';
-import { combineLatest } from 'rxjs';
+import { mapGetters } from "vuex";
+import { switchMap, map } from "rxjs/operators";
+import { combineLatest } from "rxjs";
 
 export default {
-  name: 'term-offering-indicator',
+  name: "term-offering-indicator",
   props: {
     period: {
       type: Object,
-      required: true,
+      required: true
     },
     course: {
       type: String,
-      required: true,
+      required: true
     },
-    matches: Boolean,
+    matches: Boolean
   },
-  computed: mapGetters('institution', ['institution']),
+  computed: mapGetters("institution", ["institution"]),
   subscriptions() {
     const institution$ = this.$observe(() => this.institution);
     const course$ = this.$observe(() => this.course);
     const allTerms$ = institution$.pipe(
       switchMap(institution => institution.getIndexes()),
       map(indexes => indexes.getTerms()),
-      map(terms => terms.slice().reverse()),
+      map(terms => terms.slice().reverse())
     );
     const terms$ = combineLatest(institution$, course$).pipe(
-      switchMap(([institution, course]) => institution.course(course).terms),
+      switchMap(([institution, course]) => institution.course(course).terms)
     );
     const period$ = this.$observe(() => this.period);
     const matches$ = this.$observe(() => this.matches);
@@ -64,28 +64,28 @@ export default {
             return term;
           }
         }
-      }),
+      })
     );
     const isOffered$ = lastTerm$.pipe(map(term => Boolean(term)));
     const isOld$ = combineLatest(allTerms$, lastTerm$).pipe(
-      map(([allTerms, lastTerm]) => allTerms.indexOf(lastTerm) > 16),
+      map(([allTerms, lastTerm]) => allTerms.indexOf(lastTerm) > 16)
     );
     return {
       tooltip: lastTerm$,
       state: combineLatest(period$, matches$, isOld$, isOffered$).pipe(
         map(([period, matches, isOld, isOffered]) => {
           if (!isOffered || (!matches && isOld)) {
-            return 'not offered';
+            return "not offered";
           } else if (!matches) {
-            return 'not matching';
+            return "not matching";
           } else if (isOld) {
-            return 'old';
+            return "old";
           }
-          return 'active';
-        }),
-      ),
+          return "active";
+        })
+      )
     };
-  },
+  }
 };
 </script>
 

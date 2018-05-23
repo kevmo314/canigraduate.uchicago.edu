@@ -88,73 +88,73 @@
 </template>
 
 <script>
-import { Observable, of } from 'rxjs';
-import { SORT } from '@/store/modules/search';
-import { mapState, mapGetters } from 'vuex';
-import { map, switchMap } from 'rxjs/operators';
+import { Observable, of } from "rxjs";
+import { SORT } from "@/store/modules/search";
+import { mapState, mapGetters } from "vuex";
+import { map, switchMap } from "rxjs/operators";
 
-function createComputedProperty(field, namespace = 'filter') {
+function createComputedProperty(field, namespace = "filter") {
   return {
     get() {
       return this.$store.state[namespace][field];
     },
     set(value) {
-      this.$store.commit(namespace + '/update', { [field]: value });
-    },
+      this.$store.commit(namespace + "/update", { [field]: value });
+    }
   };
 }
 
 export default {
-  name: 'filters',
+  name: "filters",
   data() {
     return {
       showAlgolia: false,
       sortItems: [
-        { value: SORT.BY_POPULARITY, text: 'By popularity' },
-        { value: SORT.ALPHABETICALLY, text: 'Alphabetically' },
-      ],
+        { value: SORT.BY_POPULARITY, text: "By popularity" },
+        { value: SORT.ALPHABETICALLY, text: "Alphabetically" }
+      ]
     };
   },
   computed: {
-    ...mapGetters('institution', ['institution']),
-    query: createComputedProperty.call(this, 'query'),
-    periods: createComputedProperty.call(this, 'periods'),
-    days: createComputedProperty.call(this, 'days'),
-    departments: createComputedProperty.call(this, 'departments'),
-    instructors: createComputedProperty.call(this, 'instructors'),
-    sort: createComputedProperty.call(this, 'sort', 'search'),
-    full: createComputedProperty.call(this, 'full'),
-    taken: createComputedProperty.call(this, 'taken'),
-    old: createComputedProperty.call(this, 'old'),
+    ...mapGetters("institution", ["institution"]),
+    query: createComputedProperty.call(this, "query"),
+    periods: createComputedProperty.call(this, "periods"),
+    days: createComputedProperty.call(this, "days"),
+    departments: createComputedProperty.call(this, "departments"),
+    instructors: createComputedProperty.call(this, "instructors"),
+    sort: createComputedProperty.call(this, "sort", "search"),
+    full: createComputedProperty.call(this, "full"),
+    taken: createComputedProperty.call(this, "taken"),
+    old: createComputedProperty.call(this, "old")
   },
   subscriptions() {
     const institution = this.$observe(() => this.institution);
     const institutionData = institution.pipe(
-      switchMap(institution => institution.data()),
+      switchMap(institution => institution.data())
     );
     const indexes = institution.pipe(
-      switchMap(institution => institution.getIndexes()),
+      switchMap(institution => institution.getIndexes())
     );
     return {
       searchPlaceholder: institutionData.pipe(
-        map(institution => `Try "${institution.searchPlaceholder}"`),
+        map(institution => `Try "${institution.searchPlaceholder}"`)
       ),
       periodName: institutionData.pipe(
-        map(institution => institution.periodName),
+        map(institution => institution.periodName)
       ),
       periodItems: institutionData.pipe(
         map(institution =>
           institution.periods.map((period, value) => ({
             value,
             text: period.name,
-            abbr: period.shorthand,
-          })),
-        ),
+            abbr: period.shorthand
+          }))
+        )
       ),
       departmentItems: indexes.pipe(map(index => index.getDepartments())),
-      instructorItems: indexes.pipe(map(index => index.getInstructors())),
+      instructorItems: indexes.pipe(map(index => index.getInstructors()))
     };
-  },
+  }
 };
 </script>
 

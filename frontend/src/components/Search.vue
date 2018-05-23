@@ -33,12 +33,12 @@
 </template>
 
 <script>
-import Filters from '@/components/Filters.vue';
-import SearchResult from '@/components/SearchResult.vue';
-import IntervalTree from '@/lib/interval-tree';
-import partialSort from '@/lib/partial-sort';
-import { mapState, mapActions, mapGetters } from 'vuex';
-import { SORT } from '@/store/modules/search';
+import Filters from "@/components/Filters.vue";
+import SearchResult from "@/components/SearchResult.vue";
+import IntervalTree from "@/lib/interval-tree";
+import partialSort from "@/lib/partial-sort";
+import { mapState, mapActions, mapGetters } from "vuex";
+import { SORT } from "@/store/modules/search";
 import {
   switchMap,
   map,
@@ -46,9 +46,9 @@ import {
   refCount,
   debounceTime,
   tap,
-  first,
-} from 'rxjs/operators';
-import { fromEventPattern, combineLatest, of } from 'rxjs';
+  first
+} from "rxjs/operators";
+import { fromEventPattern, combineLatest, of } from "rxjs";
 
 export default {
   components: { Filters, SearchResult },
@@ -56,23 +56,23 @@ export default {
     return { resultsPerPage: 10 };
   },
   computed: {
-    ...mapGetters('institution', ['institution']),
-    ...mapState('transcript', { transcript: state => state }),
+    ...mapGetters("institution", ["institution"]),
+    ...mapState("transcript", { transcript: state => state }),
     page: {
       get() {
         return this.$store.state.search.page;
       },
       set(page) {
-        this.$store.commit('search/update', { page });
-      },
-    },
+        this.$store.commit("search/update", { page });
+      }
+    }
   },
   subscriptions() {
     const institution$ = this.$observe(() => this.institution);
     const page = this.$observe(() => this.page);
     const resultsPerPage = this.$observe(() => this.resultsPerPage);
     const filterEvents = this.$observe(() => this.$store.state.filter, {
-      deep: true,
+      deep: true
     });
     const sortEvents = this.$observe(() => this.$store.state.search.sort);
     const transcript$ = this.$observe(() => this.transcript);
@@ -84,28 +84,28 @@ export default {
           ...x,
           days: x.days
             .map(day => [1440 * day, 1440 * (day + 1)])
-            .reduce((tree, interval) => tree.add(interval), new IntervalTree()),
-        })),
-      ),
+            .reduce((tree, interval) => tree.add(interval), new IntervalTree())
+        }))
+      )
     ).pipe(
       debounceTime(100),
       switchMap(([transcript, institution, filter]) =>
-        institution.search(transcript, filter),
+        institution.search(transcript, filter)
       ),
       map(results => Object.freeze(results)),
       publishReplay(1),
-      refCount(),
+      refCount()
     );
     const courses$ = sections$.pipe(
       map(results => Array.from(results.keys())),
       tap(results => {
         const maxPage = Math.ceil(results.length / this.resultsPerPage);
         if (this.$store.state.search.page > maxPage && maxPage > 0) {
-          this.$store.commit('search/setPage', maxPage);
+          this.$store.commit("search/setPage", maxPage);
         }
       }),
       publishReplay(1),
-      refCount(),
+      refCount()
     );
     let sortLeft = 0;
     const sortedResults = combineLatest(
@@ -115,7 +115,7 @@ export default {
       resultsPerPage,
       combineLatest(
         institution$,
-        sortEvents.pipe(tap(() => (sortLeft = 0))),
+        sortEvents.pipe(tap(() => (sortLeft = 0)))
       ).pipe(
         switchMap(([institution, sort]) => {
           const sortAlphabetically = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -126,13 +126,13 @@ export default {
                   (rankings[b] | 0) - (rankings[a] | 0) ||
                   sortAlphabetically(a, b)
                 );
-              }),
+              })
             );
           } else if (sort == SORT.ALPHABETICALLY) {
             return of(sortAlphabetically);
           }
-        }),
-      ),
+        })
+      )
     ).pipe(
       map(([results, page, resultsPerPage, sortFn]) => {
         if (sortLeft < page * resultsPerPage) {
@@ -141,33 +141,33 @@ export default {
             results,
             sortLeft,
             (sortLeft = page * resultsPerPage),
-            sortFn,
+            sortFn
           );
         }
         return results.slice(
           (page - 1) * resultsPerPage,
-          page * resultsPerPage,
+          page * resultsPerPage
         );
       }),
       map(results => Object.freeze(results)),
       publishReplay(1),
-      refCount(),
+      refCount()
     );
     return {
       courses: sortedResults,
       sections: sections$,
       sectionsByCourse: combineLatest(sortedResults, sections$).pipe(
-        map(([courses, sections]) => {}),
+        map(([courses, sections]) => {})
       ),
       eventTime: filterEvents.pipe(map(() => performance.now())),
       resultTime: filterEvents.pipe(
         switchMap(() => sortedResults.pipe(first())),
         switchMap(() => this.$nextTick()),
-        map(() => performance.now()),
+        map(() => performance.now())
       ),
-      courseCount: courses$.pipe(map(results => results.length)),
+      courseCount: courses$.pipe(map(results => results.length))
     };
   },
-  methods: mapActions('filter', ['reset']),
+  methods: mapActions("filter", ["reset"])
 };
 </script>

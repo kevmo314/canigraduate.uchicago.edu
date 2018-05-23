@@ -9,7 +9,7 @@ function partition<T>(
   i: number,
   j: number,
   p: number,
-  compare: Comparator<T>,
+  compare: Comparator<T>
 ): number {
   [A[p], A[j]] = [A[j], A[p]];
   for (let k = i; k < j; k++) {
@@ -27,7 +27,7 @@ function partialQuickSort<T>(
   i: number,
   j: number,
   k: number,
-  compare: Comparator<T>,
+  compare: Comparator<T>
 ) {
   if (i < j) {
     const p = pivot(A, i, j);
@@ -43,7 +43,7 @@ export default function<T>(
   A: T[],
   i: number,
   k: number,
-  compare: Comparator<T>,
+  compare: Comparator<T>
 ): T[] {
   partialQuickSort(A, i, A.length - 1, k, compare);
   return A;

@@ -77,54 +77,54 @@
 </template>
 
 <script>
-import { combineLatest, of } from 'rxjs';
-import CourseName from '@/components/CourseName';
-import { mapState, mapActions, mapGetters } from 'vuex';
-import { map, debounceTime, switchMap, tap, concat } from 'rxjs/operators';
-import { DayOfWeek } from '@/models/section';
-import TWEEN from '@tweenjs/tween.js';
+import { combineLatest, of } from "rxjs";
+import CourseName from "@/components/CourseName";
+import { mapState, mapActions, mapGetters } from "vuex";
+import { map, debounceTime, switchMap, tap, concat } from "rxjs/operators";
+import { DayOfWeek } from "@/models/section";
+import TWEEN from "@tweenjs/tween.js";
 
 const COLORS = [
-  '#CDDC39',
-  '#F44336',
-  '#2196F3',
-  '#FF9800',
-  '#009688',
-  '#795548',
+  "#CDDC39",
+  "#F44336",
+  "#2196F3",
+  "#FF9800",
+  "#009688",
+  "#795548"
 ];
 
 export default {
-  name: 'calendar',
+  name: "calendar",
   components: { CourseName },
   props: {
     records: {
       type: Array,
-      required: true,
+      required: true
     },
     term: {
       type: String,
-      required: true,
-    },
+      required: true
+    }
   },
   data() {
     const clock = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     return {
       topShift: 480,
       height: 600,
-      times: [...clock.map(v => v + 'a'), ...clock.map(v => v + 'p')],
-      DayOfWeek,
+      times: [...clock.map(v => v + "a"), ...clock.map(v => v + "p")],
+      DayOfWeek
     };
   },
   computed: {
-    ...mapState('calendar', { temporary: state => state.temporary }),
-    ...mapGetters('institution', ['institution']),
+    ...mapState("calendar", { temporary: state => state.temporary }),
+    ...mapGetters("institution", ["institution"]),
     earliest() {
       if (this.schedules.length == 0) {
         return 360;
       }
       return (
         Math.floor(
-          Math.min(...this.schedules.map(x => (x.schedule.end / 60) | 0)) / 30,
+          Math.min(...this.schedules.map(x => (x.schedule.end / 60) | 0)) / 30
         ) * 30
       );
     },
@@ -134,23 +134,23 @@ export default {
       }
       return (
         Math.ceil(
-          Math.max(...this.schedules.map(x => (x.schedule.end / 60) | 0)) / 30,
+          Math.max(...this.schedules.map(x => (x.schedule.end / 60) | 0)) / 30
         ) * 30
       );
     },
     legend() {
       return Object.values(
-        this.schedules.reduce((a, b) => ({ ...a, [b.color]: b }), {}),
+        this.schedules.reduce((a, b) => ({ ...a, [b.color]: b }), {})
       ).sort((a, b) => {
         if (a.course == b.course) {
           return a.section < b.section ? -1 : 1;
         }
         return a.course < b.course ? -1 : 1;
       });
-    },
+    }
   },
   methods: {
-    ...mapActions('filter', ['reset']),
+    ...mapActions("filter", ["reset"]),
     overlaps(schedule, previous) {
       return schedule.day == previous.day && schedule.start < previous.end;
     },
@@ -158,7 +158,7 @@ export default {
       function parseSchedule(activity) {
         return (activity.schedule || []).map(schedule => ({
           schedule,
-          type: activity.type,
+          type: activity.type
         }));
       }
       const results = (section.primaries || [])
@@ -190,13 +190,13 @@ export default {
           .start();
         animate();
       });
-    },
+    }
   },
   subscriptions() {
     const institution$ = this.$observe(() => this.institution);
     const scheduleHints = institution$.pipe(
       switchMap(institution => institution.data()),
-      map(data => data.scheduleBlocks),
+      map(data => data.scheduleBlocks)
     );
     const schedules = combineLatest(
       this.$observe(() => this.records),
@@ -206,12 +206,12 @@ export default {
           return (
             temporary.course && {
               ...temporary,
-              color: 'rgba(255, 235, 59, 0.8)',
-              temporary: true,
+              color: "rgba(255, 235, 59, 0.8)",
+              temporary: true
             }
           );
-        }),
-      ),
+        })
+      )
     ).pipe(
       debounceTime(50),
       switchMap(([records, term, temporary]) => {
@@ -229,17 +229,17 @@ export default {
                 institution
                   .course(record.course)
                   .term(term)
-                  .section(record.section),
+                  .section(record.section)
               ),
               switchMap(section => section.data()),
               // Pull the schedules.
               map(schedule =>
-                this.flattenToSchedules(schedule, record.activity),
+                this.flattenToSchedules(schedule, record.activity)
               ),
               // Add the course id.
-              map(schedule => schedule.map(s => ({ ...s, ...record }))),
+              map(schedule => schedule.map(s => ({ ...s, ...record })))
             );
-          }),
+          })
         ).pipe(
           // Flatten the array and assign a color.
           map(schedule => {
@@ -248,24 +248,24 @@ export default {
                 value.map(block => {
                   return {
                     ...block,
-                    color: block.color || COLORS[index],
+                    color: block.color || COLORS[index]
                   };
-                }),
+                })
               );
             }, []);
           }),
           // Sort by time desc.
           map(schedule =>
-            schedule.sort((a, b) => a.schedule[0] - b.schedule[0]),
+            schedule.sort((a, b) => a.schedule[0] - b.schedule[0])
           ),
           map(Object.freeze),
-          tap(() => this.tween()),
+          tap(() => this.tween())
         );
-      }),
+      })
     );
 
     return { schedules, scheduleHints };
-  },
+  }
 };
 </script>
 
@@ -274,7 +274,7 @@ export default {
   cursor: pointer;
 }
 
-.legend-tile>>>.list__tile {
+.legend-tile >>> .list__tile {
   height: 40px;
 }
 </style>

@@ -45,27 +45,27 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
-import CourseName from '@/components/CourseName';
-import { Observable } from 'rxjs/Observable';
+import { mapState } from "vuex";
+import CourseName from "@/components/CourseName";
+import { Observable } from "rxjs/Observable";
 
 export default {
-  name: 'requirement',
+  name: "requirement",
   components: { CourseName },
   props: {
     lifted: { type: Object, required: true },
-    prune: { type: Boolean, required: true },
+    prune: { type: Boolean, required: true }
   },
   data() {
     return { collapse: !this.isLeaf };
   },
   computed: {
-    ...mapState('transcript', { transcript: state => state }),
+    ...mapState("transcript", { transcript: state => state }),
     progress() {
       return {
         completed: 0,
         remaining: 1,
-        ...this.lifted.progress,
+        ...this.lifted.progress
       };
     },
     program() {
@@ -75,10 +75,10 @@ export default {
       return this.progress.remaining == 0 && this.progress.completed > 0;
     },
     isLeaf() {
-      return typeof this.program === 'string';
+      return typeof this.program === "string";
     },
     isExact() {
-      return this.isLeaf && this.program.indexOf(':') == -1;
+      return this.isLeaf && this.program.indexOf(":") == -1;
     },
     isMetadata() {
       return !this.isLeaf && !this.program.requirements;
@@ -87,12 +87,12 @@ export default {
       return this.isShortenedOr || this.isShortenedAll;
     },
     isShortenedAll() {
-      return !this.isLeaf && this.program.grouping == 'ALL';
+      return !this.isLeaf && this.program.grouping == "ALL";
     },
     isShortenedOr() {
-      return !this.isLeaf && this.program.grouping == 'OR';
-    },
-  },
+      return !this.isLeaf && this.program.grouping == "OR";
+    }
+  }
 };
 </script>
 

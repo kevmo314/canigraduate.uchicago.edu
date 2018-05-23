@@ -1,6 +1,6 @@
 const DEFAULT_STATE = {
-  activeTerm: '',
-  temporary: {},
+  activeTerm: "",
+  temporary: {}
 };
 
 export default {
@@ -12,14 +12,14 @@ export default {
     },
     set(state, data) {
       Object.assign(state, data);
-    },
+    }
   },
   actions: {
     setTemporarySection(context, temporary) {
-      context.commit('set', { temporary });
+      context.commit("set", { temporary });
     },
     clearTemporary(context) {
-      context.commit('set', { temporary: {} });
-    },
-  },
+      context.commit("set", { temporary: {} });
+    }
+  }
 };

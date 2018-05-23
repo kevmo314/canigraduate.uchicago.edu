@@ -1,6 +1,6 @@
 export const SORT = {
   BY_POPULARITY: 0,
-  ALPHABETICALLY: 1,
+  ALPHABETICALLY: 1
 };
 
 export default {
@@ -8,7 +8,7 @@ export default {
   state: {
     expanded: [],
     page: 1,
-    sort: SORT.BY_POPULARITY,
+    sort: SORT.BY_POPULARITY
   },
   mutations: {
     setExpanded(state, { course, expanded }) {
@@ -27,6 +27,6 @@ export default {
     },
     update(state, params) {
       Object.assign(state, params);
-    },
-  },
+    }
+  }
 };

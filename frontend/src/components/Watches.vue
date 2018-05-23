@@ -50,31 +50,31 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState } from "vuex";
 
 export default {
   data() {
     return {
-      term: '',
-      course: '',
-      section: '',
-      courseHint: '',
+      term: "",
+      course: "",
+      section: "",
+      courseHint: "",
       headers: [
-        { text: 'Term', sortable: true, value: 'term', align: 'center' },
-        { text: 'Course', sortable: true, value: 'course', align: 'center' },
-        { text: 'Section', sortable: true, value: 'section', align: 'center' },
-        { text: 'Added', sortable: true, value: 'added', align: 'center' },
-        { text: 'Actions', sortable: false },
-      ],
+        { text: "Term", sortable: true, value: "term", align: "center" },
+        { text: "Course", sortable: true, value: "course", align: "center" },
+        { text: "Section", sortable: true, value: "section", align: "center" },
+        { text: "Added", sortable: true, value: "added", align: "center" },
+        { text: "Actions", sortable: false }
+      ]
     };
   },
-  computed: mapState('institution', { endpoints: state => state.endpoints }),
+  computed: mapState("institution", { endpoints: state => state.endpoints }),
   subscriptions() {
     return {
       courses: this.endpoints.courses(),
       terms: this.endpoints.terms(),
       watches: this.endpoints.watches.read(),
-      serverTimeOffset: this.endpoints.serverTimeOffset(),
+      serverTimeOffset: this.endpoints.serverTimeOffset()
     };
   },
   watch: {
@@ -83,17 +83,17 @@ export default {
         .courseInfo(course)
         .first()
         .subscribe(course => (this.courseHint = course.name));
-    },
+    }
   },
   methods: {
     addWatch() {
       this.endpoints.watches.create({
         term: this.term,
         course: this.course,
-        section: this.section,
+        section: this.section
       });
-    },
-  },
+    }
+  }
 };
 </script>
 

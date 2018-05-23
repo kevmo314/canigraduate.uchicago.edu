@@ -1,24 +1,24 @@
 export default {
   namespaced: true,
   state: {
-    query: '',
+    query: "",
     periods: [0, 1, 2, 3, 4, 5, 6, 7],
     days: [0, 1, 2, 3, 4, 5, 6],
     departments: [],
     instructors: [],
     full: true,
     taken: true,
-    old: false,
+    old: false
   },
   mutations: {
     update(state, params) {
       Object.assign(state, params);
-    },
+    }
   },
   actions: {
     reset(context, params = {}) {
-      context.commit('update', {
-        query: '',
+      context.commit("update", {
+        query: "",
         periods: [0, 1, 2, 3, 4, 5, 6, 7],
         days: [0, 1, 2, 3, 4, 5, 6],
         departments: [],
@@ -26,8 +26,8 @@ export default {
         full: true,
         taken: true,
         old: false,
-        ...params,
+        ...params
       });
-    },
-  },
+    }
+  }
 };

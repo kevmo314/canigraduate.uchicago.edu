@@ -40,25 +40,25 @@
 </template>
 
 <script>
-import GradeDistribution from '@/components/GradeDistribution';
-import CompletionIndicator from '@/components/CompletionIndicator';
-import TermDetail from '@/components/TermDetail';
-import Sticky from '@/directives/Sticky';
-import { combineLatest } from 'rxjs';
-import { mapGetters } from 'vuex';
-import { first, map, switchMap } from 'rxjs/operators';
+import GradeDistribution from "@/components/GradeDistribution";
+import CompletionIndicator from "@/components/CompletionIndicator";
+import TermDetail from "@/components/TermDetail";
+import Sticky from "@/directives/Sticky";
+import { combineLatest } from "rxjs";
+import { mapGetters } from "vuex";
+import { first, map, switchMap } from "rxjs/operators";
 
 export default {
-  name: 'course-detail',
+  name: "course-detail",
   components: { GradeDistribution, TermDetail, CompletionIndicator },
   props: { filter: Map },
   directives: { Sticky },
-  computed: mapGetters('institution', ['institution']),
+  computed: mapGetters("institution", ["institution"]),
   data() {
     return {
       course: this.$slots.default[0].text,
       maxTerm: 4,
-      schedules: {},
+      schedules: {}
     };
   },
   subscriptions() {
@@ -68,20 +68,20 @@ export default {
       institution$.pipe(
         switchMap(institution => institution.getIndexes()),
         map(indexes => indexes.getTerms()),
-        map(terms => terms.slice().reverse()),
+        map(terms => terms.slice().reverse())
       ),
-      this.$observe(() => this.filter).pipe(map(filter => filter.keys())),
+      this.$observe(() => this.filter).pipe(map(filter => filter.keys()))
     ).pipe(
       map(([allTerms, terms]) => {
         // Order terms by the index in the institution term listing.
         return Array.from(terms).sort(
-          (a, b) => allTerms.indexOf(a) - allTerms.indexOf(b),
+          (a, b) => allTerms.indexOf(a) - allTerms.indexOf(b)
         );
-      }),
+      })
     );
     const courseData$ = combineLatest(institution$, course$).pipe(
       map(([institution, course]) => institution.course(course)),
-      switchMap(course => course.data()),
+      switchMap(course => course.data())
     );
     return {
       description: courseData$.pipe(map(course => course.description)),
@@ -91,22 +91,22 @@ export default {
       grades: combineLatest(
         institution$.pipe(
           switchMap(institution => institution.data()),
-          map(data => data.gpas),
+          map(data => data.gpas)
         ),
         institution$.pipe(
-          switchMap(institution => institution.getGradeDistribution()),
+          switchMap(institution => institution.getGradeDistribution())
         ),
-        course$,
+        course$
       ).pipe(
         map(([gpas, grades, course]) =>
           gpas.map(gpa => ({
             gpa,
-            count: (grades[course] || {})[gpa] || 0,
-          })),
-        ),
-      ),
+            count: (grades[course] || {})[gpa] || 0
+          }))
+        )
+      )
     };
-  },
+  }
 };
 </script>
 
@@ -145,7 +145,7 @@ export default {
   width: 100%;
   margin-left: 8px;
   height: 1px;
-  content: '\a0';
+  content: "\a0";
   background-color: lightgrey;
 }
 

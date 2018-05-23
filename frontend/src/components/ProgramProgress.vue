@@ -7,19 +7,19 @@
 </template>
 
 <script>
-import { mapGetters, mapState } from 'vuex';
-import { switchMap, map } from 'rxjs/operators';
-import { combineLatest } from 'rxjs';
+import { mapGetters, mapState } from "vuex";
+import { switchMap, map } from "rxjs/operators";
+import { combineLatest } from "rxjs";
 
 export default {
-  name: 'program-progress',
+  name: "program-progress",
   props: {
     program: { type: String, required: true },
-    extension: { type: String, required: false },
+    extension: { type: String, required: false }
   },
   computed: {
-    ...mapGetters('institution', ['institution']),
-    ...mapState('transcript', { transcript: state => state }),
+    ...mapGetters("institution", ["institution"]),
+    ...mapState("transcript", { transcript: state => state })
   },
   subscriptions() {
     return {
@@ -27,17 +27,17 @@ export default {
         this.$observe(() => this.institution),
         this.$observe(() => this.program),
         this.$observe(() => this.extension),
-        this.$observe(() => this.transcript),
+        this.$observe(() => this.transcript)
       ).pipe(
         switchMap(([institution, program, extension, transcript]) => {
           const root = institution.program(program);
           const model = root && extension ? root.extension(extension) : root;
           return model.bindTranscript(transcript);
         }),
-        map(lifted => lifted.progress),
-      ),
+        map(lifted => lifted.progress)
+      )
     };
-  },
+  }
 };
 </script>
 

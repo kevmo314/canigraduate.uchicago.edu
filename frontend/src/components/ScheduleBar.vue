@@ -11,30 +11,30 @@
 </template>
 
 <script>
-import EventBus from '@/EventBus';
-import { mapGetters } from 'vuex';
-import { map, switchMap } from 'rxjs/operators';
-import { combineLatest } from 'rxjs';
+import EventBus from "@/EventBus";
+import { mapGetters } from "vuex";
+import { map, switchMap } from "rxjs/operators";
+import { combineLatest } from "rxjs";
 
-const DAYS = ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
+const DAYS = ["Su", "M", "T", "W", "Th", "F", "Sa"];
 
 function formatTime(t) {
   const hour = (Math.floor(t / (60 * 60)) + 11) % 12 + 1;
   const minute = Math.floor(t / 60) % 60;
   const beforeNoon = t * 2 < 86400;
-  return hour + (minute < 10 ? ':0' : ':') + minute + (beforeNoon ? 'a' : 'p');
+  return hour + (minute < 10 ? ":0" : ":") + minute + (beforeNoon ? "a" : "p");
 }
 
 export default {
-  name: 'schedule-bar',
+  name: "schedule-bar",
   props: {
     schedule: {
       type: Array,
-      required: true,
-    },
+      required: true
+    }
   },
   computed: {
-    ...mapGetters('institution', ['institution']),
+    ...mapGetters("institution", ["institution"]),
     tooltip() {
       const blocks = this.schedule.slice().sort((a, b) => a.day - b.day);
       const output = [];
@@ -50,15 +50,15 @@ export default {
           }
         }
         output.push(
-          days.join(' ') +
-            ' ' +
+          days.join(" ") +
+            " " +
             formatTime(blocks[i].start) +
-            '-' +
-            formatTime(blocks[i].end),
+            "-" +
+            formatTime(blocks[i].end)
         );
       }
-      return output.join(', ');
-    },
+      return output.join(", ");
+    }
   },
   subscriptions() {
     return {
@@ -66,7 +66,7 @@ export default {
         this.$observe(() => this.schedule),
         this.$observe(() => this.institution).pipe(
           switchMap(institution => institution.data()),
-          map(institution => institution.scheduleBlocks),
+          map(institution => institution.scheduleBlocks)
         ),
         (schedule, scheduleBlocks) => {
           return schedule
@@ -76,22 +76,22 @@ export default {
               const block = scheduleBlocks.find(
                 scheduleBlock =>
                   scheduleBlock.start * 60 <= time.start &&
-                  time.end < scheduleBlock.end * 60,
+                  time.end < scheduleBlock.end * 60
               );
               return {
                 day: DAYS[time.day],
-                cssClass: block ? block.cssClass : 'other',
+                cssClass: block ? block.cssClass : "other"
               };
             });
-        },
-      ),
+        }
+      )
     };
   },
   methods: {
     showScheduleTab() {
-      EventBus.$emit('show-schedule-tab');
-    },
-  },
+      EventBus.$emit("show-schedule-tab");
+    }
+  }
 };
 </script>
 
