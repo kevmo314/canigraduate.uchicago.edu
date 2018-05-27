@@ -1,16 +1,16 @@
 <template>
   <div v-if="isMetadata" class="ml-2">
-    <v-icon class="state-icon mr-2">indeterminate_check_box</v-icon>
+    <v-icon v-if="authenticated" class="state-icon mr-2">indeterminate_check_box</v-icon>
     {{lifted.display}}
   </div>
   <v-layout v-else-if="isLeaf && progress.remaining > 0" row align-center class="ml-2 py-1" :class="{'red--text': !prune && this.transcript.length > 0}">
-    <v-icon class="state-icon mr-2">check_box_outline_blank</v-icon>
+    <v-icon v-if="authenticated" class="state-icon mr-2">check_box_outline_blank</v-icon>
     <div class="id">{{program.split(':')[0]}}</div>
     <course-name class="ml-2" v-if="isExact">{{program}}</course-name>
     <div class="ml-2" v-else>Elective</div>
   </v-layout>
   <v-layout v-else-if="isLeaf" row align-center class="ml-2 py-1 green--text">
-    <v-icon class="state-icon mr-2">check_box</v-icon>
+    <v-icon v-if="authenticated" class="state-icon mr-2">check_box</v-icon>
     <div class="id">
       {{lifted.satisfier}}
     </div>
@@ -47,7 +47,7 @@
 <script>
 import { mapState } from "vuex";
 import CourseName from "@/components/CourseName";
-import { Observable } from "rxjs/Observable";
+import { AuthenticationStatus } from "@/store/modules/authentication";
 
 export default {
   name: "requirement",
@@ -60,6 +60,9 @@ export default {
     return { collapse: !this.isLeaf };
   },
   computed: {
+    ...mapState("authentication", {
+      authenticated: state => state.status == AuthenticationStatus.AUTHENTICATED
+    }),
     ...mapState("transcript", { transcript: state => state }),
     progress() {
       return {

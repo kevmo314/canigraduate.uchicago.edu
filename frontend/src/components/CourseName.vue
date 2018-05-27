@@ -6,7 +6,6 @@
 <script>
 import { mapGetters } from "vuex";
 import { map, switchMap, filter } from "rxjs/operators";
-import models from "@/models";
 import { combineLatest } from "rxjs";
 
 export default {

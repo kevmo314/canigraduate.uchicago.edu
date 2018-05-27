@@ -9,7 +9,6 @@
 </template>
 
 <script>
-import { Subject } from "rxjs/Subject";
 import { mapGetters } from "vuex";
 import { map, switchMap } from "rxjs/operators";
 import { combineLatest } from "rxjs";
