@@ -68,7 +68,13 @@ export default {
           }
         );
     },
-    authenticateEducators(context, data = {}) {
+    authenticateEducators(
+      context,
+      data: { username: string; password: string } = {
+        username: null,
+        password: null
+      }
+    ) {
       context.commit("update", {
         ...data,
         type: AuthenticationType.EDUCATOR,
@@ -101,6 +107,7 @@ export default {
         status: AuthenticationStatus.PENDING,
         message: ""
       });
+      /*
       context.rootState.institution.endpoints
         .createEducatorAccount(data.username, data.password)
         .subscribe(
@@ -118,7 +125,7 @@ export default {
               status: AuthenticationStatus.REJECTED
             });
           }
-        );
+        );*/
     },
     reset(context, status = AuthenticationStatus.UNAUTHENTICATED) {
       if (context.state.status == AuthenticationStatus.AUTHENTICATED) {

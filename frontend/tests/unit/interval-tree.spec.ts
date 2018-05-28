@@ -1,7 +1,7 @@
-import IntervalTree from '@/lib/interval-tree';
+import IntervalTree from "@/lib/interval-tree";
 
-describe('IntervalTree', () => {
-  it('should correctly detect intersections', () => {
+describe("IntervalTree", () => {
+  it("should correctly detect intersections", () => {
     const it = new IntervalTree();
 
     it.add([10383734, 10594186]);
@@ -24,7 +24,7 @@ describe('IntervalTree', () => {
     expect(it.intersects([9404968, 9404969])).toEqual(false);
   });
 
-  it('should correctly detect intersections 2', () => {
+  it("should correctly detect intersections 2", () => {
     const it = new IntervalTree();
 
     expect(it.intersects([1, 2])).toEqual(false);

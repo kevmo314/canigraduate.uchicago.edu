@@ -28,6 +28,8 @@ interface Period {
   readonly color: string;
 }
 
+type Distribution = { [gpa: number]: number };
+
 export interface InstitutionData {
   readonly algoliaIndex: string;
   readonly name: string;
@@ -59,7 +61,7 @@ export default class Institution {
     this.gradeDistribution = defer(() => Axios.get(HOST + "/api/grades")).pipe(
       map(
         (response: { data: any }) =>
-          Object.freeze(response.data) as { [gpa: number]: number }
+          Object.freeze(response.data) as Distribution
       ),
       publishReplay(1),
       refCount()
@@ -76,10 +78,7 @@ export default class Institution {
       defer(() => {
         return of(
           // Not sure why this is necessary...
-          algoliasearch.default(
-            "BF6BT6JP9W",
-            "52677be23c182ca96eb2ccfd7c9c459f"
-          ) as algoliasearch.Client
+          algoliasearch("BF6BT6JP9W", "52677be23c182ca96eb2ccfd7c9c459f")
         );
       }),
       this.data()

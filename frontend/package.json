@@ -1,85 +1,73 @@
 {
   "name": "canigraduate",
-  "version": "1.0.0",
-  "description": "Can I Graduate?",
-  "author": "Kevin Wang <kevmo314@gmail.com>",
-  "license": "MIT",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
-    "start": "cross-env NODE_ENV=development webpack-serve webpack.config.js",
-    "build": "cross-env NODE_ENV=production webpack webpack.config.js",
-    "test": "karma start karma.conf.js"
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "test:unit": "vue-cli-service test:unit",
+    "test:e2e": "vue-cli-service test:e2e",
+    "precommit": "precise-commits"
   },
   "dependencies": {
-    "@babel/core": "^7.0.0-beta.42",
-    "@babel/polyfill": "^7.0.0-beta.42",
-    "@babel/preset-env": "^7.0.0-beta.42",
-    "@babel/preset-stage-2": "^7.0.0-beta.42",
-    "@babel/preset-typescript": "^7.0.0-beta.42",
-    "@babel/register": "^7.0.0-beta.42",
+    "@firebase/app": "^0.3.3",
+    "@firebase/auth": "^0.5.3",
+    "@firebase/firestore": "^0.5.4",
     "@tweenjs/tween.js": "^17.2.0",
-    "@types/algoliasearch": "^3.27.2",
     "algoliasearch": "^3.27.1",
     "axios": "^0.18.0",
     "base64-js": "^1.3.0",
     "chartist": "^0.11.0",
-    "cross-env": "^5.1.4",
     "fastbitset": "^0.2.7",
-    "firebase": "^4.12.1",
-    "logrocket": "^0.6.10",
-    "logrocket-vuex": "0.0.3",
-    "pako": "^1.0.6",
-    "promise-polyfill": "^7.1.1",
-    "rxjs": "^6.0.0",
+    "logrocket": "^0.6.12",
+    "logrocket-vuex": "^0.0.3",
+    "register-service-worker": "^1.0.0",
+    "rxjs": "^6.2.0",
     "stickyfilljs": "^2.0.5",
     "vue": "^2.5.16",
     "vue-router": "^3.0.1",
-    "vue-rx": "^5.0.0",
-    "vue-scrollto": "^2.11.0",
-    "vue-timeago": "^3.4.4",
-    "vuetify": "^1.0.11",
+    "vuetify": "^1.0.18",
     "vuex": "^3.0.1",
-    "vuex-persistedstate": "^2.5.1"
+    "vuex-persistedstate": "^2.5.4"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.42",
+    "@types/algoliasearch": "^3.27.4",
     "@types/base64-js": "^1.2.5",
-    "@types/chai": "^4.1.3",
-    "@types/mocha": "^5.2.0",
-    "@vue/test-utils": "^1.0.0-beta.15",
-    "babel-loader": "^8.0.0-beta.2",
-    "connect-history-api-fallback": "^1.5.0",
-    "css-loader": "^0.28.11",
-    "file-loader": "^1.1.11",
-    "html-webpack-plugin": "^3.1.0",
-    "jasmine-core": "^3.1.0",
-    "karma": "^2.0.2",
-    "karma-chrome-launcher": "^2.2.0",
-    "karma-jasmine": "^1.1.2",
-    "karma-typescript": "^3.0.12",
-    "koa-connect": "^2.0.1",
-    "mini-css-extract-plugin": "^0.2.0",
-    "node-sass": "^4.8.3",
-    "prettier": "^1.11.1",
-    "sass-loader": "^6.0.7",
-    "semver": "^5.5.0",
-    "typescript": "^2.8.1",
-    "url-loader": "^1.0.1",
-    "vue-loader": "^14.2.2",
-    "vue-style-loader": "^4.1.0",
+    "@types/jest": "^22.2.3",
+    "@vue/cli-plugin-babel": "^3.0.0-beta.11",
+    "@vue/cli-plugin-e2e-cypress": "^3.0.0-beta.11",
+    "@vue/cli-plugin-pwa": "^3.0.0-beta.11",
+    "@vue/cli-plugin-typescript": "^3.0.0-beta.11",
+    "@vue/cli-plugin-unit-jest": "^3.0.0-beta.11",
+    "@vue/cli-service": "^3.0.0-beta.11",
+    "husky": "^0.14.3",
+    "node-sass": "^4.9.0",
+    "precise-commits": "^1.0.2",
+    "sass-loader": "^7.0.1",
+    "ts-jest": "^22.4.6",
     "vue-template-compiler": "^2.5.16",
-    "webpack": "^4.3.0",
-    "webpack-bundle-analyzer": "^2.11.1",
-    "webpack-cli": "^2.0.13",
-    "webpack-serve": "^0.3.0"
+    "webpack-bundle-analyzer": "^2.13.1"
   },
-  "engines": {
-    "node": ">= 8.2.1",
-    "yarn": ">= 1.0.0"
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
   },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not ie <= 8"
-  ]
+  "browserslist": ["> 1%", "last 2 versions", "not ie <= 8"],
+  "jest": {
+    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "vue"],
+    "transform": {
+      "^.+\\.vue$": "vue-jest",
+      ".+\\.(css|styl|less|sass|scss|png|jpg|ttf|woff|woff2)$":
+        "jest-transform-stub",
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    },
+    "snapshotSerializers": ["jest-serializer-vue"],
+    "testMatch": [
+      "<rootDir>/(tests/unit/**/*.spec.(js|jsx|ts|tsx)|**/__tests__/*.(js|jsx|ts|tsx))"
+    ]
+  }
 }

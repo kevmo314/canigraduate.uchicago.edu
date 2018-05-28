@@ -1,10 +1,10 @@
+import About from "@/components/About.vue";
+import Analytics from "@/components/Analytics.vue";
+import Program from "@/components/Program.vue";
+import Search from "@/components/Search.vue";
+import Watches from "@/components/Watches.vue";
 import Vue from "vue";
 import VueRouter from "vue-router";
-import About from "@/components/About";
-import Search from "@/components/Search";
-import Program from "@/components/Program";
-import Watches from "@/components/Watches";
-import Analytics from "@/components/Analytics";
 
 Vue.use(VueRouter);
 
