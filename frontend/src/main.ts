@@ -38,19 +38,14 @@ Vue.mixin({
           key,
           undefined /* val */,
           null /* customSetter */,
-          false /* shallow */
+          true /* shallow */
         )
       );
       vm._subscriptions = keys.map(key => {
         return (obs[key] instanceof Observable
           ? obs[key]
           : of(obs[key])
-        ).subscribe(
-          value => (vm[key] = value),
-          error => {
-            throw error;
-          }
-        );
+        ).subscribe(value => (vm[key] = value));
       });
     }
   },

@@ -4,13 +4,13 @@
     {{lifted.display}}
   </div>
   <v-layout v-else-if="isLeaf && progress.remaining > 0" row align-center class="ml-2 py-1" :class="{'red--text': !prune && this.transcript.length > 0}">
-    <v-icon v-if="authenticated" class="state-icon mr-2">check_box_outline_blank</v-icon>
+    <v-icon v-if="authenticated" class="state-icon mr-2" :class="{'red--text': !prune && this.transcript.length > 0}">check_box_outline_blank</v-icon>
     <div class="id">{{program.split(':')[0]}}</div>
     <course-name class="ml-2" v-if="isExact">{{program}}</course-name>
     <div class="ml-2" v-else>Elective</div>
   </v-layout>
   <v-layout v-else-if="isLeaf" row align-center class="ml-2 py-1 green--text">
-    <v-icon v-if="authenticated" class="state-icon mr-2">check_box</v-icon>
+    <v-icon v-if="authenticated" class="state-icon mr-2 green--text">check_box</v-icon>
     <div class="id">
       {{lifted.satisfier}}
     </div>

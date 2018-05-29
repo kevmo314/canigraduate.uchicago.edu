@@ -1,11 +1,17 @@
 <template>
-  <span :style="{fontStyle: name ? null : 'italic'}">
+  <span :style="{fontStyle: name ? null : 'italic'}" class="name" :class="{'unresolved': name === undefined}">
     {{name || 'Unknown'}}</span>
 </template>
 
 <script>
 import { mapGetters } from "vuex";
-import { map, switchMap, filter } from "rxjs/operators";
+import {
+  map,
+  switchMap,
+  filter,
+  publishReplay,
+  refCount
+} from "rxjs/operators";
 import { combineLatest } from "rxjs";
 
 export default {
@@ -21,9 +27,19 @@ export default {
       ).pipe(
         map(([institution, course]) => institution.course(course)),
         switchMap(course => course.data()),
-        map(data => data.name)
+        map(data => data && data.name)
       )
     };
   }
 };
 </script>
+
+<style scoped>
+.name {
+  transition: opacity 0.3s ease-in;
+}
+
+.unresolved {
+  opacity: 0;
+}
+</style>
