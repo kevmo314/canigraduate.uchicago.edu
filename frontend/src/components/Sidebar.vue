@@ -137,8 +137,8 @@ export default {
       map(transcript => transcript.filter(record => record.quality))
     );
     const allTerms = institution$.pipe(
-      switchMap(institution => institution.getIndexes()),
-      map(indexes => indexes.getTerms()),
+      map(institution => institution.index),
+      switchMap(indexes => indexes.getTerms()),
       map(terms => terms.slice().reverse()),
       tap(terms => {
         if (!this.$store.state.calendar.activeTerm) {

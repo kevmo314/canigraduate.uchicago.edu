@@ -67,8 +67,8 @@ export default {
     const institution$ = this.$observe(() => this.institution);
     const terms$ = combineLatest(
       institution$.pipe(
-        switchMap(institution => institution.getIndexes()),
-        map(indexes => indexes.getTerms()),
+        map(institution => institution.index),
+        switchMap(indexes => indexes.getTerms()),
         map(terms => terms.slice().reverse())
       ),
       this.$observe(() => this.filter).pipe(map(filter => filter.keys()))

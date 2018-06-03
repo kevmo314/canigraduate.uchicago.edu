@@ -132,9 +132,7 @@ export default {
     const institutionData = institution.pipe(
       switchMap(institution => institution.data())
     );
-    const indexes = institution.pipe(
-      switchMap(institution => institution.getIndexes())
-    );
+    const indexes = institution.pipe(map(institution => institution.index));
     return {
       searchPlaceholder: institutionData.pipe(
         map(institution => `Try "${institution.searchPlaceholder}"`)
@@ -151,8 +149,8 @@ export default {
           }))
         )
       ),
-      departmentItems: indexes.pipe(map(index => index.getDepartments())),
-      instructorItems: indexes.pipe(map(index => index.getInstructors()))
+      departmentItems: indexes.pipe(switchMap(index => index.getDepartments())),
+      instructorItems: indexes.pipe(switchMap(index => index.getInstructors()))
     };
   }
 };

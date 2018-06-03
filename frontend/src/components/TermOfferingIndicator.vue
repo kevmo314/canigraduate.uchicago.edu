@@ -48,8 +48,8 @@ export default {
     const institution$ = this.$observe(() => this.institution);
     const course$ = this.$observe(() => this.course);
     const allTerms$ = institution$.pipe(
-      switchMap(institution => institution.getIndexes()),
-      map(indexes => indexes.getTerms()),
+      map(institution => institution.index),
+      switchMap(indexes => indexes.getTerms()),
       map(terms => terms.slice().reverse())
     );
     const terms$ = combineLatest(institution$, course$).pipe(

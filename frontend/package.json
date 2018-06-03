@@ -10,6 +10,7 @@
     "precommit": "precise-commits"
   },
   "dependencies": {
+    "@firebase/app-types": "^0.3.2",
     "@tweenjs/tween.js": "^17.2.0",
     "algoliasearch": "^3.27.1",
     "axios": "^0.18.0",
@@ -32,19 +33,27 @@
     "@types/algoliasearch": "^3.27.4",
     "@types/base64-js": "^1.2.5",
     "@types/jest": "^22.2.3",
+    "@vue/cli": "^3.0.0-beta.15",
     "@vue/cli-plugin-babel": "^3.0.0-beta.11",
     "@vue/cli-plugin-e2e-cypress": "^3.0.0-beta.11",
     "@vue/cli-plugin-pwa": "^3.0.0-beta.11",
     "@vue/cli-plugin-typescript": "^3.0.0-beta.11",
     "@vue/cli-plugin-unit-jest": "^3.0.0-beta.11",
     "@vue/cli-service": "^3.0.0-beta.11",
+    "babel-core": "^6.26.3",
+    "eslint": "^4.19.1",
     "husky": "^0.14.3",
+    "jest": "^23.1.0",
     "node-sass": "^4.9.0",
     "precise-commits": "^1.0.2",
+    "prettier": "^1.13.4",
     "sass-loader": "^7.0.1",
     "ts-jest": "^22.4.6",
+    "typescript": "^2.9.1",
     "vue-template-compiler": "^2.5.16",
-    "webpack-bundle-analyzer": "^2.13.1"
+    "webpack": "^4.10.2",
+    "webpack-bundle-analyzer": "^2.13.1",
+    "worker-loader": "^2.0.0"
   },
   "postcss": {
     "plugins": {

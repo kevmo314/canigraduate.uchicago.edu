@@ -27,12 +27,10 @@ export default {
   computed: mapGetters("institution", ["institution"]),
   subscriptions() {
     const sections$ = combineLatest(
-      this.$observe(() => this.institution).pipe(
-        switchMap(institution => institution.getIndexes())
-      ),
+      this.$observe(() => this.institution),
       this.$observe(() => this.course),
       this.$observe(() => this.term)
-    ).pipe(map(([index, course, term]) => index.getSections(course, term)));
+    ).pipe(map(([institution, course, term]) => institution.index.getSections(course, term)));
     return { sections: sections$ };
   },
   methods: mapActions("calendar", ["clearTemporary"])

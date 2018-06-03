@@ -90,7 +90,7 @@ export default {
     ).pipe(
       debounceTime(100),
       switchMap(([transcript, institution, filter]) =>
-        institution.search(transcript, filter)
+        institution.index.search(transcript, filter)
       ),
       map(results => Object.freeze(results)),
       publishReplay(1),
