@@ -39,7 +39,7 @@
         </v-card-actions>
       </v-card>
     </form>
-    <form class="mt-3">
+    <form>
       <v-subheader>Educators</v-subheader>
       <v-card>
         <v-card-text>

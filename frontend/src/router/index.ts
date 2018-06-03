@@ -1,5 +1,6 @@
 import About from "@/components/About.vue";
 import Analytics from "@/components/Analytics.vue";
+import PageNotFound from "@/components/PageNotFound.vue";
 import Program from "@/components/Program.vue";
 import Search from "@/components/Search.vue";
 import Watches from "@/components/Watches.vue";
@@ -26,12 +27,13 @@ export default new VueRouter({
       component: Watches
     },
     {
-      path: "/about",
+      path: "/",
       component: About
     },
     {
       path: "/analytics",
       component: Analytics
-    }
+    },
+    { path: "*", component: PageNotFound }
   ]
 });

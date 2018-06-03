@@ -34,7 +34,7 @@ export default {
     }
   },
   actions: {
-    async authenticate(context, data = {}) {
+    authenticate(context, data = {}) {
       context.commit("update", {
         ...data,
         type: AuthenticationType.STUDENT,
@@ -44,7 +44,7 @@ export default {
       const institution = context.rootGetters["institution/institution"];
       institution
         .getTranscript(context.state.username, context.state.password)
-        .then(
+        .subscribe(
           response => {
             context.commit("update", {
               status: AuthenticationStatus.AUTHENTICATED,

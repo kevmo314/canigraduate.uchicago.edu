@@ -6,7 +6,7 @@
         <v-tab href="#schedule">Schedule</v-tab>
         <v-tab-item id="transcript" class="item">
           <div class="caption text-xs-center px-3 py-2">
-            <strong class="grey--text text--darken-2">Your GPA is bold.</strong> <span class="grey--text">Average GPA is in grey.</span>
+            <strong class="grey--text text--darken-2">Your GPA is bold.</strong> <span class="grey--text ml-1">Average GPA is in grey.</span>
           </div>
           <v-expansion-panel focusable>
             <v-expansion-panel-content v-for="(term, index) in terms" :key="term" :value="index === terms.length - 1">
@@ -16,13 +16,13 @@
                   <span v-if="transcript.find(t => t.term == term && t.quality)">
                     Quarter
                     <strong class="grey--text text--darken-2">{{quarterGpa[index].toFixed(2)}}</strong>
-                    <span v-if="quarterEgpa" class="grey--text">{{quarterEgpa[index].toFixed(2)}}</span>
+                    <span v-if="quarterEgpa" class="grey--text ml-1">{{quarterEgpa[index].toFixed(2)}}</span>
                     &nbsp;&middot;&nbsp;
                   </span>
                   <span v-if="transcript.find(t => t.quality)">
                     Cumulative
                     <strong class="grey--text text--darken-2">{{cumulativeGpa[index].toFixed(2)}}</strong>
-                    <span v-if="cumulativeEgpa" class="grey--text">{{cumulativeEgpa[index].toFixed(2)}}</span>
+                    <span v-if="cumulativeEgpa" class="grey--text ml-1">{{cumulativeEgpa[index].toFixed(2)}}</span>
                   </span>
                 </div>
               </div>

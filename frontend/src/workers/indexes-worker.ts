@@ -1,3 +1,4 @@
+import IntervalTree from "@/lib/interval-tree";
 import { InstitutionData } from "@/models/institution";
 import * as algoliasearch from "algoliasearch";
 import Axios from "axios";
@@ -167,12 +168,15 @@ function search(
         // Map the list of course identifiers to the corresponding bitset.
         map(courses => indexes.getBitSetForCourses(courses)),
         // Apply the exact query match mask.
-        map(mask => {
-          const course = filter.query.toUpperCase();
-          return indexes.getCourses().includes(course)
-            ? mask.union(indexes.getBitSetForCourses([course]))
-            : mask;
-        }),
+        map(mask =>
+          mask.union(
+            indexes.getBitSetForCourses(
+              indexes
+                .getCourses()
+                .filter(x => x.includes(filter.query.toUpperCase()))
+            )
+          )
+        ),
         map(mask => results => results.intersection(mask)),
         first() // Complete the observable.
       )
@@ -220,6 +224,9 @@ function search(
 
   // This is a rather expensive filter...
   if (filter.days) {
+    const it = filter.days
+      .map(day => [1440 * day, 1440 * (day + 1)])
+      .reduce((tree, interval) => tree.add(interval), new IntervalTree());
   }
 
   // Generate a full state.

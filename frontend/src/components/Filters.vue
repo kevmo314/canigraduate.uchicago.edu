@@ -12,40 +12,6 @@
           </v-btn-toggle>
         </v-layout>
         <v-divider></v-divider>
-        <v-layout row class="my-3">
-          <label class="label body-2">Days of the week</label>
-          <v-btn-toggle multiple v-model="days">
-            <v-btn flat>
-              <span class="hidden-sm-and-down">Sunday</span>
-              <span class="hidden-md-and-up">Sun</span>
-            </v-btn>
-            <v-btn flat>
-              <span class="hidden-sm-and-down">Monday</span>
-              <span class="hidden-md-and-up">Mon</span>
-            </v-btn>
-            <v-btn flat>
-              <span class="hidden-sm-and-down">Tuesday</span>
-              <span class="hidden-md-and-up">Tue</span>
-            </v-btn>
-            <v-btn flat>
-              <span class="hidden-sm-and-down">Wednesday</span>
-              <span class="hidden-md-and-up">Wed</span>
-            </v-btn>
-            <v-btn flat>
-              <span class="hidden-sm-and-down">Thursday</span>
-              <span class="hidden-md-and-up">Thu</span>
-            </v-btn>
-            <v-btn flat>
-              <span class="hidden-sm-and-down">Friday</span>
-              <span class="hidden-md-and-up">Fri</span>
-            </v-btn>
-            <v-btn flat>
-              <span class="hidden-sm-and-down">Saturday</span>
-              <span class="hidden-md-and-up">Sat</span>
-            </v-btn>
-          </v-btn-toggle>
-        </v-layout>
-        <v-divider></v-divider>
         <v-layout row>
           <label class="label body-2">Departments</label>
           <v-select :items="departmentItems" v-model="departments" multiple chips deletable-chips autocomplete

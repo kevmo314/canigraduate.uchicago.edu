@@ -49,7 +49,7 @@ import { fromEventPattern, combineLatest, of, zip } from "rxjs";
 export default {
   components: { Filters, SearchResult },
   data() {
-    return { resultsPerPage: 10 };
+    return { resultsPerPage: 25 };
   },
   computed: {
     ...mapGetters("institution", ["institution"]),
@@ -75,14 +75,7 @@ export default {
     const sections$ = combineLatest(
       transcript$,
       institution$,
-      filterEvents.pipe(
-        map(x => ({
-          ...x,
-          days: x.days
-            .map(day => [1440 * day, 1440 * (day + 1)])
-            .reduce((tree, interval) => tree.add(interval), new IntervalTree())
-        }))
-      )
+      filterEvents
     ).pipe(
       switchMap(([transcript, institution, filter]) =>
         institution.index.search(transcript, filter)

@@ -137,13 +137,11 @@ export default class Institution {
           auth: { username, password }
         })
       ),
-      map(response => {
-        response => {
-          return auth.signInWithCustomToken(response.data.token).then(() => {
-            response.data.data = auth.currentUser;
-            return response;
-          });
-        };
+      switchMap(response => {
+        return auth.signInWithCustomToken(response.data.token).then(() => {
+          response.data.data = auth.currentUser;
+          return response;
+        });
       })
     );
   }
