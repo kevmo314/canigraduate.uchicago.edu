@@ -4,15 +4,10 @@
     <filters />
     <v-slide-y-reverse-transition>
       <div v-if="courses && courses.length > 0">
-        <v-subheader class="mt-0 display-flex">
-          <div class="flex-grow">
-            {{courseCount}}
-            <template v-if="courseCount == 1">course</template>
-            <template v-else>courses</template>
-          </div>
-          <div class="caption">Rendered in
-            <span class="green--text caption">{{Math.ceil(resultTime - eventTime)}}ms</span>
-          </div>
+        <v-subheader class="mt-0">
+          {{courseCount}}
+          <template v-if="courseCount == 1">course</template>
+          <template v-else>courses</template>
         </v-subheader>
         <search-result v-for="course in courses" :key="course" :value="courseCount == 1"
           :filter="sections.get(course)">{{course}}</search-result>
@@ -44,11 +39,12 @@ import {
   map,
   publishReplay,
   refCount,
-  debounceTime,
+  timestamp,
+  auditTime,
   tap,
   first
 } from "rxjs/operators";
-import { fromEventPattern, combineLatest, of } from "rxjs";
+import { fromEventPattern, combineLatest, of, zip } from "rxjs";
 
 export default {
   components: { Filters, SearchResult },
@@ -73,7 +69,7 @@ export default {
     const resultsPerPage = this.$observe(() => this.resultsPerPage);
     const filterEvents = this.$observe(() => this.$store.state.filter, {
       deep: true
-    });
+    }).pipe(auditTime(100));
     const sortEvents = this.$observe(() => this.$store.state.search.sort);
     const transcript$ = this.$observe(() => this.transcript);
     const sections$ = combineLatest(
@@ -88,7 +84,6 @@ export default {
         }))
       )
     ).pipe(
-      debounceTime(100),
       switchMap(([transcript, institution, filter]) =>
         institution.index.search(transcript, filter)
       ),
@@ -150,20 +145,15 @@ export default {
         );
       }),
       map(results => Object.freeze(results)),
+      timestamp(),
       publishReplay(1),
       refCount()
     );
     return {
-      courses: sortedResults,
+      courses: sortedResults.pipe(map(data => data.value)),
       sections: sections$,
       sectionsByCourse: combineLatest(sortedResults, sections$).pipe(
         map(([courses, sections]) => {})
-      ),
-      eventTime: filterEvents.pipe(map(() => performance.now())),
-      resultTime: filterEvents.pipe(
-        switchMap(() => sortedResults.pipe(first())),
-        switchMap(() => this.$nextTick()),
-        map(() => performance.now())
       ),
       courseCount: courses$.pipe(map(results => results.length))
     };

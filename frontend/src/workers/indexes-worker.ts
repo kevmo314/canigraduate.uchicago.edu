@@ -7,6 +7,7 @@ import {
   Subscription,
   combineLatest,
   defer,
+  empty,
   fromEvent,
   of
 } from "rxjs";
@@ -112,6 +113,8 @@ function getCommandResponse(message: WorkerMessage) {
                 message.data.transcript,
                 message.data.filter
               );
+            default:
+              return empty();
           }
         })
       );

@@ -8,7 +8,7 @@
 import SectionDetail from "@/components/SectionDetail";
 import { mapActions, mapGetters } from "vuex";
 import { combineLatest, of } from "rxjs";
-import { switchMap, map, filter, concat } from "rxjs/operators";
+import { switchMap, map, filter, concat, tap } from "rxjs/operators";
 
 export default {
   name: "term-detail",
@@ -30,7 +30,7 @@ export default {
       this.$observe(() => this.institution),
       this.$observe(() => this.course),
       this.$observe(() => this.term)
-    ).pipe(map(([institution, course, term]) => institution.index.getSections(course, term)));
+    ).pipe(switchMap(([institution, course, term]) => institution.index.getSections(course, term)));
     return { sections: sections$ };
   },
   methods: mapActions("calendar", ["clearTemporary"])
