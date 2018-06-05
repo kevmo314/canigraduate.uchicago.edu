@@ -1,8 +1,6 @@
-import * as functions from 'firebase-functions';
-import * as nodemailer from 'nodemailer';
-import Watches from '../firestore/Watches';
-import Users from '../firestore/Users';
 import Config from '../firestore/Config';
+import Users from '../firestore/Users';
+import Watches from '../firestore/Watches';
 
 function toEnrollmentString(data) {
   const enrolled =
@@ -63,7 +61,7 @@ export default async function(
   }
   const watches = await Watches.find(term, course, section);
   const emails = await Promise.all(
-    watches.map(({ data }) => Users.getEmail(data.uid)),
+    watches.map(({ data }) => Users.getEmail(data.uid.split(':')[1])),
   );
   return Promise.all(
     [...new Set(emails)].map(to => {

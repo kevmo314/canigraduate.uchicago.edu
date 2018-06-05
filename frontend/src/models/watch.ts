@@ -18,4 +18,8 @@ export default class Watch {
   data(): Observable<WatchData> {
     return publishDocument(this.ref) as Observable<WatchData>;
   }
+
+  delete(): Promise<void> {
+    return this.ref.delete();
+  }
 }

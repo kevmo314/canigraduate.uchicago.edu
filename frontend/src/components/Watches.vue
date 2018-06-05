@@ -15,15 +15,18 @@
             <td class="text-xs-center">{{props.item.term || '*'}}</td>
             <td class="text-xs-center">{{props.item.course || '*'}}</td>
             <td class="text-xs-center">{{props.item.section || '*'}}</td>
-            <td></td>
+            <td class="text-xs-right"><v-btn small flat @click.native="deleteWatch(props.item.id)">Delete</v-btn></td>
           </template>
         </v-data-table>
+        <p class="mt-3">Add more watches on <router-link to="/search">course search</router-link>.</p>
       </v-card-text>
     </v-card>
   </div>
 </template>
 
 <script>
+import { combineLatest, of } from "rxjs";
+import { switchMap, map, first } from "rxjs/operators";
 import { mapGetters } from "vuex";
 
 export default {
@@ -37,18 +40,39 @@ export default {
         { text: "Term", sortable: true, value: "term", align: "center" },
         { text: "Course", sortable: true, value: "course", align: "center" },
         { text: "Section", sortable: true, value: "section", align: "center" },
-        { text: "Actions", sortable: false }
+        { text: "", sortable: false }
       ]
     };
   },
   computed: mapGetters("institution", ["institution"]),
+  methods: {
+    deleteWatch(id) {
+      this.$observe(() => this.institution)
+        .pipe(first())
+        .subscribe(institution => institution.watch(id).delete());
+    }
+  },
   subscriptions() {
-    const institution$ = this.$observe(() => this.institution);
     return {
-      courses: this.endpoints.courses(),
-      terms: this.endpoints.terms(),
-      watches: this.endpoints.watches.read(),
-      serverTimeOffset: this.endpoints.serverTimeOffset()
+      watches: this.$observe(() => this.institution).pipe(
+        switchMap(institution =>
+          institution.watches.pipe(
+            switchMap(watches => {
+              // Get each of the documents.
+              return watches.length == 0
+                ? of([])
+                : combineLatest(
+                    watches.map(watch =>
+                      institution
+                        .watch(watch)
+                        .data()
+                        .pipe(map(data => ({ id: watch, ...data })))
+                    )
+                  );
+            })
+          )
+        )
+      )
     };
   }
 };

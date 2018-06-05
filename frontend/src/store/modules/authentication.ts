@@ -1,3 +1,4 @@
+import { User } from "firebase";
 import { auth } from "../../models/firebase";
 
 export const AuthenticationStatus = {
@@ -34,6 +35,11 @@ export default {
     }
   },
   actions: {
+    updateUser(context, user: User) {
+      if (!user) {
+        context.commit("update", DEFAULT_STATE);
+      }
+    },
     authenticate(context, data = {}) {
       context.commit("update", {
         ...data,
@@ -41,8 +47,7 @@ export default {
         status: AuthenticationStatus.PENDING,
         message: ""
       });
-      const institution = context.rootGetters["institution/institution"];
-      institution
+      context.rootGetters["institution/institution"]
         .getTranscript(context.state.username, context.state.password)
         .subscribe(
           response => {

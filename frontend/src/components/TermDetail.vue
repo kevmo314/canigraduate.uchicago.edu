@@ -1,6 +1,19 @@
 <template>
-  <div class="mt-2" @mouseout="clearTemporary">
-    <section-detail v-for="(section, index) of sections" :key="section" :term="term" :course="course" :section="section" :matches="filter.includes(index)" />
+  <div>
+    <div class="display-flex pr-0 mb-2" @click="expanded = !expanded">
+      <v-icon :class="{'rotated': expanded}">expand_more</v-icon>
+      <div class="subheading term-heading flex-grow ml-2">{{term}}</div>
+      <v-slide-x-transition>
+        <div class="caption ml-2 enrolled-heading" v-if="expanded">
+          Enrolled
+        </div>
+      </v-slide-x-transition>
+    </div>
+    <v-slide-y-transition>
+      <div class="mt-2" @mouseout="clearTemporary" v-if="expanded">
+        <section-detail v-for="(section, index) of sections" :key="section" :term="term" :course="course" :section="section" :matches="filter.includes(index)" />
+      </div>
+    </v-slide-y-transition>
   </div>
 </template>
 
@@ -24,15 +37,57 @@ export default {
     },
     filter: Array
   },
+  data() {
+    return { expanded: false };
+  },
+  methods: {
+    toggle() {
+      console.log("toggle", this.expanded);
+      this.expanded = !this.expanded;
+    }
+  },
   computed: mapGetters("institution", ["institution"]),
   subscriptions() {
     const sections$ = combineLatest(
       this.$observe(() => this.institution),
       this.$observe(() => this.course),
       this.$observe(() => this.term)
-    ).pipe(switchMap(([institution, course, term]) => institution.index.getSections(course, term)));
+    ).pipe(
+      switchMap(([institution, course, term]) =>
+        institution.index.getSections(course, term)
+      )
+    );
     return { sections: sections$ };
   },
   methods: mapActions("calendar", ["clearTemporary"])
 };
 </script>
+
+<style scoped>
+v-icon {
+  transition: transform 0.3s ease-in-out;
+}
+
+.rotated {
+  transform: rotateZ(-180deg);
+}
+
+.term-heading {
+  position: relative;
+  overflow: hidden;
+}
+
+.term-heading:after {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  margin-left: 8px;
+  height: 1px;
+  content: "\a0";
+  background-color: lightgrey;
+}
+
+.enrolled-heading {
+  align-self: center;
+}
+</style>

@@ -184,7 +184,12 @@ export default {
   overflow-y: auto;
 }
 
+.item >>> .expansion-panel__header {
+  padding: 12px;
+}
+
 .item >>> .header__icon {
-  display: none;
+  order: -1;
+  margin-right: 12px;
 }
 </style>

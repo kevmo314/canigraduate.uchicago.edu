@@ -14,18 +14,7 @@
     <v-layout row>
       <v-spacer>
         <template v-if="terms">
-          <div v-for="(term, index) of terms.slice(0, maxTerm)" :key="term">
-            <div class="display-flex pr-0">
-              <div class="subheading term-heading flex-grow">{{term}}</div>
-              <div class="caption ml-2 enrolled-heading" v-if="index == 0">
-                Enrolled
-              </div>
-            </div>
-            <term-detail :filter="filter.get(term)" :course="course" :term="term" />
-          </div>
-          <div class="text-xs-center" v-if="maxTerm < terms.length">
-            <v-btn block flat @click="maxTerm += 1">Show {{terms[maxTerm]}}</v-btn>
-          </div>
+          <term-detail v-for="term of terms" :key="term" :term="term" :course="course" :filter="filter.get(term)" />
         </template>
       </v-spacer>
       <div class="side ml-3" v-sticky>
@@ -58,7 +47,6 @@ export default {
   data() {
     return {
       course: this.$slots.default[0].text,
-      maxTerm: 4,
       schedules: {}
     };
   },
@@ -130,27 +118,8 @@ export default {
 }
 
 .side {
-  width: 150px;
+  width: 225px;
   top: 75px;
   align-self: flex-start;
-}
-
-.term-heading {
-  position: relative;
-  overflow: hidden;
-}
-
-.term-heading:after {
-  position: absolute;
-  top: 50%;
-  width: 100%;
-  margin-left: 8px;
-  height: 1px;
-  content: "\a0";
-  background-color: lightgrey;
-}
-
-.enrolled-heading {
-  align-self: center;
 }
 </style>

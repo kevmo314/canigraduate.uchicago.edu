@@ -1,3 +1,4 @@
+import { auth } from "@/models/firebase";
 import { Observable, of } from "rxjs";
 import { pluck } from "rxjs/operators";
 import Vue from "vue";
@@ -94,5 +95,11 @@ Vue.config.performance = !PRODUCTION;
 export default new Vue({
   router: router,
   store: store,
-  render: h => h(App)
+  render: h => h(App),
+  created() {
+    auth.onAuthStateChanged(user => {
+      console.log("state changed", user);
+      this.$store.dispatch("authentication/updateUser", user);
+    });
+  }
 }).$mount("#app");
