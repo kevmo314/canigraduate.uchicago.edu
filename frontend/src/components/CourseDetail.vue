@@ -14,7 +14,7 @@
     <v-layout row>
       <v-spacer>
         <template v-if="terms">
-          <term-detail v-for="term of terms" :key="term" :term="term" :course="course" :filter="filter.get(term)" />
+          <term-detail v-for="(term, index) of terms" :key="term" :term="term" :course="course" :filter="filter.get(term)" :expand="index == 0" />
         </template>
       </v-spacer>
       <div class="side ml-3" v-sticky>

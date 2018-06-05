@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="display-flex pr-0 mb-2" @click="expanded = !expanded">
+    <a class="display-flex pr-0 mb-2 black--text" @click="expanded = !expanded">
       <v-icon :class="{'rotated': expanded}">expand_more</v-icon>
       <div class="subheading term-heading flex-grow ml-2">{{term}}</div>
       <v-slide-x-transition>
@@ -8,7 +8,7 @@
           Enrolled
         </div>
       </v-slide-x-transition>
-    </div>
+    </a>
     <v-slide-y-transition>
       <div class="mt-2" @mouseout="clearTemporary" v-if="expanded">
         <section-detail v-for="(section, index) of sections" :key="section" :term="term" :course="course" :section="section" :matches="filter.includes(index)" />
@@ -35,16 +35,11 @@ export default {
       type: String,
       required: true
     },
-    filter: Array
+    filter: Array,
+    expand: Boolean
   },
   data() {
-    return { expanded: false };
-  },
-  methods: {
-    toggle() {
-      console.log("toggle", this.expanded);
-      this.expanded = !this.expanded;
-    }
+    return { expanded: this.expand };
   },
   computed: mapGetters("institution", ["institution"]),
   subscriptions() {

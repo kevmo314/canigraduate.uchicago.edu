@@ -17,7 +17,7 @@
         </div>
       </div>
     </div>
-    <div class="display-flex pa-0 secondary-activity pb-1" :class="{'caption primary--text': hasMultipleSecondaries(section)}"
+    <div class="display-flex pa-0 secondary-activity pb-1" :class="{'caption primary--text': hasMultipleSecondaries(section), 'muted': !matches}"
       v-for="activity of data.secondaries || []" :key="activity.id"
       @mouseover="setTemporarySection({term, section, course, activity: activity.id})">
       <div class="section-id">{{hasMultipleSecondaries(data) ? activity.id : ''}}</div>
