@@ -33,7 +33,7 @@ public class MapValue {
 
     private JsonObject getFields() {
         // Weird, it's empty?
-        return Optional.ofNullable(this.object.getAsJsonObject("fields")).orElse(new JsonObject());
+        return Optional.ofNullable(this.object.getAsJsonObject("fields")).orElseGet(JsonObject::new);
     }
 
     public Map<String, Value> toMap() {
@@ -46,7 +46,7 @@ public class MapValue {
     }
 
     public Optional<Value> get(String key) {
-        return Optional.ofNullable(this.getFields().getAsJsonObject(key)).map(Value::new);
+        return Optional.ofNullable(this.getFields().getAsJsonObject(key)).map(Value::new).filter(Value::isPresent);
     }
 
     public MapValue put(String key, Value value) {

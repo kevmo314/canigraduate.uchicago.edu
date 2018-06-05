@@ -84,6 +84,10 @@ public class Value {
         return new MapValue(this.object.get("mapValue").getAsJsonObject());
     }
 
+    public boolean isPresent() {
+        return !this.getTypeKey().filter("nullValue"::equals).isPresent();
+    }
+
     private Optional<String> getTypeKey() {
         return this.object.entrySet().stream().findFirst().map(Map.Entry::getKey);
     }
