@@ -26,8 +26,6 @@ public class CourseCoder extends CustomCoder<Course> {
 
     @Override
     public void encode(Course value, OutputStream outStream) throws IOException {
-        // Test comment.
-
         STRING_CODER.encode(value.getName(), outStream);
         STRING_OPTIONAL_CODER.encode(value.getDescription(), outStream);
         STRING_SET_CODER.encode(value.getNotes(), outStream);
