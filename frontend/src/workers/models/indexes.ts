@@ -93,6 +93,7 @@ export default class Indexes {
   private readonly data: any;
   private readonly courses: string[];
   private readonly terms: string[];
+  private readonly currentTerm: string;
   private readonly courseIndexes: Map<string, number>;
   private readonly termIndexes: Map<string, number>;
   private readonly sequences: Map<string, TypedFastBitSet | string>;
@@ -110,6 +111,7 @@ export default class Indexes {
     // TODO: Would be nice to put these all in observables so they don't block the UI thread.
     this.courses = data.courses as string[];
     this.terms = data.terms as string[];
+    this.currentTerm = data.currentTerm as string;
     this.courseIndexes = new Map<string, number>(
       this.courses.map((course, index) => [course, index] as [string, number])
     );
@@ -156,6 +158,10 @@ export default class Indexes {
 
   getTerms(): string[] {
     return this.terms;
+  }
+
+  getCurrentTerm(): string {
+    return this.currentTerm;
   }
 
   getSections(course: string, term: string) {

@@ -27,6 +27,7 @@ export enum WorkerCommand {
   UNSUBSCRIBE,
   GET_COURSES,
   GET_TERMS,
+  GET_CURRENT_TERM,
   GET_SECTIONS_FOR_COURSE_TERM,
   GET_SPARSE_SEQUENCE,
   GET_SEQUENCES,
@@ -88,6 +89,10 @@ export default class PackedIndex {
 
   getTerms(): Observable<string[]> {
     return this.call(WorkerCommand.GET_TERMS);
+  }
+
+  getCurrentTerm(): Observable<string> {
+    return this.call(WorkerCommand.GET_CURRENT_TERM);
   }
 
   getSections(course: string, term: string): Observable<string[]> {

@@ -68,6 +68,7 @@ export enum WorkerCommand {
   UNSUBSCRIBE,
   GET_COURSES,
   GET_TERMS,
+  GET_CURRENT_TERM,
   GET_SECTIONS_FOR_COURSE_TERM,
   GET_SPARSE_SEQUENCE,
   GET_SEQUENCES,
@@ -94,6 +95,8 @@ function getCommandResponse(message: WorkerMessage) {
               return of(indexes.getCourses());
             case WorkerCommand.GET_TERMS:
               return of(indexes.getTerms());
+            case WorkerCommand.GET_CURRENT_TERM:
+              return of(indexes.getCurrentTerm());
             case WorkerCommand.GET_SECTIONS_FOR_COURSE_TERM:
               return of(
                 indexes.getSections(message.data.course, message.data.term)
