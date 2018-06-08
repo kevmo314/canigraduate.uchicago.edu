@@ -26,6 +26,7 @@ public class CourseCoder extends CustomCoder<Course> {
 
     @Override
     public void encode(Course value, OutputStream outStream) throws IOException {
+
         STRING_CODER.encode(value.getName(), outStream);
         STRING_OPTIONAL_CODER.encode(value.getDescription(), outStream);
         STRING_SET_CODER.encode(value.getNotes(), outStream);
@@ -47,6 +48,7 @@ public class CourseCoder extends CustomCoder<Course> {
                 .addAllCrosslists(STRING_SET_CODER.decode(inStream))
                 .build();
     }
+
 
     @Override
     public void verifyDeterministic() throws NonDeterministicException {
