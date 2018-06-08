@@ -10,7 +10,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class WatchCoder extends CustomCoder<Watch> {
-    // for the git so stupid
+    // for the git so stupiasdfjlzxjckjcvlzd
     private static final Coder<String> STRING_CODER = StringUtf8Coder.of();
 
 
