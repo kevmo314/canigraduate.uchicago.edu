@@ -98,7 +98,6 @@ export default new Vue({
   render: h => h(App),
   created() {
     auth.onAuthStateChanged(user => {
-      console.log("state changed", user);
       this.$store.dispatch("authentication/updateUser", user);
     });
   }
