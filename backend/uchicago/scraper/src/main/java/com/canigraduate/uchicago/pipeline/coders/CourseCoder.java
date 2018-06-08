@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class CourseCoder extends CustomCoder<Course> {
+    //allah
     private static final Coder<String> STRING_CODER = StringUtf8Coder.of();
     private static final Coder<Set<String>> STRING_SET_CODER = SetCoder.of(STRING_CODER);
     private static final Coder<Optional<String>> STRING_OPTIONAL_CODER = OptionalCoder.of(STRING_CODER);
