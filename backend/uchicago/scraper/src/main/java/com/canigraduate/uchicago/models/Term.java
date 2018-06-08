@@ -37,6 +37,10 @@ public abstract class Term implements Comparable<Term> {
         return Integer.parseInt(this.getTerm().substring(this.getTerm().length() - 4));
     }
 
+    public boolean isPresentOrFuture() {
+        return this.getAge() <= 0;
+    }
+
     public String getPeriod() {
         return this.getTerm().substring(0, 6);
     }

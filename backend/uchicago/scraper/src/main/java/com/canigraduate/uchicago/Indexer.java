@@ -212,6 +212,11 @@ public class Indexer {
             sectionIds.forEach(sectionsJson::add);
             index.add("courses", coursesJson);
             index.add("terms", termsJson);
+            index.addProperty("currentTerm", Arrays.stream(termKeys)
+                    .filter(Term::isPresentOrFuture)
+                    .findFirst()
+                    .orElse(termKeys[termKeys.length - 1])
+                    .getTerm());
             index.add("sections", sectionsJson);
             index.addProperty("cardinalities", Base64.getEncoder().encodeToString(pack(builder.build())));
             index.addProperty("sectionIds", Base64.getEncoder().encodeToString(pack(idsBuilder.build())));
@@ -386,11 +391,11 @@ public class Indexer {
         AlgoliaCourse() {
         }
 
-        public String getDescription() {
+        String getDescription() {
             return this.description;
         }
 
-        public AlgoliaCourse setDescription(String description) {
+        AlgoliaCourse setDescription(String description) {
             this.description = description;
             return this;
         }
@@ -404,11 +409,11 @@ public class Indexer {
             return this;
         }
 
-        public String getObjectID() {
+        String getObjectID() {
             return this.objectID;
         }
 
-        public AlgoliaCourse setObjectID(String objectID) {
+        AlgoliaCourse setObjectID(String objectID) {
             this.objectID = objectID;
             return this;
         }
