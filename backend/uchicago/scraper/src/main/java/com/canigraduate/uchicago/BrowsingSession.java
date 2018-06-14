@@ -28,9 +28,9 @@ public class BrowsingSession {
                 }
                 this.cookies.putAll(response.cookies());
                 return response.body();
-            } catch (IOException ex) {
+            } catch (IOException up) {
                 if (i == this.retries - 1) {
-                    throw ex;
+                    throw up; // haha
                 }
             }
         }
