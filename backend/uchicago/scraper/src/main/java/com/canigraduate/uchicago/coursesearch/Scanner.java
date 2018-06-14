@@ -33,6 +33,13 @@ class Scanner {
                 ImmutableMap.of("UC_CLSRCH_WRK2_SUBJECT", department)));
     }
 
+    Scanner(Browser browser, Watch watch) throws IOException {
+        this.browser = browser;
+        this.browser.action("UC_CLSRCH_WRK2_STRM");
+        this.activePage = Jsoup.parse(this.browser.action("UC_CLSRCH_WRK2_SEARCH_BTN",
+                ImmutableMap.of("UC_CLSRCH_WRK2_PTUN_KEYWORD", watch.getCourse())));
+    }
+
     private static Optional<String> selectFirstText(Document page, String query) {
         return Optional.ofNullable(page.selectFirst(query))
                 .map(element -> element.text().trim())
