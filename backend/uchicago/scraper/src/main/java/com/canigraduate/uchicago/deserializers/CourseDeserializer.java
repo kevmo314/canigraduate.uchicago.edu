@@ -7,20 +7,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 
-import java.util.List;
-import java.util.Map;
-
 public class CourseDeserializer {
-    public static Course fromMap(Map<String, Object> course) {
-        return Course.builder()
-                .setName((String) course.get("name"))
-                .setDescription((String) course.get("description"))
-                .setPriority((int) course.get("priority"))
-                .setParent((String) course.get("sequence"))
-                .addAllCrosslists((List<String>) course.get("crosslists"))
-                .addAllNotes((List<String>) course.get("notes"))
-                .build();
-    }
 
     public static Course fromMapValue(MapValue fields) {
         return Course.builder()
