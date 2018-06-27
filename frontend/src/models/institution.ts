@@ -67,8 +67,9 @@ export default class Institution {
             sequences.map(sequence => this.index.getSparseSequence(sequence))
           );
         })
-      ),
-      (courseRanking, sparseSequences) => {
+      )
+    ).pipe(
+      map(([courseRanking, sparseSequences]) => {
         sparseSequences.forEach(sequence => {
           // Promote the rank of each course in the sequence to the max.
           const max =
@@ -78,8 +79,7 @@ export default class Institution {
           sequence.forEach(course => (courseRanking[course] = max));
         });
         return courseRanking;
-      }
-    ).pipe(
+      }),
       publishReplay(1),
       refCount()
     );
