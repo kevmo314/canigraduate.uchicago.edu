@@ -10,8 +10,35 @@
         </div>
       </div>
       <div class="offering-indicators">
-        <term-offering-indicator v-for="period of periods" :key="period.name" :period="period"
-          :course="course" :matches="Array.from(filter.keys()).some(term => term.indexOf(period.name) > -1)"></term-offering-indicator>
+        <v-btn flat color="info" @click.stop="addWatchDialog = !addWatchDialog" v-if="show" disabled>
+          <v-icon left>add_alert</v-icon>
+          Watches aren't working yet, sorry!
+        </v-btn>
+        <template v-else>
+          <term-offering-indicator v-for="period of periods" :key="period.name" :period="period"
+            :course="course" :matches="Array.from(filter.keys()).some(term => term.indexOf(period.name) > -1)"></term-offering-indicator>
+        </template>
+        <v-dialog v-model="addWatchDialog" max-width="500px">
+          <v-card>
+            <v-card-title>
+              Which term?
+            </v-card-title>
+            <v-card-text>
+              <v-radio-group v-model="radioGroup">
+                <v-radio
+                  v-for="term in futureTerms"
+                  :key="term"
+                  :label="term"
+                  :value="term"
+                ></v-radio>
+              </v-radio-group>
+            </v-card-text>
+            <v-card-actions>
+              <v-btn color="primary" flat @click.stop="dialog2=false">Notify me</v-btn>
+              <v-btn flat @click.stop="addWatchDialog = false">Nevermind</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </div>
     </v-card-title>
     <v-slide-y-transition>
@@ -53,8 +80,12 @@ export default {
       }
     }
   },
+  methods: {
+    addWatch(course) {}
+  },
   data() {
     return {
+      addWatchDialog: false,
       course: this.$slots.default[0].text,
       maxTerm: 4
     };
@@ -62,16 +93,31 @@ export default {
   subscriptions() {
     const institution = this.$observe(() => this.institution);
     const course = this.$observe(() => this.course);
+    const terms$ = institution.pipe(
+      switchMap(institution => institution.index.getTerms())
+    );
+    const currentTerm$ = institution.pipe(
+      switchMap(institution => institution.index.getCurrentTerm())
+    );
+    const courseTerms$ = this.$observe(() => this.filter).pipe(
+      map(filter => new Set(filter.keys()))
+    );
     return {
       periods: institution.pipe(
         switchMap(institution => institution.data()),
         map(data => data.periods)
       ),
-      crosslists: combineLatest(institution, course, (institution, course) =>
-        institution.course(course)
-      ).pipe(
+      crosslists: combineLatest(institution, course).pipe(
+        map(([institution, course]) => institution.course(course)),
         switchMap(course => course.data()),
         map(course => course.crosslists.join(", "))
+      ),
+      futureTerms: combineLatest(terms$, currentTerm$, courseTerms$).pipe(
+        map(([terms, currentTerm, courseTerms]) =>
+          terms
+            .slice(terms.indexOf(currentTerm) + 1)
+            .filter(term => courseTerms.has(term))
+        )
       )
     };
   }
