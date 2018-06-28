@@ -48,6 +48,7 @@
             <li>Jacob Burroughs</li>
             <li>Kelly Shen</li>
             <li>Caitlin Yee</li>
+            <li>Alvin Zhao</li>
           </ul>
         </p>
         <p>Interested in contributing? Tired of seeing stuff unfinished? Check out our
